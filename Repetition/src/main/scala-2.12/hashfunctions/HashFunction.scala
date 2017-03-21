@@ -2,10 +2,13 @@ package hashfunctions
 
 import measures.Distance
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 trait HashFunction {
   def apply(v: Array[Float]): Array[Int]
+  def generateProbes(v : Array[Float]): ArrayBuffer[Array[Int]]
+  def flipSign(x:Int):Int = if (x == 0) 1 else 0
 }
 
 case class Hyperplane(k: Int, rndf:() => Random, numOfDim: Int) extends HashFunction {
@@ -38,6 +41,28 @@ case class Hyperplane(k: Int, rndf:() => Random, numOfDim: Int) extends HashFunc
     } yield c
 
     set
+  }
+
+  // TODO dont use arraybuffer
+  override def generateProbes(v: Array[Float]): ArrayBuffer[Array[Int]] = {
+    val hashCode = apply(v)
+    val M = hashCode.length
+    val listBuckets = new ArrayBuffer[Array[Int]]()
+    // adding the query itself
+    listBuckets+=hashCode
+    // 1-step probing
+    for(i <- 0 until M){
+      var newCode = hashCode
+      newCode = hashCode.updated(i, flipSign(hashCode(i)))
+      listBuckets += newCode
+      // 2-step probing
+      for(j <- i+1 until M){
+        newCode = newCode.updated(j, flipSign(newCode(j)))
+        listBuckets += newCode
+      }
+    }
+    listBuckets
+
   }
 }
 
@@ -152,5 +177,13 @@ case class CrossPolytope(k: Int, rndf:() => Random, numOfDim: Int) extends HashF
     generateHashcode(x)
   }
 
+  override def generateProbes(v: Array[Float]): ArrayBuffer[Array[Int]] = {
 
+
+
+
+
+
+
+  }
 }

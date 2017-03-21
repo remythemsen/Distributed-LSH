@@ -31,14 +31,24 @@ class ProbeTable(f:() => HashFunction) {
     */
   def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
     // TODO dont use Array.hashCode
-    val key = hf(v)
-    this.table(util.Arrays.hashCode(key))
+//    val key = hf(v)
+//    this.table(util.Arrays.hashCode(key))
+
+    for {
+      p <- hf.generateProbes(v)
+      cands <- this.table(util.Arrays.hashCode(p))
+    } yield cands
   }
+
+
+
+
 
   def mpQuery(q:Array[Float], probingScheme:String, numOfProbes:Int) : ArrayBuffer[(Int, Array[Float])] = {
     // keys of buckets to be probed
     var bucketsToBeProbed = new ArrayBuffer[Int]
 
+    // TODO Move this out, it needs to be put on the table on launch
     probingScheme match {
       case "Hyperplane" =>
         val p = new HyperplaneScheme(hf(q))
