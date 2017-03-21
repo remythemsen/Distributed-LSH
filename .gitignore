@@ -1,0 +1,6 @@
+data
+out
+out/*
+data/*
+.idea/*
+target/*
