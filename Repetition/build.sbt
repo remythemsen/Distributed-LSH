@@ -28,14 +28,3 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.0",
   "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
-
-maintainer := "Remy Themsen <remt@itu.dk>"
-
-version in Docker := "1.0"
-
-dockerExposedPorts in Docker := Seq(2552)
-
-dockerRepository := Some("remeeh")
-
-dockerBaseImage := "java"
-enablePlugins(JavaAppPackaging)

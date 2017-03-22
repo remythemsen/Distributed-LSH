@@ -31,16 +31,11 @@ class ProbeTable(f:() => HashFunction) {
     */
   def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
     // TODO dont use Array.hashCode
-//    val key = hf(v)
-//    this.table(util.Arrays.hashCode(key))
-
     for {
       p <- hf.generateProbes(v)
       cands <- this.table(util.Arrays.hashCode(p))
     } yield cands
   }
-
-
 
 
 
