@@ -28,10 +28,10 @@ class Repetition(hashFunction: () => HashFunction, distance:Distance) extends Ac
       this.status = Ready
       sender ! Ready
 
-    case Query(vec, k, probingScheme, numOfProbes) =>
+    case Query(vec, k) =>
       // case query, look in internal table, and get top 30.
       sender ! { // TODO measure times, return to sender (
-        val candidates = this.table.mpQuery(vec, probingScheme, numOfProbes)
+        val candidates = this.table.query(vec)
         val cWithDistance = candidates.map(x => (x._1, distance.measure(x._2, vec)))
 
         // TODO Check correctness of k-1

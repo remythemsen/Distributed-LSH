@@ -61,6 +61,7 @@ case class Hyperplane(k: Int, rndf:() => Random, numOfDim: Int) extends HashFunc
     var i,j,c = 0
     while(i < k) {
       System.arraycopy(hashCode, 0, probes(c), 0, k) // Copies values from hashCode into existing array in probes
+      // TODO remove this assignment
       val OneStepProbe = probes(c)(i) = 1 - probes(c)(i) // efficient flip (here we permute)
 
       c = c+1 // c is updated to copy the reference into probes array index

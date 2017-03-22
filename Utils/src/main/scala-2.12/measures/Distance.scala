@@ -8,14 +8,13 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 // TODO Factor out into shared lib
 trait Distance {
-  def measure[A:Numeric](x:Array[A], y:Array[A])(implicit num:Numeric[A]) : Double
+  def measure(x:Array[Float], y:Array[Float]) : Float
 }
 
 object Euclidean extends Distance {
-  override def measure[A:Numeric](x: Array[A], y: Array[A])(implicit num: Numeric[A]): Double = {
-    require(x.length.equals(y.length))
+  override def measure(x: Array[Float], y: Array[Float]): Double = {
     Math.sqrt((x zip y).map {
-      case (a, b) => Math.pow(num.toDouble(num.minus(b, a)), 2)
+      case (a, b) => Math.pow(b - a, 2)
     }.sum)
   }
 }
