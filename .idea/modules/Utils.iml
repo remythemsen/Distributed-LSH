@@ -21,7 +21,7 @@
       <excludeFolder url="file://$MODULE_DIR$/../../Utils/target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../Utils/target/streams" />
     </content>
-    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.12.1:jar" level="project" />
   </component>
