@@ -14,7 +14,8 @@ case class Hyperplane(k: Int, rndf:() => Random, numOfDim: Int) extends HashFunc
   private val probes = new Array[Array[Int]]((k*k)/2) // Array of probes to be reused
 
   // TODO Change to use long
-  def apply(v: Array[Float], result:Array[Int]): Array[Int] = {
+  override def apply(v: Array[Float]): Array[Int] = {
+    val result = new Array[Int](k)
     // For performance, a while loop is used
     var i = 0
     while(i < k) {
@@ -57,7 +58,7 @@ case class Hyperplane(k: Int, rndf:() => Random, numOfDim: Int) extends HashFunc
 
   override def generateProbes(v: Array[Float]): Array[Array[Int]] = {
     // TODO update to long
-    val hashCode:Array[Int] = apply(v, new Array(k))
+    val hashCode:Array[Int] = apply(v)
     var i,j,c = 0
     while(i < k) {
       System.arraycopy(hashCode, 0, probes(c), 0, k) // Copies values from hashCode into existing array in probes

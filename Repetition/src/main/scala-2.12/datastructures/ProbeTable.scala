@@ -28,7 +28,7 @@ class ProbeTable(f:() => HashFunction) {
     * @param v a query point
     * @return a list of vectors with same key as v
     */
-  def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
+  def query(v:Array[Float]) : Array[(Int, Array[Float])] = {
     // TODO dont use Array.hashCode
     // TODO optimize
     for {

@@ -2,7 +2,7 @@ package actors
 
 import java.io.File
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import datastructures.ProbeTable
 import hashfunctions.HashFunction
 import io.Parser
@@ -11,23 +11,25 @@ import measures.Distance
 import messages._
 import tools.QuickSelect
 
+object Program extends App {
+  val system = ActorSystem("RepetitionSystem")
+  val repetition = system.actorOf(Props[Repetition], name = "Repetition")
+}
+
 class Repetition(hashFunction: () => HashFunction, distance:Distance) extends Actor {
 
-  private var status:Status = NotReady
   private var table:ProbeTable = _
 
   override def receive: Receive = {
     // TODO Move file parsing out of class
     case FillTable(buildFromFile, dimensions) =>
-      this.status = NotReady
       this.table = new ProbeTable(hashFunction)
       val parser = DisaParser(Parser.memMappedIterator(new File(buildFromFile)), dimensions)
       while (parser.hasNext) {
         this.table += parser.next
       }
 
-      this.status = Ready
-      sender ! Ready
+      sender ! true
 
     case Query(vec, k) =>
       // case query, look in internal table, and get top 30.

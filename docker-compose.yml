@@ -1,0 +1,7 @@
+version: '2'
+services:
+  repetition:
+    image: remeeh/repetition:1.0
+    volumes:
+     - ./data:/opt/docker/data
+

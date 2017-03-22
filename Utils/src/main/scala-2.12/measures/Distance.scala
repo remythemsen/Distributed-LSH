@@ -8,7 +8,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 // TODO Factor out into shared lib
 trait Distance {
-  def measure(x:Array[Float], y:Array[Float]) : Float
+  def measure(x:Array[Float], y:Array[Float]) : Double
 }
 
 object Euclidean extends Distance {

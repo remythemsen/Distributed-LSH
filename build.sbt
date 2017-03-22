@@ -13,9 +13,9 @@ libraryDependencies ++= Seq(
 
 lazy val DistributedLSH = project in file(".") dependsOn Repetition
 
-lazy val RecallTest = project in file("Recall Test") dependsOn Repetition
-
 lazy val Utils = project in file("Utils")
+
+lazy val RecallTest = project in file("Recall Test") dependsOn(DistributedLSH, Repetition, Utils)
 
 lazy val Repetition = project in file("Repetition") dependsOn Utils
 
