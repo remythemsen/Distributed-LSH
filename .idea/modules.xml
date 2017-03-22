@@ -4,6 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/DistributedLSH.iml" filepath="$PROJECT_DIR$/.idea/modules/DistributedLSH.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/DistributedLSH-build.iml" filepath="$PROJECT_DIR$/.idea/modules/DistributedLSH-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Recall Test/Recall Test.iml" filepath="$PROJECT_DIR$/Recall Test/Recall Test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/RecallTest.iml" filepath="$PROJECT_DIR$/.idea/modules/RecallTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/RecallTest-build.iml" filepath="$PROJECT_DIR$/.idea/modules/RecallTest-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Repetition.iml" filepath="$PROJECT_DIR$/.idea/modules/Repetition.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Repetition-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Repetition-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Utils.iml" filepath="$PROJECT_DIR$/.idea/modules/Utils.iml" />

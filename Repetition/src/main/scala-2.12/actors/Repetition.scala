@@ -1,7 +1,8 @@
 package actors
 
 import java.io.File
-import akka.actor.Actor
+
+import akka.actor.{Actor, ActorRef}
 import datastructures.ProbeTable
 import hashfunctions.HashFunction
 import io.Parser
@@ -40,7 +41,8 @@ class Repetition(hashFunction: () => HashFunction, distance:Distance) extends Ac
           else k-1
         })._2
 
-        sender ! QueryResult(cWithDistance.filter(x => x._2 <= kthDist), candidates.size)
+        // TODO Make sure we dont send arraybuffer
+        sender ! cWithDistance.filter(x => x._2 <= kthDist)
 
       }
 

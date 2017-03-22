@@ -1,8 +1,7 @@
 package datastructures
 
 import java.util
-import hashfunctions.{CrossPolytope, HashFunction}
-import multiprobing.{CrossPolytopeScheme, HyperplaneScheme}
+import hashfunctions.{HashFunction}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
