@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="RecallTest" external.linked.project.path="$MODULE_DIR$/../../Recall Test" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../../Recall Test/target/scala-2.12/classes" />
-    <output-test url="file://$MODULE_DIR$/../../Recall Test/target/scala-2.12/test-classes" />
+<module external.linked.project.id="RecallTest" external.linked.project.path="$MODULE_DIR$/../../RecallTest" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
+    <output url="file://$MODULE_DIR$/../../RecallTest/target/scala-2.12/classes" />
+    <output-test url="file://$MODULE_DIR$/../../RecallTest/target/scala-2.12/test-classes" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../Recall Test">
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/main/scala" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/main/scala-2.12" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/target/scala-2.12/src_managed/main" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/test/java" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/test/scala" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/test/scala-2.12" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/target/scala-2.12/src_managed/test" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/main/resources" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/target/scala-2.12/resource_managed/main" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/src/test/resources" type="java-test-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../Recall Test/target/scala-2.12/resource_managed/test" type="java-test-resource" />
-      <excludeFolder url="file://$MODULE_DIR$/../../Recall Test/target" />
-      <excludeFolder url="file://$MODULE_DIR$/../../Recall Test/target/resolution-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/../../Recall Test/target/streams" />
+    <content url="file://$MODULE_DIR$/../../RecallTest">
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/main/scala" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/main/scala-2.12" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/target/scala-2.12/src_managed/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/test/scala" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/test/scala-2.12" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/target/scala-2.12/src_managed/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/target/scala-2.12/resource_managed/main" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/src/test/resources" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../RecallTest/target/scala-2.12/resource_managed/test" type="java-test-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/../../RecallTest/target" />
+      <excludeFolder url="file://$MODULE_DIR$/../../RecallTest/target/docker" />
+      <excludeFolder url="file://$MODULE_DIR$/../../RecallTest/target/resolution-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/../../RecallTest/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../RecallTest/target/universal" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

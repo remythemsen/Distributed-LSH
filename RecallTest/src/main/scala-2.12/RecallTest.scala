@@ -1,4 +1,3 @@
-import actors.Repetition
 import akka.actor.ActorSystem
 import hashfunctions.Hyperplane
 import lsh.LSHStructure
@@ -19,16 +18,22 @@ object RecallTest extends App {
   val systemName = "akka.tcp://"+repSystemName+"@"
   val actorPath = "/user/Repetition"
 
-  val repetitions = for {
+  val repetitionAddresses = for {
     ip <- ips
-    tableHandlerAddress <- {
+    repetitionAddress <- {
       Array(systemName+ip+":"+repPort+actorPath)
     }
-  } yield tableHandlerAddress
+  } yield repetitionAddress
 
+  val system = ActorSystem("RecallTestSystem")
+
+  val lsh = new LSHStructure(for {
+    address <- repetitionAddresses
+    repetition <- Seq(system.actorSelection(address))
+  } yield repetition)
 
   val rnd = new Random(System.currentTimeMillis())
 
-  //val lsh = new LSHStructure(repetitions, () => Hyperplane(12, () => new Random(rnd.nextLong), 128),Euclidean)
+  lsh.build("data/", () => Hyperplane(12, () => new Random(rnd.nextLong), 128),128,Euclidean)
 
 }

@@ -1,6 +1,6 @@
 package lsh
 
-import messages.{FillTable, Query}
+import messages.{InitRepetition, Query}
 
 import scala.concurrent.{Await, Future}
 import akka.actor._
@@ -8,6 +8,8 @@ import akka.util.Timeout
 
 import scala.concurrent.duration._
 import akka.pattern.ask
+import hashfunctions.HashFunction
+import measures.Distance
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -17,19 +19,18 @@ import scala.collection.mutable.ArrayBuffer
   * stored in its internal hashmaps
   */
 
-class LSHStructure[A](repetitions:Array[ActorRef]) {
+class LSHStructure(repetitions:Array[ActorSelection]) {
 
   /**
     * When Initializing LSH with a set of repetitions
     * Each repetition is reset, and rebuilt
     */
 
-  build // builds the tables
-
   // TODO Change content in messages between nodes to be simple arrays instead of objects
   val resultSets:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length) // TODO Cannot use array in .sequence method, ... consider another method.
   val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
   implicit val timeout = Timeout(10.seconds)
+
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def query(qp:Array[Float], k:Int) : ArrayBuffer[Int] = {
@@ -46,10 +47,10 @@ class LSHStructure[A](repetitions:Array[ActorRef]) {
     res.sortBy(x => x._2).take(k).map(x => x._1)
   }
 
-  def build : Unit = {
+  def build(filePath:String, hf: () => HashFunction, dimensions:Int, simMeasure:Distance) : Unit = {
     var i = 0
     while(i < repetitions.length) {
-      statuses(i) = repetitions(i) ? FillTable
+      statuses(i) = repetitions(i) ? InitRepetition(filePath, hf, dimensions, simMeasure)
       i += 1
     }
 

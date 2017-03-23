@@ -39,3 +39,4 @@ dockerRepository := Some("remeeh")
 
 dockerBaseImage := "java"
 enablePlugins(JavaAppPackaging)
+

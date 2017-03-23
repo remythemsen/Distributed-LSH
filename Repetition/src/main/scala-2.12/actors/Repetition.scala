@@ -16,14 +16,16 @@ object Program extends App {
   val repetition = system.actorOf(Props[Repetition], name = "Repetition")
 }
 
-class Repetition(hashFunction: () => HashFunction, distance:Distance) extends Actor {
+class Repetition extends Actor {
 
   private var table:ProbeTable = _
+  private var simMeasure:Distance = _
 
   override def receive: Receive = {
-    // TODO Move file parsing out of class
-    case FillTable(buildFromFile, dimensions) =>
+    // Setting or resetting a repetition
+    case InitRepetition(buildFromFile, hashFunction, dimensions, distance) =>
       this.table = new ProbeTable(hashFunction)
+      this.simMeasure = distance
       val parser = DisaParser(Parser.memMappedIterator(new File(buildFromFile)), dimensions)
       while (parser.hasNext) {
         this.table += parser.next
@@ -35,7 +37,7 @@ class Repetition(hashFunction: () => HashFunction, distance:Distance) extends Ac
       // case query, look in internal table, and get top 30.
       sender ! { // TODO measure times, return to sender (
         val candidates = this.table.query(vec)
-        val cWithDistance = candidates.map(x => (x._1, distance.measure(x._2, vec)))
+        val cWithDistance = candidates.map(x => (x._1, this.simMeasure.measure(x._2, vec)))
 
         // TODO Check correctness of k-1
         val kthDist = QuickSelect.quickSelect(cWithDistance, {
