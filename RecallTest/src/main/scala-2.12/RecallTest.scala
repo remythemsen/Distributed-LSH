@@ -1,8 +1,13 @@
+import java.io.File
+
 import akka.actor.ActorSystem
 import hashfunctions.Hyperplane
+import io.Parser
+import io.Parser.DisaParser
 import lsh.LSHStructure
 import measures.Euclidean
 
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
 
@@ -34,6 +39,14 @@ object RecallTest extends App {
 
   val rnd = new Random(System.currentTimeMillis())
 
-  lsh.build("data/", () => Hyperplane(12, () => new Random(rnd.nextLong), 128),128,Euclidean)
+  if(lsh.build("data/descriptors-40000-reduced-128.data", "Hyperplane", 12, 128,Euclidean, rnd.nextLong())) {
+    println("Structure Was built!")
+    val queryPoints = DisaParser(Source.fromFile(new File("data/descriptors-40000-reduced-128.queries")).getLines(), 128).toArray
+
+    for(qp <- queryPoints) {
+      val result:ArrayBuffer[Int] = lsh.query(qp._2, 10)
+      println("query done")
+    }
+  }
 
 }

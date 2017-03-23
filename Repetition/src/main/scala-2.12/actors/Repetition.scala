@@ -4,12 +4,14 @@ import java.io.File
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import datastructures.ProbeTable
-import hashfunctions.HashFunction
+import hashfunctions.{HashFunction, Hyperplane}
 import io.Parser
 import io.Parser.DisaParser
 import measures.Distance
 import messages._
 import tools.QuickSelect
+
+import scala.io.Source
 
 object Program extends App {
   val system = ActorSystem("RepetitionSystem")
@@ -23,12 +25,19 @@ class Repetition extends Actor {
 
   override def receive: Receive = {
     // Setting or resetting a repetition
-    case InitRepetition(buildFromFile, hashFunction, dimensions, distance) =>
-      this.table = new ProbeTable(hashFunction)
+    case InitRepetition(buildFromFile, hashFunction, functions, dimensions, distance, seed) =>
+      this.table = new ProbeTable({
+        hashFunction.toLowerCase() match {
+          case "hyperplane" => new Hyperplane(functions, seed, dimensions)
+        }
+      })
       this.simMeasure = distance
-      val parser = DisaParser(Parser.memMappedIterator(new File(buildFromFile)), dimensions)
+      val parser = DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
+      var c = 0
       while (parser.hasNext) {
+        println(c * 100 / 39290)
         this.table += parser.next
+        c+=1
       }
 
       sender ! true

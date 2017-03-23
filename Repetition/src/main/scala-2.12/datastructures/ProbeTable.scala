@@ -5,11 +5,11 @@ import hashfunctions.{HashFunction}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class ProbeTable(f:() => HashFunction) {
+class ProbeTable(hashFunction: HashFunction) {
   private val table = new mutable.HashMap[Int, ArrayBuffer[(Int, Array[Float])]]()
 
   // internal Hash function
-  private val hf = f()
+  private val hf = hashFunction
 
   /**
     * Insert vector
@@ -28,13 +28,17 @@ class ProbeTable(f:() => HashFunction) {
     * @param v a query point
     * @return a list of vectors with same key as v
     */
-  def query(v:Array[Float]) : Array[(Int, Array[Float])] = {
+  def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
     // TODO dont use Array.hashCode
     // TODO optimize
-    for {
-      p <- hf.generateProbes(v)
-      cands <- this.table(util.Arrays.hashCode(p))
-    } yield cands
+    val results = new ArrayBuffer[(Int, Array[Float])]
+    val probes = hf.generateProbes(v)
+    var i = 0
+    while(i < probes.length) {
+      results ++= this.table.getOrElse(util.Arrays.hashCode(probes(i)), ArrayBuffer())
+      i+=1
+    }
+    results
   }
 }
 

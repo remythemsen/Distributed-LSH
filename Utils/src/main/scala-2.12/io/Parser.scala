@@ -2,6 +2,10 @@ package io
 
 import java.io.{File, InputStream}
 
+import io.Parser.DisaParser
+
+import scala.io.Source
+
 object Parser {
   type Descriptor = (Int, Array[Float])
 
@@ -23,6 +27,7 @@ object Parser {
   /*
   * Useful mem mapped iterator
   */
+  // Will not work if file is > 2GB
   def memMappedIterator(file:File): Iterator[String] = {
     import java.io.FileInputStream
     import java.nio.ByteOrder.LITTLE_ENDIAN
@@ -54,4 +59,7 @@ object Parser {
     }
     go(s.indexOf(' ', 0), 0, 0, new Array[Float](l))
   }
+}
+object Program extends App {
+  DisaParser(Source.fromFile(new File("data/descriptors-1-million-reduced-128.data")).getLines, 128)
 }

@@ -1,17 +1,26 @@
 package hashfunctions
 
 import measures.Distance
-import scala.util.Random
 
-case class Hyperplane(k: Int, rndf:() => Random, numOfDim: Int) extends HashFunction {
-  private val rnd:Random = rndf()
+import scala.util.Random
+;
+
+case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
+  private val rnd:Random = new Random(seed)
   private val numberOfDimensions:Int = numOfDim
   private val hyperPlanes = for {
     _ <- (0 until k).toArray
     hp <- Array(generateRandomV(numberOfDimensions))
   } yield hp
 
-  private val probes = new Array[Array[Int]]((k*k)/2) // Array of probes to be reused
+  private val probes:Array[Array[Int]] = {
+    val a = new Array[Array[Int]]((k*(k+1)/2)+1) // Array of probes to be reused
+    for(i <- 0 until a.length) {
+      a(i) =  new Array[Int](k)
+    }
+    a
+  }
+
 
   // TODO Change to use long
   override def apply(v: Array[Float]): Array[Int] = {
@@ -59,11 +68,19 @@ case class Hyperplane(k: Int, rndf:() => Random, numOfDim: Int) extends HashFunc
   override def generateProbes(v: Array[Float]): Array[Array[Int]] = {
     // TODO update to long
     val hashCode:Array[Int] = apply(v)
+
     var i,j,c = 0
+
+    // Insert query element
+    System.arraycopy(hashCode, 0, probes(c), 0, k)
+    c+=1
+
+    // Generate buckets
     while(i < k) {
       System.arraycopy(hashCode, 0, probes(c), 0, k) // Copies values from hashCode into existing array in probes
       // TODO remove this assignment
-      val OneStepProbe = probes(c)(i) = 1 - probes(c)(i) // efficient flip (here we permute)
+      probes(c)(i) = 1 - probes(c)(i)// efficient flip (here we permute)
+      val OneStepProbe = probes(c)
 
       c = c+1 // c is updated to copy the reference into probes array index
       j = i+1

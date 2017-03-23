@@ -1,7 +1,19 @@
 version: '2'
 services:
-  repetition:
+  repetition1:
     image: remeeh/repetition:1.0
     volumes:
      - ./data:/opt/docker/data
 
+  repetition2:
+    image: remeeh/repetition:1.0
+    volumes:
+     - ./data:/opt/docker/data
+
+  recalltest:
+    volumes:
+     - ./data:/opt/docker/data
+    image: remeeh/recalltest:1.0
+    links:
+    - repetition1:repetition1
+    - repetition2:repetition2
