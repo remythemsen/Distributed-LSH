@@ -9,6 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/MicroBenchmark" />
+            <option value="$PROJECT_DIR$/MicroBenchmark/project" />
             <option value="$PROJECT_DIR$/RecallTest" />
             <option value="$PROJECT_DIR$/RecallTest/project" />
             <option value="$PROJECT_DIR$/Repetition" />

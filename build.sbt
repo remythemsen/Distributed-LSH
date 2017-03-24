@@ -17,5 +17,7 @@ lazy val Utils = project in file("Utils")
 
 lazy val RecallTest = project in file("RecallTest") dependsOn(DistributedLSH, Repetition, Utils)
 
+lazy val MicroBenchmark = project in file("MicroBenchmark") dependsOn(DistributedLSH, Repetition, Utils) enablePlugins JmhPlugin
+
 lazy val Repetition = project in file("Repetition") dependsOn Utils
 
