@@ -1,26 +1,18 @@
 package benchmark
 
-/**
-  * Created by remeeh on 24-03-2017.
-  */
 import java.util.concurrent.TimeUnit
 
 import datastructures.ProbeTable
 import hashfunctions.Hyperplane
-import org.openjdk.jmh.annotations._
+import org.openjdk.jmh.annotations.{OutputTimeUnit, _}
 import org.openjdk.jmh.infra.Blackhole
-import org.openjdk.jmh.runner.Runner
-import org.openjdk.jmh.runner.RunnerException
-import org.openjdk.jmh.runner.options.Options
-import org.openjdk.jmh.runner.options.OptionsBuilder
-import org.openjdk.jmh.annotations.OutputTimeUnit
 
 import scala.util.Random
-@BenchmarkMode(Array(Mode.AverageTime))
+
+@BenchmarkMode(Array(Mode.Throughput))
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Thread)
-class HyperplaneQuery {
-
+class ProbeTableQuery {
   @Param(Array("128"))
   var dimensions:Int = 0
 
