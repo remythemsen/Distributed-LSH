@@ -18,26 +18,25 @@ import org.openjdk.jmh.annotations.OutputTimeUnit
 import scala.util.Random
 @BenchmarkMode(Array(Mode.AverageTime))
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@State(Scope.Benchmark)
+@State(Scope.Thread)
 class HyperplaneQuery {
 
   @Param(Array("128"))
   var dimensions:Int = 0
 
-  @Param(Array("128"))
+  @Param(Array("8,16,24"))
   var k:Int = 0
 
   @Param(Array("10000", "100000"))
   var probetablesize:Int = 0
 
   var rnd:Random = new Random
-  var vector:Array[Float] = Array()
   var vectors:Array[(Int, Array[Float])] = new Array(probetablesize)
   var hp:Hyperplane = new Hyperplane(k, rnd.nextLong(), dimensions)
   var probeTable = new ProbeTable(hp)
-  var rndId = 0
+  var rndVector = Array(0f)
 
-  @Setup
+  @Setup(Level.Invocation)
   def setup(): Unit = {
     rnd = new Random(System.currentTimeMillis())
 
@@ -53,12 +52,16 @@ class HyperplaneQuery {
       probeTable += v
     }
 
-    rndId = rnd.nextInt(vectors.length)
+  }
+
+  @Setup(Level.Invocation)
+  def pickRndVectorKey(): Unit = {
+    rndVector = vectors(rnd.nextInt(vectors.length))._2
   }
 
   // Remember to read from variable, and consume result by blackhole (avoid dead code eli)
   @Benchmark
-  def query(bh:Blackhole, rndId:Int):Unit = {
-    bh.consume(probeTable.query(vectors(rndId)._2))
+  def query(bh:Blackhole):Unit = {
+    bh.consume(probeTable.query(rndVector))
   }
 }
