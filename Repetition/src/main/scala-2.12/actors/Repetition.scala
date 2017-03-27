@@ -11,6 +11,7 @@ import measures.Distance
 import messages._
 import tools.QuickSelect
 
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 object Program extends App {
@@ -46,7 +47,7 @@ class Repetition extends Actor {
       // case query, look in internal table, and get top 30.
       sender ! { // TODO measure times, return to sender (
         val candidates = this.table.query(vec)
-        val cWithDistance = candidates.map(x => (x._1, this.simMeasure.measure(x._2, vec)))
+        val cWithDistance:ArrayBuffer[(Int, Double)] = candidates.map(x => (x._1, this.simMeasure.measure(x._2, vec)))
 
         // TODO Check correctness of k-1
         val kthDist = QuickSelect.quickSelect(cWithDistance, {

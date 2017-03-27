@@ -4,6 +4,7 @@ import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -17,18 +18,31 @@ class QuickSelect {
   var n:Int = 0
 
   var rnd:Random = new Random(System.currentTimeMillis())
-  var candSet:Array[(Int, Double)] = Array()
+  var candSet:ArrayBuffer[(Int, Double)] = ArrayBuffer()
+  var arrCandSet:Array[Double] = Array()
   var qsRnd = new Random
 
   @Setup(Level.Invocation)
   def genCandSet(): Unit = {
-    candSet = Array.fill(n)(rnd.nextDouble).map(x => (rnd.nextInt(2000000), x))
+    candSet = ArrayBuffer.fill(n)(rnd.nextDouble).map(x => (rnd.nextInt(2000000), x))
+    arrCandSet = candSet.toArray.map(x => x._2)
     qsRnd = new Random(rnd.nextLong)
   }
 
   @Benchmark
-  def tupleWithDouble(bh:Blackhole) : Unit = {
+  // TODO Quickselect i generic, (Which involves boxing!!) @specialized or change
+  def genericQSArrayBufferTuple(bh:Blackhole) : Unit = {
     bh.consume(tools.QuickSelect.quickSelect(candSet, n, qsRnd))
+  }
+
+  @Benchmark
+  def specializedQSArrayBufferTuple(bh:Blackhole) : Unit = {
+    bh.consume(tools.SQuickSelect.quickSelect(candSet, n, qsRnd))
+  }
+
+  @Benchmark
+  def specializedQSArraySingle(bh:Blackhole) : Unit = {
+    bh.consume(tools.SSQuickSelect.quickSelect(arrCandSet, n, qsRnd))
   }
 
 }
