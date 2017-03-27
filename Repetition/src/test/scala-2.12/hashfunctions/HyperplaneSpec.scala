@@ -19,7 +19,7 @@ class HyperplaneSpec extends FlatSpec with Matchers {
     val rnd = new Random(System.currentTimeMillis())
     val hp = new Hyperplane(10, rnd.nextLong(), 128)
     val vec = Array.fill[Float](128)(rnd.nextFloat)
-    val pbs = hp.generateProbes(vec)
+    val pbs = hp.generateProbes(hp(vec))
     assert(pbs.getClass == new Array[Array[Int]](6).getClass)
   }
 

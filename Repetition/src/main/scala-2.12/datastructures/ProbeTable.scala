@@ -1,7 +1,9 @@
 package datastructures
 
 import java.util
-import hashfunctions.{HashFunction}
+
+import hashfunctions.{HashFunction, Hyperplane}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -32,7 +34,7 @@ class ProbeTable(hashFunction: HashFunction) {
     // TODO dont use Array.hashCode
     // TODO optimize
     val results = new ArrayBuffer[(Int, Array[Float])]
-    val probes = hf.generateProbes(v)
+    val probes = hf.generateProbes(hf(v))
     var i = 0
     while(i < probes.length) {
       results ++= this.table.getOrElse(util.Arrays.hashCode(probes(i)), ArrayBuffer())

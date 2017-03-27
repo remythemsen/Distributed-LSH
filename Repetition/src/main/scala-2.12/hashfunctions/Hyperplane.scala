@@ -61,13 +61,12 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     * 2-step multiprobe scheme
     * Generates a set of keys from a vector
     *
-    * @param v
+    * @param hashCode
     * @return
     */
 
-  override def generateProbes(v: Array[Float]): Array[Array[Int]] = {
+  override def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
     // TODO update to long
-    val hashCode:Array[Int] = apply(v)
 
     var i,j,c = 0
 
