@@ -19,13 +19,15 @@ class QuickSelect {
 
   var rnd:Random = new Random(System.currentTimeMillis())
   var candSet:ArrayBuffer[(Int, Double)] = ArrayBuffer()
-  var arrCandSet:Array[Double] = Array()
+  var arrCandSet:Array[(Int, Double)] = Array()
+  var arrCandSetSingle:Array[Double] = Array()
   var qsRnd = new Random
 
   @Setup(Level.Invocation)
   def genCandSet(): Unit = {
     candSet = ArrayBuffer.fill(n)(rnd.nextDouble).map(x => (rnd.nextInt(2000000), x))
-    arrCandSet = candSet.toArray.map(x => x._2)
+    arrCandSet = candSet.toArray
+    arrCandSetSingle = candSet.toArray.map(x => x._2)
     qsRnd = new Random(rnd.nextLong)
   }
 
@@ -36,12 +38,12 @@ class QuickSelect {
 
   @Benchmark
   def specializedQSArrayBufferTuple(bh:Blackhole) : Unit = {
-    bh.consume(tools.SQuickSelect.quickSelect(candSet, n, qsRnd))
+    bh.consume(tools.SQuickSelect.quickSelect(arrCandSet, n, qsRnd))
   }
 
   @Benchmark
   def specializedQSArraySingle(bh:Blackhole) : Unit = {
-    bh.consume(tools.SSQuickSelect.quickSelect(arrCandSet, n, qsRnd))
+    bh.consume(tools.SSQuickSelect.quickSelect(arrCandSetSingle, n, qsRnd))
   }
 
 }

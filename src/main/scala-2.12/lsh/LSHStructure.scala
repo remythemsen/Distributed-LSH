@@ -33,7 +33,11 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
+
   def query(qp:Array[Float], k:Int) : ArrayBuffer[Int] = {
+    // TODO we know that size of resultSet is at most k*Repetitions, is it somehow possible to move it out of query
+    val concatenatedResultSet:Array[Int] = new Array[Int](k*repetitions.length)
+
     // for each rep, send query, wait for result from all. return set
     var i = 0
     while(i < repetitions.length) {
@@ -41,9 +45,11 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
       i += 1
     }
 
+    // TODO check if efficient await over futures is possible combining following applications to result set
+
     // Wait for all results to return
     // TODO Future sequence is a linear cost
-    val res = Await.result(Future.sequence(resultSets), timeout.duration).asInstanceOf[ArrayBuffer[ArrayBuffer[(Int, Double)]]]
+    val res = Await.result(Future.sequence(resultSets), timeout.duration).asInstanceOf[ArrayBuffer[Array[(Int, Double)]]]
 
     res.flatten.sortBy(x => x._2).take(k).map(x => x._1)
   }

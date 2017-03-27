@@ -8,7 +8,7 @@ import scala.util.Random
   */
 
 object SQuickSelect {
-  def quickSelect(array: ArrayBuffer[(Int, Double)], n: Int, rand: Random = new Random): Double = {
+  def quickSelect(array: Array[(Int, Double)], n: Int, rand: Random = new Random): Double = {
     val pivot = rand.nextInt(array.length)
     val (left, right) = array.partition(x => x._2 < array(pivot)._2)
     if (left.length == n) {

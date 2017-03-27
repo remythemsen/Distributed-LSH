@@ -1,9 +1,6 @@
 package datastructures
 
-import java.util
-
 import hashfunctions.HashFunction
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -31,12 +28,12 @@ class ProbeTableLongMap(hashFunction: HashFunction) {
     * @return a list of vectors with same key as v
     */
   def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
-    // TODO dont use Array.hashCode
     // TODO optimize
     val results = new ArrayBuffer[(Int, Array[Float])]
     val probes = hf.generateProbes(hf(v))
     var i = 0
     while(i < probes.length) {
+      // TODO Is getOrElse fast enough, and we are appending arrays
       results ++= this.table.getOrElse(toLong(probes(i)), ArrayBuffer())
       i+=1
     }
