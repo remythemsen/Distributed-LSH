@@ -36,7 +36,7 @@ class Repetition extends Actor {
       val parser = DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
       var c = 0
       while (parser.hasNext) {
-        println(c * 100 / 39290)
+        println(c * 100 / 39290) // TODO Remove this!!!
         this.table += parser.next
         c+=1
       }
@@ -55,7 +55,7 @@ class Repetition extends Actor {
           else k-1
         })._2
 
-        // TODO Make sure we dont send arraybuffer
+        // TODO Make sure we dont send arraybuffer over the network
         sender ! cWithDistance.filter(x => x._2 <= kthDist)
 
       }

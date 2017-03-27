@@ -3,7 +3,6 @@ package hashfunctions
 import measures.Distance
 
 import scala.util.Random
-;
 
 case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   private val rnd:Random = new Random(seed)
@@ -35,14 +34,15 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   }
 
   // TODO Change this into Breeze dotproduct
+  // TODO Remove the branch if possible
   private def hash(v: Array[Float], randomV: Array[Float]): Int = {
-    // TODO Done use parallel for this dot p
-    if (Distance.parDotProduct(v, randomV) > 0) 1 else 0
+    if (Distance.dotProduct(v, randomV) > 0) 1 else 0
   }
 
   /**
     * Generates random hyperplane, speed here is not essential
     * Since these are computed in the preprocessing step
+    * However length (size) May have an effect
     * @param size
     * @return random hyperplane
     */
@@ -66,7 +66,6 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     */
 
   override def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
-    // TODO update to long
 
     var i,j,c = 0
 
@@ -77,7 +76,7 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     // Generate buckets
     while(i < k) {
       System.arraycopy(hashCode, 0, probes(c), 0, k) // Copies values from hashCode into existing array in probes
-      // TODO remove this assignment
+      // TODO remove this assignment if possible
       probes(c)(i) = 1 - probes(c)(i)// efficient flip (here we permute)
       val OneStepProbe = probes(c)
 

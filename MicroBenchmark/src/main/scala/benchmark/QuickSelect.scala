@@ -30,7 +30,6 @@ class QuickSelect {
   }
 
   @Benchmark
-  // TODO Quickselect i generic, (Which involves boxing!!) @specialized or change
   def genericQSArrayBufferTuple(bh:Blackhole) : Unit = {
     bh.consume(tools.QuickSelect.quickSelect(candSet, n, qsRnd))
   }

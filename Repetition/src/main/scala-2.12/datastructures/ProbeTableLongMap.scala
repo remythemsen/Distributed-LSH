@@ -2,13 +2,13 @@ package datastructures
 
 import java.util
 
-import hashfunctions.{HashFunction, Hyperplane}
+import hashfunctions.HashFunction
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class ProbeTable(hashFunction: HashFunction) {
-  private val table = new mutable.HashMap[Int, ArrayBuffer[(Int, Array[Float])]]()
+class ProbeTableLongMap(hashFunction: HashFunction) {
+  private val table = new mutable.LongMap[ArrayBuffer[(Int, Array[Float])]]()
 
   // internal Hash function
   private val hf = hashFunction
@@ -18,7 +18,7 @@ class ProbeTable(hashFunction: HashFunction) {
     * @param v vector to be inserted into internal hashmap
     */
   def +=(v:(Int, Array[Float])) : Unit = {
-    val key = util.Arrays.hashCode(hf(v._2))
+    val key = toLong(hf(v._2))
     val value = {
       if(this.table.contains(key)) this.table(key)++ArrayBuffer(v)
       else ArrayBuffer(v)
@@ -32,16 +32,26 @@ class ProbeTable(hashFunction: HashFunction) {
     */
   def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
     // TODO dont use Array.hashCode
-    // TODO dont append arrays!
     // TODO optimize
     val results = new ArrayBuffer[(Int, Array[Float])]
     val probes = hf.generateProbes(hf(v))
     var i = 0
     while(i < probes.length) {
-      results ++= this.table.getOrElse(util.Arrays.hashCode(probes(i)), ArrayBuffer())
+      results ++= this.table.getOrElse(toLong(probes(i)), ArrayBuffer())
       i+=1
     }
     results
+  }
+
+  def toLong(key:Array[Int]):Long = {
+    var i = 0
+    var long = 0
+    while(i < key.length) {
+      long += key(i)
+      long = long << 1
+      i+=1
+    }
+    long
   }
 }
 

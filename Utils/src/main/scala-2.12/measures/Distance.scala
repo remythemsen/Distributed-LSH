@@ -20,6 +20,16 @@ object Euclidean extends Distance {
 }
 
 object Distance {
+  def dotProduct(x:Array[Float], y:Array[Float]) : Float = {
+    var i = 0
+    var res:Float = 0f
+    while(i < x.length) {
+      res += x(i) * y(i)
+      i+=1
+    }
+    res
+  }
+
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(8))
   def parDotProduct[A:Fractional](x: Array[A], y: Array[A])(implicit num:Numeric[A]): Double = {
     val p = 2

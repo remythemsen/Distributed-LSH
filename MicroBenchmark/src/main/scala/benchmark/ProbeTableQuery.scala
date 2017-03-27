@@ -2,7 +2,7 @@ package benchmark
 
 import java.util.concurrent.TimeUnit
 
-import datastructures.ProbeTable
+import datastructures.{ProbeTable, ProbeTableLongMap}
 import hashfunctions.Hyperplane
 import org.openjdk.jmh.annotations.{OutputTimeUnit, _}
 import org.openjdk.jmh.infra.Blackhole
@@ -16,19 +16,20 @@ class ProbeTableQuery {
   @Param(Array("128"))
   var dimensions:Int = 0
 
-  @Param(Array("8","16","24"))
+  @Param(Array("16","24"))
   var k:Int = 0
 
-  @Param(Array("10000", "100000"))
+  @Param(Array("100000"))
   var probetablesize:Int = 0
 
   var rnd:Random = new Random
   var vectors:Array[(Int, Array[Float])] = new Array(probetablesize)
   var hp:Hyperplane = new Hyperplane(k, rnd.nextLong(), dimensions)
   var probeTable = new ProbeTable(hp)
+  var longMapProbeTable = new ProbeTableLongMap(hp)
   var rndVector = Array(0f)
 
-  @Setup(Level.Invocation)
+  @Setup(Level.Trial)
   def setup(): Unit = {
     rnd = new Random(System.currentTimeMillis())
 
@@ -38,10 +39,14 @@ class ProbeTableQuery {
     }
 
     hp = new Hyperplane(k, rnd.nextLong(), dimensions)
+
     probeTable = new ProbeTable(hp)
+
+    longMapProbeTable = new ProbeTableLongMap(hp)
 
     for(v <- vectors) {
       probeTable += v
+      longMapProbeTable += v
     }
 
   }
@@ -55,5 +60,10 @@ class ProbeTableQuery {
   @Benchmark
   def query(bh:Blackhole):Unit = {
     bh.consume(probeTable.query(rndVector))
+  }
+
+  @Benchmark
+  def queryLongMap(bh:Blackhole):Unit = {
+    bh.consume(longMapProbeTable.query(rndVector))
   }
 }
