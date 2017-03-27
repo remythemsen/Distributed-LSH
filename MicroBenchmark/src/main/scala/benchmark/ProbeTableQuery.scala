@@ -16,7 +16,7 @@ class ProbeTableQuery {
   @Param(Array("128"))
   var dimensions:Int = 0
 
-  @Param(Array("8,16,24"))
+  @Param(Array("8","16","24"))
   var k:Int = 0
 
   @Param(Array("10000", "100000"))
