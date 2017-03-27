@@ -6,6 +6,8 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
+// TODO This needs to be optimized and tested
+
 case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   // Initialization
   private val rnd:Random = new Random(seed)
@@ -119,14 +121,26 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
   private implicit object Ord extends Ordering[(IndexedSeq[Int],Float)] {
     def compare(x:(IndexedSeq[Int],Float), y:(IndexedSeq[Int],Float)):Int = y._2.compare(x._2)
   }
-  private var pq:mutable.PriorityQueue[(IndexedSeq[Int], Float)] = _
+
+  private var pq:mutable.PriorityQueue[(IndexedSeq[Int], Float)] = new mutable.PriorityQueue[(IndexedSeq[Int], Float)]()
 
 
+  // M = # of rotations (functions)
+  private val M = rotations.length
+
+  // pairsLists = lists of pairs of distances and indices to the max value, for each CP
+  private val pairsLists = new Array[Array[(Float,Int)]](M)
 
   override def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
-    // TODO update to long
+    // TODO Find amount
+    val numOfProbes = 150
 
-    val T = setsList.length
+    // TODO update to long
+    val pertSetList = generateSets(numOfProbes)
+
+    // listBuckets = list of probing buckets
+
+    val T = pertSetList.length
     val listOfProbingBuckets = new ArrayBuffer[Array[Int]](T)
     for(i<-0 until T){
       val probingBucket = new Array[Int](M)
@@ -135,13 +149,13 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
         val listOfPairs = pairsLists(j)
 
         // retrieve the corresponding pair
-        val pair = listOfPairs(setsList(i)(j))
+        val pair = listOfPairs(pertSetList(i)(j))
 
         // get the index of the next closest point to the query
         val indexInVector = pair._2
 
         // compute the hash values of the probing bucket
-        if(listRotations(j)(indexInVector) < 0){
+        if(rotations(j)(indexInVector) < 0){
           probingBucket(j) = 2 * indexInVector - 2
         } else {
           probingBucket(j) = 2 * indexInVector - 1
@@ -149,6 +163,78 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
       }
       listOfProbingBuckets += probingBucket
     }
-    listOfProbingBuckets
+    listOfProbingBuckets.toArray
+  }
+
+  private def generateSets(Tsize:Int):Array[IndexedSeq[Int]]={
+
+    def score(a: IndexedSeq[Int]): Float = {
+      // returns the score of a perturbation set
+      var score=0.0f
+
+      for(i<- a.indices) {
+        val curList = pairsLists(i)
+        val pair = curList(a(i))
+        val dist = pair._1
+        score += dist*dist
+      }
+      score
+    }
+
+    def shift(A: IndexedSeq[Int]): IndexedSeq[Int] = {
+      // replaces last element of A by 1 + the element's value
+      val index = A.size-1
+      val newVal = A(index)+1
+      val B = A.updated(index, newVal)
+      B
+    }
+
+    def expand(A: IndexedSeq[Int]): IndexedSeq[Int] = {
+      // adds the last element + 1 to the set
+      val B = A:+0
+      B
+    }
+
+    val setsList = new Array[IndexedSeq[Int]](Tsize)
+
+    // initialize the heap with the element 0, with the score of 0
+    pq.enqueue((IndexedSeq(0),0.0f))
+
+    // i counts the number of sets that are added to the setsList
+    var i = 0
+    var done = false
+
+    do{
+      // extract the element of minimum score from the heap
+      val ps = pq.dequeue()._1
+
+      // when perturbation set "complete", add to the setsList
+      if(ps.size == M){
+        setsList(i) = ps
+
+        // add the shifted perturbation set to the heap
+        val shiftedPs = shift(ps)
+        val scoreShiftedPs = score(shiftedPs)
+        pq.enqueue((shiftedPs, scoreShiftedPs))
+
+        if(i < Tsize - 1){
+          i += 1
+        } else {
+          done = true
+        }
+      } else {
+        // add the shifted perturbation set to the heap
+        val shiftedPs = shift(ps)
+        val scoreShiftedPs = score(shiftedPs)
+        pq.enqueue((shiftedPs, scoreShiftedPs))
+
+        // add the expanded perturbation set to the heap
+        val expandedPs = expand(ps)
+        val scoreExpandedPs = score(expandedPs)
+        pq.enqueue((expandedPs, scoreExpandedPs))
+      }
+    } while( !done )
+
+    setsList
   }
 }

@@ -11,11 +11,31 @@ trait Distance {
   def measure(x:Array[Float], y:Array[Float]) : Double
 }
 
-object Euclidean extends Distance {
+object EuclideanOld extends Distance {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
     Math.sqrt((x zip y).map {
       case (a, b) => Math.pow(b - a, 2)
     }.sum)
+  }
+}
+
+object Euclidean extends Distance {
+  // TODO Consider single left shift instead
+  override def measure(x: Array[Float], y: Array[Float]): Double = {
+    var res = 0.0
+    var i = 0
+    while(i < x.length) {
+      res += Math.pow(y(i) - x(i), 2)
+      i += 1
+    }
+    res
+  }
+}
+
+
+object Cosine extends Distance {
+  override def measure(x: Array[Float], y: Array[Float]): Double = {
+    1-(Distance.dotProduct(x, y)/((Distance.magnitude(x)*Distance.magnitude(y))))
   }
 }
 
@@ -28,6 +48,17 @@ object Distance {
       i+=1
     }
     res
+  }
+
+  def magnitude(x: Array[Float]) : Double = {
+    var r:Double = 0.0
+    var i = 0
+    while(i < x.length) {
+      r+=Math.pow(x(i), 2)
+      i += 1
+    }
+
+    Math.sqrt(r)
   }
 
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(8))
