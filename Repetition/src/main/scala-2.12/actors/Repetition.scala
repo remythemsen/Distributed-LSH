@@ -51,7 +51,7 @@ class Repetition extends Actor {
         val resultPairs:Array[(Int, Double)] = new Array[(Int, Double)](candidates.length)
         var i = 0
         while(i < candidates.length) {
-          resultPairs(i) = (resultPairs(i)._1, this.simMeasure.measure(vec, candidates(i)._2))
+          resultPairs(i) = (candidates(i)._1, this.simMeasure.measure(vec, candidates(i)._2))
           i+=1
         }
 

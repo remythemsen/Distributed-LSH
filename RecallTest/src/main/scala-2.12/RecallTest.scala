@@ -48,5 +48,8 @@ object RecallTest extends App {
       println("query done")
     }
   }
+  def timer[R](r: => R): Unit = {
+
+  }
 
 }

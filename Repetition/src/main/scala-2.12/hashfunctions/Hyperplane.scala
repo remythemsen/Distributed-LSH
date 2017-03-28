@@ -21,7 +21,6 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   }
 
 
-  // TODO Change to use long
   override def apply(v: Array[Float]): Array[Int] = {
     val result = new Array[Int](k)
     // For performance, a while loop is used
@@ -40,21 +39,17 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   }
 
   /**
-    * Generates random hyperplane, speed here is not essential
-    * Since these are computed in the preprocessing step
-    * However length (size) May have an effect
+    * Generates random hyperplane
     * @param size
     * @return random hyperplane
     */
-  def generateRandomV(size: Int) : Array[Float] = {
-    val set = for {
+  def generateRandomV(size:Int) : Array[Float] = {
+    for {
       _ <- (0 until size).toArray
       c <- Array[Float]({
         if (rnd.nextBoolean()) -1 else 1
       })
     } yield c
-
-    set
   }
 
   /**

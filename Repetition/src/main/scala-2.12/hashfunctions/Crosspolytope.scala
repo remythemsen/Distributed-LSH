@@ -10,10 +10,10 @@ import scala.util.Random
 
 case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   // Initialization
-  private val rnd:Random = new Random(seed)
+  val rnd:Random = new Random(seed)
 
-  private val rotations = new Array[Array[Float]](k)
-  private val arrayOfMaxIndices = new Array[Int](k)
+  val rotations = new Array[Array[Float]](k)
+  val arrayOfMaxIndices = new Array[Int](k)
 
   def generateRDV(size:Int, seed:Long) : Array[Float] = {
     val rnd = new Random(seed)
@@ -25,7 +25,7 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
     diagonalMatrix
   }
 
-  private val diagonals:Array[Array[Float]] = for {
+  val diagonals:Array[Array[Float]] = for {
     i <- (0 until k * 3).toArray // 3 diagonals for each k
     x <- Array(generateRDV(numOfDim, rnd.nextLong))
   } yield x
@@ -65,7 +65,7 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
     hashcode
   }
 
-  private def hadamardTransformation(a: Array[Float], low: Int, high: Int, y: Array[Float]): Array[Float]={
+  def hadamardTransformation(a: Array[Float], low: Int, high: Int, y: Array[Float]): Array[Float]={
     if(high - low > 0) {
       val middle = (low + high) / 2
       var c = 1
@@ -92,7 +92,7 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
     y
   }
 
-  private def pseudoRandomRotation(H: Array[Float], x: Array[Float], i: Int): Array[Float] ={
+  def pseudoRandomRotation(H: Array[Float], x: Array[Float], i: Int): Array[Float] ={
     def VectorMultiplication(A: Array[Float], x: Array[Float]): Array[Float] = {
       val b = new Array[Float](numOfDim)
       for(i <- 0 until numOfDim){
@@ -110,7 +110,7 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
   }
 
   // TODO How many
-  private val probes:Array[Array[Int]] = {
+  val probes:Array[Array[Int]] = {
     val a = new Array[Array[Int]]((k * (k + 1) / 2) + 1) // Array of probes to be reused
     for (i <- 0 until a.length) {
       a(i) = new Array[Int](k)
@@ -118,20 +118,20 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
     a
   }
 
-  private implicit object Ord extends Ordering[(IndexedSeq[Int],Float)] {
+  implicit object Ord extends Ordering[(IndexedSeq[Int],Float)] {
     def compare(x:(IndexedSeq[Int],Float), y:(IndexedSeq[Int],Float)):Int = y._2.compare(x._2)
   }
 
-  private var pq:mutable.PriorityQueue[(IndexedSeq[Int], Float)] = new mutable.PriorityQueue[(IndexedSeq[Int], Float)]()
+  var pq:mutable.PriorityQueue[(IndexedSeq[Int], Float)] = new mutable.PriorityQueue[(IndexedSeq[Int], Float)]()
 
 
   // M = # of rotations (functions)
-  private val M = rotations.length
+  val M = rotations.length
 
   // pairsLists = lists of pairs of distances and indices to the max value, for each CP
-  private val pairsLists = new Array[Array[(Float,Int)]](M)
+  val pairsLists = new Array[Array[(Float,Int)]](M)
 
-  override def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
+  def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
     // TODO Find amount
     val numOfProbes = 150
 
@@ -166,7 +166,7 @@ case class Crosspolytope(k: Int, seed:Long, numOfDim: Int) extends HashFunction 
     listOfProbingBuckets.toArray
   }
 
-  private def generateSets(Tsize:Int):Array[IndexedSeq[Int]]={
+  def generateSets(Tsize:Int):Array[IndexedSeq[Int]]={
 
     def score(a: IndexedSeq[Int]): Float = {
       // returns the score of a perturbation set

@@ -1,6 +1,7 @@
 package benchmark
 
 import java.util.concurrent.TimeUnit
+import akka.actor.{ActorSystem, Props}
 import datastructures.{ProbeTable, ProbeTableLongMap}
 import hashfunctions.Hyperplane
 import org.openjdk.jmh.annotations.{OutputTimeUnit, _}
@@ -28,32 +29,35 @@ class Repetition {
     var longMapProbeTable = new ProbeTableLongMap(hp)
     var rndVector = Array(0f)
     var repetition:Repetition = new Repetition
+    var system:ActorSystem = _
 
     @Setup(Level.Trial)
     def setup(): Unit = {
-        rnd = new Random(System.currentTimeMillis())
+      rnd = new Random(System.currentTimeMillis())
+      system = ActorSystem("BenchmarkSystem")
+      val a1 = system.actorOf(Props[actors.Repetition], name = "rep1")
 
-        vectors = new Array(probetablesize)
-        for (i <- vectors.indices) {
-            vectors(i) = (rnd.nextInt, Array.fill[Float](dimensions)(rnd.nextFloat))
-        }
+      vectors = new Array(probetablesize)
+      for (i <- vectors.indices) {
+        vectors(i) = (rnd.nextInt, Array.fill[Float](dimensions)(rnd.nextFloat))
+      }
 
-        repetition = new Repetition
-        hp = new Hyperplane(k, rnd.nextLong(), dimensions)
+      repetition = new Repetition
+      hp = new Hyperplane(k, rnd.nextLong(), dimensions)
 
-        for(v <- vectors) {
+      for(v <- vectors) {
 
-        }
+      }
     }
 
-    @Setup(Level.Invocation)
-    def pickRndVectorKey(): Unit = {
-        rndVector = vectors(rnd.nextInt(vectors.length))._2
-    }
+  @Setup(Level.Invocation)
+  def pickRndVectorKey(): Unit = {
+    rndVector = vectors(rnd.nextInt(vectors.length))._2
+  }
 
-    // Remember to read from variable, and consume result by blackhole (avoid dead code eli)
-    @Benchmark
-    def query(bh:Blackhole):Unit = {
-        bh.consume(probeTable.query(rndVector))
-    }
+  // Remember to read from variable, and consume result by blackhole (avoid dead code eli)
+  @Benchmark
+  def query(bh:Blackhole):Unit = {
+    bh.consume(probeTable.query(rndVector))
+  }
 }
