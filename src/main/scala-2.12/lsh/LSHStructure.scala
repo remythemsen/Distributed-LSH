@@ -27,20 +27,18 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
     */
 
   // TODO Change content in messages between nodes to be simple arrays instead of objects
-  val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
-  val resultSets:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length) // TODO Cannot use array in .sequence method, ... consider another method.
+  val futureResults:Array[Future[Any]] = new Array(repetitions.length) // TODO Cannot use array in .sequence method, ... consider another method.
   implicit val timeout = Timeout(10.hours)
-
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def query(qp:Array[Float], k:Int) : ArrayBuffer[Int] = {
     // TODO we know that size of resultSet is at most k*Repetitions, is it somehow possible to move it out of query
-    //val concatenatedResultSet:Array[Int] = new Array[Int](k*repetitions.length)
+    val candidates = new ArrayBuffer[Array[(Int,Double)]](k*repetitions.length) // TODO 100 is kind of a magic number, should not be less than k
 
     // for each rep, send query, wait for result from all. return set
     var i = 0
     while(i < repetitions.length) {
-      resultSets(i) = repetitions(i) ? Query(qp, k)
+      futureResults(i) = repetitions(i) ? Query(qp, k)
       i += 1
     }
 
@@ -48,15 +46,20 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
 
     // Wait for all results to return
     // TODO Future sequence is a linear cost
-    val res = Await.result(Future.sequence(resultSets), timeout.duration).asInstanceOf[ArrayBuffer[Array[(Int, Double)]]]
+    var j = 0
+    while(j < futureResults.length) {
+      candidates += Await.result(futureResults(j), timeout.duration).asInstanceOf[Array[(Int, Double)]]
+      j+=1
+    }
 
-    res.flatten.sortBy(x => x._2).take(k).map(x => x._1)
+    candidates.flatten.sortBy(x => x._2).take(k).map(x => x._1)
   }
 
   def build(filePath:String, hashFunction:String, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
+    val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
-      statuses(i) = repetitions(i) ? InitRepetition(filePath, hashFunction, functions, dimensions, simMeasure, seed)
+      statuses += repetitions(i) ? InitRepetition(filePath, hashFunction, functions, dimensions, simMeasure, seed)
       i += 1
     }
 

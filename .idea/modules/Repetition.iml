@@ -22,6 +22,7 @@
       <excludeFolder url="file://$MODULE_DIR$/../../Repetition/target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../Repetition/target/scala-2.11" />
       <excludeFolder url="file://$MODULE_DIR$/../../Repetition/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../Repetition/target/test-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../../Repetition/target/universal" />
     </content>
     <orderEntry type="inheritedJdk" />

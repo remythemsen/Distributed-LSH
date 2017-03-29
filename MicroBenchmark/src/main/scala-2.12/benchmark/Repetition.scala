@@ -1,63 +1,67 @@
 package benchmark
 
+import java.io.File
 import java.util.concurrent.TimeUnit
-import akka.actor.{ActorSystem, Props}
-import datastructures.{ProbeTable, ProbeTableLongMap}
-import hashfunctions.Hyperplane
+
+import io.Parser.DisaParser
+import messages.{InitRepetition, Query}
 import org.openjdk.jmh.annotations.{OutputTimeUnit, _}
 import org.openjdk.jmh.infra.Blackhole
-import scala.util.Random
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.util.Timeout
+import measures.Euclidean
 
-@BenchmarkMode(Array(Mode.Throughput))
+import akka.pattern.ask
+import scala.concurrent.{Await, Future}
+import scala.io.Source
+import scala.util.Random
+import scala.concurrent.duration._
+
+@BenchmarkMode(Array(Mode.AverageTime))
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Thread)
 class Repetition {
 
-    @Param(Array("128"))
-    var dimensions:Int = 0
+  implicit val timeout = Timeout(10.hours)
 
-    @Param(Array("16","24"))
-    var k:Int = 0
+  var rnd:Random = new Random(System.currentTimeMillis())
+  var queryPoints:Iterator[Array[Float]] = _
+  var nextPoint:Array[Float] = _
+  var system:ActorSystem = _
+  var a1:ActorRef = _
 
-    @Param(Array("100000"))
-    var probetablesize:Int = 0
+  @Setup(Level.Trial)
+  def setup(): Unit = {
+    rnd = new Random(System.currentTimeMillis())
+    system = ActorSystem("BenchmarkSystem")
+    a1 = system.actorOf(Props[actors.Repetition], name = "rep1")
 
-    var rnd:Random = new Random
-    var vectors:Array[(Int, Array[Float])] = new Array(probetablesize)
-    var hp:Hyperplane = new Hyperplane(k, rnd.nextLong(), dimensions)
-    var probeTable = new ProbeTable(hp)
-    var longMapProbeTable = new ProbeTableLongMap(hp)
-    var rndVector = Array(0f)
-    var repetition:Repetition = new Repetition
-    var system:ActorSystem = _
 
-    @Setup(Level.Trial)
-    def setup(): Unit = {
-      rnd = new Random(System.currentTimeMillis())
-      system = ActorSystem("BenchmarkSystem")
-      val a1 = system.actorOf(Props[actors.Repetition], name = "rep1")
+    val ready = a1 ? InitRepetition("../data/descriptors-40000-reduced-128.data", "hyperplane", 16, 128, Euclidean, rnd.nextLong)
+    Await.result(ready, timeout.duration)
 
-      vectors = new Array(probetablesize)
-      for (i <- vectors.indices) {
-        vectors(i) = (rnd.nextInt, Array.fill[Float](dimensions)(rnd.nextFloat))
-      }
-
-      repetition = new Repetition
-      hp = new Hyperplane(k, rnd.nextLong(), dimensions)
-
-      for(v <- vectors) {
-
-      }
-    }
+  }
+  @Setup(Level.Iteration)
+  def getQueries() = {
+    val points = DisaParser(Source.fromFile(new File("../data/descriptors-40000-reduced-128.data")).getLines(), 128).map(x => x._2).toIndexedSeq
+    rnd.shuffle(points)
+    queryPoints = points.toIterator
+  }
 
   @Setup(Level.Invocation)
   def pickRndVectorKey(): Unit = {
-    rndVector = vectors(rnd.nextInt(vectors.length))._2
+    nextPoint = queryPoints.next
+  }
+
+  @TearDown(Level.Trial)
+  def td:Unit = {
+    val nothing = system.terminate()
   }
 
   // Remember to read from variable, and consume result by blackhole (avoid dead code eli)
   @Benchmark
   def query(bh:Blackhole):Unit = {
-    bh.consume(probeTable.query(rndVector))
+    val cands:Future[Any] = a1 ? Query(nextPoint, 10)
+    bh.consume(Await.result(cands, timeout.duration).asInstanceOf[Array[(Int, Double)]])
   }
 }

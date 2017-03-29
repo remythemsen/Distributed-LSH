@@ -35,7 +35,7 @@ class LSHStructureQuery {
     val a2 = system.actorOf(Props[actors.Repetition], name = "rep2")
 
     lsh = new LSHStructure(Array(system.actorSelection(a1.path), system.actorSelection(a2.path)))
-    lsh.build("../data/descriptors-40000-reduced-128.data", "Hyperplane", 14, 128,Euclidean, rnd.nextLong())
+    lsh.build("../data/descriptors-40000-reduced-128.data", "Hyperplane", 16, 128,Euclidean, rnd.nextLong())
     println("Structure Was built!")
   }
 
@@ -48,7 +48,7 @@ class LSHStructureQuery {
 
   @Setup(Level.Invocation) // (Needs to be 100)
   def invo = {
-    nextPoint = Array.fill[Float](128)(rnd.nextFloat())//queryPoints.next
+    nextPoint = queryPoints.next
   }
   @TearDown(Level.Trial)
   def td:Unit = {
