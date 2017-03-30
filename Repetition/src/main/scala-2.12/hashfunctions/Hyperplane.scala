@@ -20,7 +20,10 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     a
   }
 
-
+  // Long variant.
+  // override def apply(v: Array[Float]): Long
+  // long result = 0 
+  // while (i < k) { result += (hash(v, hyperplanes(i)) << i; i += 1 } result
   override def apply(v: Array[Float]): Array[Int] = {
     val result = new Array[Int](k)
     // For performance, a while loop is used
@@ -43,6 +46,7 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     * @param size
     * @return random hyperplane
     */
+  // TODO A random hyperplane is not +1, -1, but a random gaussian in each component!
   def generateRandomV(size:Int) : Array[Float] = {
     for {
       _ <- (0 until size).toArray
@@ -60,6 +64,18 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     * @return
     */
 
+  // Long variant
+  // Idea: 
+  // override def generateProbes(hashCode: Long): Array[Long] = {
+  // probes is an array of k (k + 1) / 2 elements
+  // whenever you flip by doing probes(c)(i) = 1  - probes(c)(i), 
+  // you have to check whether the bit is set and flip it accordingly using 
+  // if (probes(c) & (1 << i) != 0) { 
+  //    probes(c) -= (1 << i);
+  // } else { 
+  //    probes(c) += (1 << i); 
+  // }
+  
   override def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
 
     var i,j,c = 0
