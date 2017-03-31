@@ -20,7 +20,7 @@ class ProbeTableLongMap(hashFunction: HashFunction) {
       if(this.table.contains(key)) this.table(key)++ArrayBuffer(v)
       else ArrayBuffer(v)
     }
-    this.table += (key -> value)
+    this.table += (key -> value) // Store key -> array index
   }
 
   /**

@@ -7,10 +7,7 @@ import scala.util.Random
 case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   private val rnd:Random = new Random(seed)
   private val numberOfDimensions:Int = numOfDim
-  private val hyperPlanes = for {
-    _ <- (0 until k).toArray
-    hp <- Array(generateRandomV(numberOfDimensions))
-  } yield hp
+  private val hyperPlanes:Array[Array[Float]] = generateHyperplanes(numberOfDimensions, k)
 
   private val probes:Array[Array[Int]] = {
     val a = new Array[Array[Int]]((k*(k+1)/2)+1) // Array of probes to be reused
@@ -36,20 +33,22 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
   // TODO Remove the branch if possible
   private def hash(v: Array[Float], randomV: Array[Float]): Int = {
     if (Distance.dotProduct(v, randomV) > 0) 1 else 0
+
   }
 
   /**
-    * Generates random hyperplane
+    * Generates set of random hyperplanes
     * @param size
     * @return random hyperplane
     */
-  def generateRandomV(size:Int) : Array[Float] = {
-    for {
-      _ <- (0 until size).toArray
-      c <- Array[Float]({
-        if (rnd.nextBoolean()) -1 else 1
-      })
-    } yield c
+  def generateHyperplanes(size:Int, k:Int) : Array[Array[Float]] = {
+    val hyperPlanes = new Array[Array[Float]](k)
+    var i = 0
+    while(i < hyperPlanes.length) {
+      hyperPlanes(i) = Array.fill[Float](size)(rnd.nextGaussian.toFloat)
+      i+=1
+    }
+    hyperPlanes
   }
 
   /**
