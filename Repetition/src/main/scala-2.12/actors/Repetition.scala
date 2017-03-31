@@ -44,7 +44,7 @@ class Repetition extends Actor {
 
       sender ! true
 
-    case Query(vec, k) =>
+    case Query(vec, k) => // TODO (+ and NOT Object) Points returned should be indexes
       // case query, look in internal table, and get top 30.
       sender ! { // TODO measure times, return to sender (
         val candidates:ArrayBuffer[(Int, Array[Float])] = this.table.query(vec)

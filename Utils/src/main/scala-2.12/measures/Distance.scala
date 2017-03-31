@@ -35,7 +35,7 @@ object Euclidean extends Distance {
 
 object Cosine extends Distance {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
-    1-(Distance.dotProduct(x, y)/((Distance.magnitude(x)*Distance.magnitude(y))))
+    1-(Distance.dotProduct(x, y)/((Distance.magnitude(x)*Distance.magnitude(y)))) // TODO remove mag due to unit
   }
 }
 
