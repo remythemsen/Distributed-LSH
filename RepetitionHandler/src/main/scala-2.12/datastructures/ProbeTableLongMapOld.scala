@@ -4,8 +4,8 @@ import hashfunctions.HashFunction
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class ProbeTableLongMap(hashFunction: HashFunction) {
-  private val table = new mutable.LongMap[ArrayBuffer[(Int, Array[Float])]]()
+class ProbeTableLongMapOld(hashFunction: HashFunction) {
+  private val table = new mutable.LongMap[ArrayBuffer[Int]]()
 
   // internal Hash function
   private val hf = hashFunction
@@ -14,32 +14,34 @@ class ProbeTableLongMap(hashFunction: HashFunction) {
     * Insert vector
     * @param v vector to be inserted into internal hashmap
     */
-  def +=(v:(Int, Array[Float])) : Unit = {
-    val key = toLong(hf(v._2))
-    val value = {
-      if(this.table.contains(key)) this.table(key)++ArrayBuffer(v)
-      else ArrayBuffer(v)
+  def +=(v:((Int, Array[Float]), Int)) : Unit = {
+    // add address of vector to the buffer in map
+    val key = toLong(hf(v._1._2))
+    if(!this.table.contains(key)) {
+      this.table(key) = new ArrayBuffer()
     }
-    this.table += (key -> value) // Store key -> array index
+
+    this.table(key) += (v._2)
   }
 
   /**
     * @param v a query point
     * @return a list of vectors with same key as v
     */
-  def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
+  def query(v:Array[Float]) : ArrayBuffer[Int] = {
     // TODO optimize
-    val results = new ArrayBuffer[(Int, Array[Float])]
+    val results = new ArrayBuffer[Int]
     val probes = hf.generateProbes(hf(v))
     var i = 0
     while(i < probes.length) {
       // TODO Is getOrElse fast enough, and we are appending arrays
-      results ++= this.table.getOrElse(toLong(probes(i)), ArrayBuffer())
+      results ++= this.table.getOrElse(toLong(probes(i)), ArrayBuffer.empty)
       i+=1
     }
     results
   }
 
+  // TODO Move this to the hash function
   def toLong(key:Array[Int]):Long = {
     var i = 0
     var long = 0

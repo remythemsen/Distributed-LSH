@@ -31,11 +31,11 @@ class LSHStructureQuery {
   def init() = {
     system = ActorSystem("BenchmarkSystem")
 
-    val a1 = system.actorOf(Props[actors.Repetition], name = "rep1")
-    val a2 = system.actorOf(Props[actors.Repetition], name = "rep2")
+    val a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
+    val a2 = system.actorOf(Props[actors.RepetitionHandler], name = "rep2")
 
     lsh = new LSHStructure(Array(system.actorSelection(a1.path), system.actorSelection(a2.path)))
-    lsh.build("../data/descriptors-40000-reduced-128.data", "Hyperplane", 16, 128,Euclidean, rnd.nextLong())
+    lsh.build("../data/descriptors-40000-reduced-128.data", 39290, 1, "Hyperplane", 16, 128,Euclidean, rnd.nextLong())
     println("Structure Was built!")
   }
 

@@ -17,13 +17,8 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     a
   }
 
-  // Long variant.
-  // override def apply(v: Array[Float]): Long
-  // long result = 0 
-  // while (i < k) { result += (hash(v, hyperplanes(i)) << i; i += 1 } result
-  override def apply(v: Array[Float]): Array[Int] = {
+  def apply(v: Array[Float]): Array[Int] = {
     val result = new Array[Int](k)
-    // For performance, a while loop is used
     var i = 0
     while(i < k) {
       result(i) = hash(v, hyperPlanes(i))
@@ -62,26 +57,11 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     * @return
     */
 
-  // Long variant
-  // Idea: 
-  // override def generateProbes(hashCode: Long): Array[Long] = {
-  // probes is an array of k (k + 1) / 2 elements
-  // whenever you flip by doing probes(c)(i) = 1  - probes(c)(i), 
-  // you have to check whether the bit is set and flip it accordingly using 
-  // if (probes(c) & (1 << i) != 0) { 
-  //    probes(c) -= (1 << i);
-  // } else { 
-  //    probes(c) += (1 << i); 
-  // }
-  
-  override def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
-
+  def generateProbes(hashCode: Array[Int]): Array[Array[Int]] = {
     var i,j,c = 0
-
     // Insert query element
     System.arraycopy(hashCode, 0, probes(c), 0, k)
     c+=1
-
     // Generate buckets
     while(i < k) {
       System.arraycopy(hashCode, 0, probes(c), 0, k) // Copies values from hashCode into existing array in probes
@@ -102,4 +82,5 @@ case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
     }
     this.probes // probes has been update in place
   }
+
 }

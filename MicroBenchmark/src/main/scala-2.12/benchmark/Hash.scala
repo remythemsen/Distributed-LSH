@@ -15,13 +15,15 @@ class Hash {
   var k:Int = 0
 
   var rnd:Random = new Random(System.currentTimeMillis())
-  var hp:Hyperplane = new Hyperplane(1, rnd.nextLong(), dimensions)
-  var c:Crosspolytope = new Crosspolytope(1, rnd.nextLong(), dimensions)
-  var vector:Array[Float] = Array()
+  var hp:Hyperplane = _
+  var hp2:Hyperplane = _
+  var c:Crosspolytope = _
+  var vector:Array[Float] = _
 
   @Setup(Level.Iteration)
   def setup(): Unit = {
     hp = new Hyperplane(k, rnd.nextLong(), dimensions)
+    hp2 = new Hyperplane(k, rnd.nextLong(), dimensions)
     c = new Crosspolytope(k/4, rnd.nextLong(), dimensions)
   }
 
@@ -33,6 +35,11 @@ class Hash {
   @Benchmark
   def hyperplane(bh:Blackhole) : Unit = {
     bh.consume(hp.apply(vector))
+  }
+
+  @Benchmark
+  def hyperplaneLong(bh:Blackhole) : Unit = {
+    bh.consume(hp2.apply(vector))
   }
 
   @Benchmark

@@ -1,4 +1,4 @@
-name := "Repetition"
+name := "RepetitionHandler"
 
 organization := "dk.distributed_lsh"
 

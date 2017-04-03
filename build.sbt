@@ -13,13 +13,13 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-remote" % "2.4.17"
 )
 
-lazy val DistributedLSH = project in file(".") dependsOn Repetition
+lazy val DistributedLSH = project in file(".") dependsOn RepetitionHandler
 
 lazy val Utils = project in file("Utils")
 
-lazy val RecallTest = project in file("RecallTest") dependsOn(DistributedLSH, Repetition, Utils)
+lazy val RecallTest = project in file("RecallTest") dependsOn(DistributedLSH, RepetitionHandler, Utils)
 
-lazy val MicroBenchmark = project in file("MicroBenchmark") dependsOn(DistributedLSH, Repetition, Utils) enablePlugins JmhPlugin
+lazy val MicroBenchmark = project in file("MicroBenchmark") dependsOn(DistributedLSH, RepetitionHandler, Utils) enablePlugins JmhPlugin
 
-lazy val Repetition = project in file("Repetition") dependsOn Utils
+lazy val RepetitionHandler = project in file("RepetitionHandler") dependsOn Utils
 

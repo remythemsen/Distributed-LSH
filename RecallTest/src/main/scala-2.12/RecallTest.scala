@@ -39,7 +39,7 @@ object RecallTest extends App {
 
   val rnd = new Random(System.currentTimeMillis())
 
-  if(lsh.build("data/descriptors-40000-reduced-128.data", "Hyperplane", 12, 128,Euclidean, rnd.nextLong())) {
+  if(lsh.build("data/descriptors-40000-reduced-128.data", 39290, 1, "Hyperplane", 12, 128,Euclidean, rnd.nextLong())) {
     println("Structure Was built!")
     val queryPoints = DisaParser(Source.fromFile(new File("data/descriptors-40000-reduced-128.queries")).getLines(), 128).toArray
 

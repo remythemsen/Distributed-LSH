@@ -2,8 +2,8 @@ package benchmark
 
 import java.util.concurrent.TimeUnit
 
-import datastructures.{ProbeTable, ProbeTableLongMap}
-import hashfunctions.Hyperplane
+import datastructures.{ProbeTable, ProbeTableLong, ProbeTableLongMapOld}
+import hashfunctions.{Hyperplane, HyperplaneLong}
 import org.openjdk.jmh.annotations.{OutputTimeUnit, _}
 import org.openjdk.jmh.infra.Blackhole
 
@@ -25,8 +25,9 @@ class ProbeTableQuery {
   var rnd:Random = new Random
   var vectors:Array[(Int, Array[Float])] = new Array(probetablesize)
   var hp:Hyperplane = new Hyperplane(k, rnd.nextLong(), dimensions)
+  var hp2:HyperplaneLong = new HyperplaneLong(k, rnd.nextLong(), dimensions)
   var probeTable = new ProbeTable(hp)
-  var longMapProbeTable = new ProbeTableLongMap(hp)
+  var longMapProbeTable = new ProbeTableLong(hp2)
   var rndVector = Array(0f)
 
   @Setup(Level.Trial)
@@ -40,13 +41,13 @@ class ProbeTableQuery {
 
     hp = new Hyperplane(k, rnd.nextLong(), dimensions)
 
-    probeTable = new ProbeTable(hp)
+    probeTable = new ProbeTableLong(hp2)
 
-    longMapProbeTable = new ProbeTableLongMap(hp)
+    longMapProbeTable = new ProbeTableLongMapOld(hp)
 
     for(v <- vectors) {
       probeTable += v
-      longMapProbeTable += v
+      longMapProbeTable += (v, 1)
     }
 
   }

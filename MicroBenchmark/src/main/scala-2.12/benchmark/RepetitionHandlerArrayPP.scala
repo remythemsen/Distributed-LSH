@@ -3,25 +3,24 @@ package benchmark
 import java.io.File
 import java.util.concurrent.TimeUnit
 
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import io.Parser.DisaParser
+import measures.Euclidean
 import messages.{InitRepetition, Query}
 import org.openjdk.jmh.annotations.{OutputTimeUnit, _}
 import org.openjdk.jmh.infra.Blackhole
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.util.Timeout
-import measures.Euclidean
-import akka.pattern.ask
 
-import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.io.Source
 import scala.util.Random
-import scala.concurrent.duration._
 
 @BenchmarkMode(Array(Mode.AverageTime))
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Thread)
-class Repetition {
+class RepetitionHandlerArrayPP {
 
   implicit val timeout = Timeout(10.hours)
 
@@ -31,17 +30,14 @@ class Repetition {
   var system:ActorSystem = _
   var a1:ActorRef = _
 
-  @Param(Array("1", "2", "3","4","5"))
-  var internalTables = 0
-
   @Setup(Level.Trial)
   def setup(): Unit = {
     rnd = new Random(System.currentTimeMillis())
     system = ActorSystem("BenchmarkSystem")
-    a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
+    a1 = system.actorOf(Props[actors.RepetitionHandlerArrayPP], name = "rep1")
 
 
-    val ready = a1 ? InitRepetition("../data/descriptors-40000-reduced-128.data", 39290, internalTables, "hyperplane", 16, 128, Euclidean, rnd.nextLong)
+    val ready = a1 ? InitRepetition("../data/descriptors-40000-reduced-128.data", 39290, 1, "hyperplane", 16, 128, Euclidean, rnd.nextLong)
     Await.result(ready, timeout.duration)
 
   }
@@ -66,6 +62,6 @@ class Repetition {
   @Benchmark
   def query(bh:Blackhole):Unit = {
     val cands:Future[Any] = a1 ? Query(nextPoint, 10)
-    bh.consume(Await.result(cands, timeout.duration).asInstanceOf[Array[(Int,Double)]])
+    bh.consume(Await.result(cands, timeout.duration).asInstanceOf[Array[(Int, Double)]])
   }
 }

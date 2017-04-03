@@ -8,8 +8,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/RecallTest.iml" filepath="$PROJECT_DIR$/.idea/modules/RecallTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/RecallTest-build.iml" filepath="$PROJECT_DIR$/.idea/modules/RecallTest-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Repetition.iml" filepath="$PROJECT_DIR$/.idea/modules/Repetition.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Repetition-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Repetition-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/RepetitionHandler.iml" filepath="$PROJECT_DIR$/.idea/modules/RepetitionHandler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/RepetitionHandler-build.iml" filepath="$PROJECT_DIR$/.idea/modules/RepetitionHandler-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Utils.iml" filepath="$PROJECT_DIR$/.idea/modules/Utils.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Utils-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Utils-build.iml" />
     </modules>

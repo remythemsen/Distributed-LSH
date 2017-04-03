@@ -1,16 +1,13 @@
 package lsh
 
 import messages.{InitRepetition, Query}
-
 import scala.concurrent.{Await, Future}
 import akka.actor._
 import akka.util.Timeout
-
 import scala.concurrent.duration._
 import akka.pattern.ask
 import hashfunctions.HashFunction
 import measures.Distance
-
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -28,7 +25,7 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
 
   // TODO Change content in messages between nodes to be simple arrays instead of objects
   val futureResults:Array[Future[Any]] = new Array(repetitions.length) // TODO Cannot use array in .sequence method, ... consider another method.
-  implicit val timeout = Timeout(10.hours)
+  implicit val timeout = Timeout(20.hours)
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def query(qp:Array[Float], k:Int) : ArrayBuffer[Int] = {
@@ -55,11 +52,11 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
     candidates.flatten.sortBy(x => x._2).take(k).map(x => x._1)
   }
 
-  def build(filePath:String, hashFunction:String, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
+  def build(filePath:String, n:Int, internalRepetitions:Int, hashFunction:String, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
-      statuses += repetitions(i) ? InitRepetition(filePath, hashFunction, functions, dimensions, simMeasure, seed)
+      statuses += repetitions(i) ? InitRepetition(filePath, n, internalRepetitions, hashFunction, functions, dimensions, simMeasure, seed)
       i += 1
     }
 
