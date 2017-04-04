@@ -64,7 +64,7 @@ class RepetitionHandler extends Actor {
             case "hyperplane" => new Hyperplane(functions, rnd.nextLong(), dimensions)
             //case "crosspolytope" => new Crosspolytope(functions, rnd.nextLong(), dimensions)
           }
-        })
+        }, functions*30)
 
         futures(i) = Future {
           buildRepetition(i, n)

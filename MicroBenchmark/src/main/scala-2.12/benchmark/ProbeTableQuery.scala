@@ -16,40 +16,36 @@ class ProbeTableQuery {
   @Param(Array("128"))
   var dimensions:Int = 0
 
-  @Param(Array("16","24"))
+  @Param(Array("16", "32"))
   var k:Int = 0
 
-  @Param(Array("100000"))
+  @Param(Array("1000000", "20000000"))
   var probetablesize:Int = 0
 
-  var rnd:Random = new Random
-  var vectors:Array[(Int, Array[Float])] = new Array(probetablesize)
-  var hp:Hyperplane = new Hyperplane(k, rnd.nextLong(), dimensions)
-  var hp2:HyperplaneLong = new HyperplaneLong(k, rnd.nextLong(), dimensions)
-  var probeTable = new ProbeTable(hp)
-  var longMapProbeTable = new ProbeTableLong(hp2)
-  var rndVector = Array(0f)
+  var rnd:Random = _
+  var vectors:Array[(Int, Array[Float])] = _
+  var hp:Hyperplane = _
+  var hp2:HyperplaneLong = _
+  var oldTable:ProbeTableLongMapOld = _
+  var newTable:ProbeTableLong = _
+  var rndVector:Array[Float] = _
 
   @Setup(Level.Trial)
   def setup(): Unit = {
     rnd = new Random(System.currentTimeMillis())
-
-    vectors = new Array(probetablesize)
-    for (i <- vectors.indices) {
-      vectors(i) = (rnd.nextInt, Array.fill[Float](dimensions)(rnd.nextFloat))
-    }
-
     hp = new Hyperplane(k, rnd.nextLong(), dimensions)
+    hp2 = new HyperplaneLong(k, rnd.nextLong(), dimensions)
+    oldTable = new ProbeTableLongMapOld(hp, 30*k)
+    newTable = new ProbeTableLong(hp2, 30*k)
+    vectors = new Array(probetablesize)
 
-    probeTable = new ProbeTableLong(hp2)
-
-    longMapProbeTable = new ProbeTableLongMapOld(hp)
-
-    for(v <- vectors) {
-      probeTable += v
-      longMapProbeTable += (v, 1)
+    var i = 0
+    while(i < vectors.length) {
+      vectors(i) = (rnd.nextInt, Array.fill[Float](dimensions)(rnd.nextFloat))
+      oldTable += (vectors(i), 1)
+      newTable += (vectors(i), 1)
+      i += 1
     }
-
   }
 
   @Setup(Level.Invocation)
@@ -59,12 +55,12 @@ class ProbeTableQuery {
 
   // Remember to read from variable, and consume result by blackhole (avoid dead code eli)
   @Benchmark
-  def query(bh:Blackhole):Unit = {
-    bh.consume(probeTable.query(rndVector))
+  def queryLongMapOld(bh:Blackhole):Unit = {
+    bh.consume(oldTable.query(rndVector))
   }
 
   @Benchmark
-  def queryLongMap(bh:Blackhole):Unit = {
-    bh.consume(longMapProbeTable.query(rndVector))
+  def queryLongMapNew(bh:Blackhole):Unit = {
+    bh.consume(newTable.query(rndVector))
   }
 }

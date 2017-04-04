@@ -5,7 +5,7 @@ import hashfunctions.HashFunctionLong
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class ProbeTableLong(hashFunction: HashFunctionLong) {
+class ProbeTableLong(hashFunction: HashFunctionLong, maxCands:Int) {
   private val table = new mutable.LongMap[ArrayBuffer[Int]]()
 
   // internal Hash function
@@ -18,11 +18,12 @@ class ProbeTableLong(hashFunction: HashFunctionLong) {
   def +=(v:((Int, Array[Float]), Int)) : Unit = {
     // add address of vector to the buffer in map
     val key = hf(v._1._2)
+    // TODO remove this branch if possible
     if(!this.table.contains(key)) {
       this.table(key) = new ArrayBuffer()
     }
 
-    this.table(key) += (v._2)
+    this.table(key) += v._2
   }
 
   /**
@@ -34,9 +35,11 @@ class ProbeTableLong(hashFunction: HashFunctionLong) {
     val results = new ArrayBuffer[Int]
     val probes = hf.generateProbes(hf(v))
     var i = 0
-    while(i < probes.length) {
-      // TODO Is getOrElse fast enough, and we are appending arrays
-      results ++= this.table.getOrElse(probes(i), ArrayBuffer.empty)
+    while(results.size < this.maxCands && i < probes.length) {
+      this.table.get(probes(i)) match {
+        case Some(x) => results ++= x
+        case None =>
+      }
       i+=1
     }
     results

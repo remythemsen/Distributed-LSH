@@ -10,9 +10,10 @@ import scala.util.Random
   */
 class ProbeTableLongMapSpec extends FlatSpec with Matchers {
   "Query " should "return results given a valid query" in {
+    val k = 6
     val rnd = new Random(System.currentTimeMillis())
-    val hp = new Hyperplane(6, rnd.nextLong(), 128)
-    val pt = new ProbeTableLongMapOld(hp)
+    val hp = new Hyperplane(k, rnd.nextLong(), 128)
+    val pt = new ProbeTableLongMapOld(hp, k*30)
 
     var i = 0
 
@@ -27,11 +28,12 @@ class ProbeTableLongMapSpec extends FlatSpec with Matchers {
 
   }
   "Query " should "not throw exception given invalid query" in {
+    val k = 6
     val rnd = new Random(System.currentTimeMillis())
-    val hp = new Hyperplane(6, rnd.nextLong(), 128)
+    val hp = new Hyperplane(k, rnd.nextLong(), 128)
     val vec = ((1,Array.fill[Float](128)(rnd.nextFloat)),1)
     val vec2 = ((3,Array.fill[Float](128)(rnd.nextFloat)),2)
-    val pt = new ProbeTableLongMapOld(hp)
+    val pt = new ProbeTableLongMapOld(hp, k)
     pt+=vec
     assert(!pt.query(vec2._1._2).contains(vec2)) // same object
   }

@@ -10,7 +10,7 @@ import scala.util.Random
 @State(Scope.Thread)
 class GenerateProbes {
 
-  @Param(Array("8", "16", "24"))
+  @Param(Array("8", "16", "32", "64"))
   var k:Int = 0
 
   var rnd:Random = new Random(System.currentTimeMillis())
@@ -27,8 +27,8 @@ class GenerateProbes {
 
   @Setup(Level.Invocation)
   def genKey(): Unit = {
-    key = Array.fill(k)(rnd.nextInt(2))
-    key2 = rnd.nextInt(Math.pow(2, k).toInt).toLong
+    key = hp(Array.fill(128)(rnd.nextFloat))
+    key2 = hp2(Array.fill(128)(rnd.nextFloat))
   }
 
   @Benchmark

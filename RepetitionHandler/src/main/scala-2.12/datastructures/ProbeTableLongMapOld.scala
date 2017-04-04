@@ -4,7 +4,7 @@ import hashfunctions.HashFunction
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class ProbeTableLongMapOld(hashFunction: HashFunction) {
+class ProbeTableLongMapOld(hashFunction: HashFunction, maxCands:Int) {
   private val table = new mutable.LongMap[ArrayBuffer[Int]]()
 
   // internal Hash function
@@ -33,9 +33,12 @@ class ProbeTableLongMapOld(hashFunction: HashFunction) {
     val results = new ArrayBuffer[Int]
     val probes = hf.generateProbes(hf(v))
     var i = 0
-    while(i < probes.length) {
+    while(results.size < maxCands && i < probes.length) {
       // TODO Is getOrElse fast enough, and we are appending arrays
-      results ++= this.table.getOrElse(toLong(probes(i)), ArrayBuffer.empty)
+      this.table.get(toLong(probes(i))) match {
+        case Some(x) => results ++= x
+        case None =>
+      }
       i+=1
     }
     results
