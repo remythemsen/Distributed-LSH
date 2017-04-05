@@ -83,6 +83,19 @@ class RepetitionHandler extends Actor {
 
 
       // Getting candidates
+      // Here we need global access to each repetition.
+      // Pseudocode: 
+      // var maxCandidates = ... 
+      // priority queue q where entries are (hashcode, rep_index)
+      // get all the probing sequences from each repetition 
+      // hf.generateProbes(hf(v))
+      // in the beginning: put probing sequence + repetition number in priority queue
+      // priority: actual hashcode: "highest priority", one bit difference: "second-highest priority", 
+      // two-steps different "lowest priority".
+      // query: 
+      // while (candidates.length < maxCandidates && !q.empty()) {
+      //  (bucket, rep_index) = q.top();
+      //   "Get the elements in the bucket for repetition rep_index" 
       var i = 0
       while (i < this.repetitions.length) {
         val candI:ArrayBuffer[Int] = this.repetitions(i).query(qp)
