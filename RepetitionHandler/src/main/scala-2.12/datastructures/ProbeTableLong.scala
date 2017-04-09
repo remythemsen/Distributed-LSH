@@ -9,7 +9,7 @@ class ProbeTableLong(hashFunction: HashFunctionLong, maxCands:Int) {
   private val table = new mutable.LongMap[ArrayBuffer[Int]]()
 
   // internal Hash function
-  private val hf = hashFunction
+  val hf = hashFunction
 
   /**
     * Insert vector
@@ -43,6 +43,10 @@ class ProbeTableLong(hashFunction: HashFunctionLong, maxCands:Int) {
       i+=1
     }
     results
+  }
+
+  def get(key:Long) : ArrayBuffer[Int] = {
+    this.table.getOrElse(key, ArrayBuffer())
   }
 }
 

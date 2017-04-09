@@ -5,8 +5,18 @@ import scala.util.Random
 case class HyperplaneLong(k: Int, seed:Long, numOfDim: Int) extends HashFunctionLong {
   private val rnd:Random = new Random(seed)
   private val numberOfDimensions:Int = numOfDim
-  private val hyperPlanes:Array[Array[Float]] = generateHyperplanes(numberOfDimensions, k)
+  val hyperPlanes:Array[Array[Float]] = generateHyperplanes(numberOfDimensions, k)
   private val probes:Array[Long] = new Array(1+(k*(k+1)/2))
+  private val hashDotResult:Array[Double] = Array(k)
+
+  def hashDot(v: Array[Float]):Array[Double] = {
+    var i = 0
+    while(i < hashDotResult.length) {
+      hashDotResult(i) = Distance.dotProduct(v, hyperPlanes(i))
+      i+=1
+    }
+    hashDotResult
+  }
 
   override def apply(v: Array[Float]): Long = {
     var result:Long = 0
