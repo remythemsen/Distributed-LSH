@@ -2,7 +2,7 @@ name := "RepetitionHandler"
 
 organization := "dk.distributed_lsh"
 
-version := "1.0"
+version := "latest"
 
 homepage := Some(url("https://github.com/remythemsen/Distributed_LSH"))
 
@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
 
 maintainer := "Remy Themsen <remt@itu.dk>"
 
-version in Docker := "1.0"
+version in Docker := "latest"
 
 dockerExposedPorts in Docker := Seq(2552)
 

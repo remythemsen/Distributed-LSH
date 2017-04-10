@@ -2,7 +2,7 @@ name := "RecallTest"
 
 organization := "dk.distributed_lsh"
 
-version := "1.0"
+version := "latest"
 
 homepage := Some(url("https://github.com/remythemsen/Distributed_LSH"))
 
@@ -28,9 +28,11 @@ libraryDependencies ++= Seq(
 
 maintainer := "Remy Themsen <remt@itu.dk>"
 
-dockerRepository := Some("remeeh")
+version in Docker := "latest"
 
 dockerExposedPorts := Seq(2552)
+
+dockerRepository := Some("remeeh")
 
 dockerBaseImage := "java"
 enablePlugins(JavaAppPackaging)

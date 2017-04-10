@@ -26,7 +26,9 @@ class PQProbeGeneratorSpec extends FlatSpec with Matchers {
   "generate" should "make correct probeset on simple input with 2 keys" in {
     val k = 2
     val rnd = new Random(System.currentTimeMillis())
-    val gen = new PQProbeGenerator(k, Array(new HyperplaneLong(k,rnd.nextLong,128))) // k=2 L=1
+    val gen = new PQProbeGenerator(k, {
+      Array(new HyperplaneLong(k,rnd.nextLong,128),new HyperplaneLong(k,rnd.nextLong,128))
+    }) // k=2 L=1
     gen.generate(Array.fill[Float](128)(rnd.nextFloat()))
     val res = gen.toArray
     val res1 = res.filter(x=>x._1 ==0).map(x => x._2)

@@ -20,7 +20,9 @@ class PQProbeGenerator(k:Int, hfs:Array[HyperplaneLong]) extends ProbeKeyGenerat
     pq.clear
     // Compute each set of probes from each key
     var hashIndex, hyperIndex, i, j = 0
-    var OneStepHash:Long = 0
+    var oneStepHash:Long = 0
+    var twoStepHash:Long = 0
+    var hash:Long = 0
 
     while (hashIndex < hfs.length) {
       // Get dot products between qp and hyperplane for each k hyperplanes in hashFunction
@@ -30,23 +32,27 @@ class PQProbeGenerator(k:Int, hfs:Array[HyperplaneLong]) extends ProbeKeyGenerat
       }
 
       // Make key itself
-      OneStepHash = hfs(hashIndex)(qp)
-      pq += Tuple2(Tuple2(hashIndex, OneStepHash),Double.PositiveInfinity) // The key itself has top priority
+      hash = hfs(hashIndex)(qp)
+      pq += Tuple2(Tuple2(hashIndex, hash),Double.PositiveInfinity) // The key itself has top priority
 
       while(i < k) { // 1-Step Probes
 
-        OneStepHash = checkAndFlip(OneStepHash, i)
-        pq += Tuple2(Tuple2(hashIndex, OneStepHash), Math.pow(epsilon, -Math.abs(this.dotProducts(i))))
+        oneStepHash = checkAndFlip(hash, i)
+        pq += Tuple2(Tuple2(hashIndex, oneStepHash), Math.pow(epsilon, -Math.abs(this.dotProducts(i))))
 
         j = i+1
         while(j < k) { // 2-Step Probes
-          pq += Tuple2(Tuple2(hashIndex, checkAndFlip(OneStepHash, j)), Math.pow(epsilon, -Math.abs(this.dotProducts(i))-Math.abs(this.dotProducts(j))))
+          twoStepHash = checkAndFlip(oneStepHash, j)
+          pq += Tuple2(Tuple2(hashIndex, twoStepHash), Math.pow(epsilon, -Math.abs(this.dotProducts(i))-Math.abs(this.dotProducts(j))))
           j += 1
         }
         i += 1
       }
 
       hashIndex += 1
+      i = 0
+      j = 0
+      hyperIndex = 0
     }
 
     def checkAndFlip(key:Long, i:Int): Long = {
