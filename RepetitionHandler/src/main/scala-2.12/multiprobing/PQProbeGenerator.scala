@@ -5,7 +5,7 @@ import measures.Distance
 
 import scala.collection.mutable
 
-class PQProbeGenerator(k:Int, hfs:Array[HyperplaneLong]) extends ProbeKeyGenerator {
+class PQProbeGenerator(k:Int, hfs:Array[HashFunctionLong]) extends ProbeKeyGenerator {
   // ((idOfRepetition, generatedKey), score)
 
   object Ord extends Ordering[((Int, Long), Double)] {	// not implicit
@@ -26,8 +26,8 @@ class PQProbeGenerator(k:Int, hfs:Array[HyperplaneLong]) extends ProbeKeyGenerat
 
     while (hashIndex < hfs.length) {
       // Get dot products between qp and hyperplane for each k hyperplanes in hashFunction
-      while(hyperIndex < hfs(i).hyperPlanes.length) {
-        this.dotProducts(hyperIndex) = Distance.dotProduct(qp, hfs(hashIndex).hyperPlanes(hyperIndex))
+      while(hyperIndex < hfs(i).state.length) {
+        this.dotProducts(hyperIndex) = Distance.dotProduct(qp, hfs(hashIndex).state(hyperIndex))
         hyperIndex += 1
       }
 
@@ -66,40 +66,6 @@ class PQProbeGenerator(k:Int, hfs:Array[HyperplaneLong]) extends ProbeKeyGenerat
     }
 
   }
-/*
-
-
-
-      var oneStepProbe: Long = 0
-
-      // Adding the key itself
-      val key = (kIndex, keys(i)._2)
-
-      probes(c) = key
-      c += 1
-
-      while (i < k) {
-        probes(c) = (kIndex, checkAndFlip(key._2, i))
-        oneStepProbe = probes(c)._2
-
-        c = c + 1
-        j = i + 1
-        while (j < k) {
-          probes(c) = (kIndex, checkAndFlip(oneStepProbe, j))
-          c = c + 1
-          j = j + 1
-        }
-        i += 1
-      }
-
-      kIndex += 1
-    }
-
-    this.probesLeft = probes.length
-
-*/
-
-
 
 
   /**

@@ -8,6 +8,7 @@ case class HyperplaneLong(k: Int, seed:Long, numOfDim: Int) extends HashFunction
   val hyperPlanes:Array[Array[Float]] = generateHyperplanes(numberOfDimensions, k)
   private val probes:Array[Long] = new Array(1+(k*(k+1)/2))
   private val hashDotResult:Array[Double] = Array(k)
+  override val state: Array[Array[Float]] = hyperPlanes
 
   def hashDot(v: Array[Float]):Array[Double] = {
     var i = 0
@@ -30,7 +31,7 @@ case class HyperplaneLong(k: Int, seed:Long, numOfDim: Int) extends HashFunction
 
   // TODO Change this into Breeze dotproduct
   // TODO Remove the branch if possible
-  private def hash(v: Array[Float], randomV: Array[Float]): Int = {
+  private def hash(v: Array[Float], randomV: Array[Float]): Long = {
     if (Distance.dotProduct(v, randomV) > 0) 1 else 0
   }
 
@@ -92,4 +93,5 @@ case class HyperplaneLong(k: Int, seed:Long, numOfDim: Int) extends HashFunction
 
     probes
   }
+
 }

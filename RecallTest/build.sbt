@@ -30,7 +30,7 @@ maintainer := "Remy Themsen <remt@itu.dk>"
 
 version in Docker := "latest"
 
-dockerExposedPorts := Seq(2552)
+dockerExposedPorts := Seq(2553)
 
 dockerRepository := Some("remeeh")
 

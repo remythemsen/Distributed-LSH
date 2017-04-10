@@ -24,7 +24,7 @@ class RepetitionHandlerProbeSpec extends FlatSpec with Matchers {
     val a1 = system.actorOf(Props[actors.RepetitionHandlerProbe], name = "rep1")
     val k = 6
     val hashFunctions = Array(new HyperplaneLong(k, rnd.nextLong, 128))
-    val ready = a1 ? InitRepetitionProbe("data/descriptors-40000-reduced-128.data",  39290,  hashFunctions.length, "hyperplane", new PQProbeGenerator(k, hashFunctions), 100,k, 128, Euclidean, rnd.nextLong)
+    val ready = a1 ? InitRepetitionProbe("data/descriptors-40000-reduced-128.data",  39290,  hashFunctions.length, "hyperplane", "pq", 100,k, 128, Euclidean, rnd.nextLong)
     Await.result(ready, timeout.duration)
     val cands:Future[Any] = a1 ? Query(Array.fill[Float](128)(rnd.nextFloat), 30)
     val res = Await.result(cands, timeout.duration).asInstanceOf[Array[(Int, Double)]]

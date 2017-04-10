@@ -10,3 +10,11 @@ services:
     volumes:
      - ./data:/opt/docker/data
 
+  recalltest:
+    image: remeeh/recalltest:latest
+    volumes:
+     - ./data:/opt/docker/data
+    links:
+     - repetitionhandler1:repetitionhandler1
+     - repetitionhandler2:repetitionhandler2
+

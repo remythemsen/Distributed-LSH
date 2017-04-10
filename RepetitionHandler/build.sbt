@@ -33,10 +33,9 @@ maintainer := "Remy Themsen <remt@itu.dk>"
 
 version in Docker := "latest"
 
-dockerExposedPorts in Docker := Seq(2552)
+dockerExposedPorts := Seq(2552)
 
 dockerRepository := Some("remeeh")
 
 dockerBaseImage := "java"
 enablePlugins(JavaAppPackaging)
-

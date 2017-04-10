@@ -31,15 +31,17 @@ object RecallTest extends App {
   } yield repetitionAddress
 
   val system = ActorSystem("RecallTestSystem")
+  println("System started")
 
   val lsh = new LSHStructure(for {
     address <- repetitionAddresses
     repetition <- Seq(system.actorSelection(address))
   } yield repetition)
+  println("Structure initialized")
 
   val rnd = new Random(System.currentTimeMillis())
 
-  if(lsh.build("data/descriptors-40000-reduced-128.data", 39290, 1, "Hyperplane", 12, 128,Euclidean, rnd.nextLong())) {
+  if(lsh.build("data/descriptors-40000-reduced-128.data", 39290, 1, "Hyperplane", "pq", 1000, 12, 128,Euclidean, rnd.nextLong())) {
     println("Structure Was built!")
     val queryPoints = DisaParser(Source.fromFile(new File("data/descriptors-40000-reduced-128.queries")).getLines(), 128).toArray
 
@@ -47,6 +49,8 @@ object RecallTest extends App {
       val result:ArrayBuffer[Int] = lsh.query(qp._2, 10)
       println("query done")
     }
+  }else {
+    println("structure did not build successfully :(")
   }
   def timer[R](r: => R): Unit = {
 

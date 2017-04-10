@@ -1,13 +1,17 @@
 package lsh
 
-import messages.{InitRepetition, Query}
+import messages.{InitRepetition, InitRepetitionProbe, Query}
+
 import scala.concurrent.{Await, Future}
 import akka.actor._
 import akka.util.Timeout
+
 import scala.concurrent.duration._
 import akka.pattern.ask
 import hashfunctions.HashFunction
 import measures.Distance
+import multiprobing.PQProbeGenerator
+
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -52,16 +56,17 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
     candidates.flatten.sortBy(x => x._2).take(k).map(x => x._1)
   }
 
-  def build(filePath:String, n:Int, internalRepetitions:Int, hashFunction:String, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
+  def build(filePath:String, n:Int, internalRepetitions:Int, hashFunction:String, probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
-      statuses += repetitions(i) ? InitRepetition(filePath, n, internalRepetitions, hashFunction, functions, dimensions, simMeasure, seed)
+      statuses += repetitions(i) ? InitRepetitionProbe(filePath, n, internalRepetitions, hashFunction, probeGenerator, maxCandsTotal/internalRepetitions, functions, dimensions, simMeasure, seed)
       i += 1
     }
 
     // waiting for all tables to finish
     // TODO if all is successful, then return
+    println("Done sending of build signals for repetitions")
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     res.forall(x => x)
   }

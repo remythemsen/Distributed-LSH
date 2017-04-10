@@ -9,7 +9,7 @@ import hashfunctions.{Crosspolytope, HashFunctionLong, Hyperplane, HyperplaneLon
 import io.Parser.DisaParser
 import measures.Distance
 import messages._
-import multiprobing.ProbeKeyGenerator
+import multiprobing.{PQProbeGenerator, ProbeKeyGenerator, TwoStepProbeGenerator}
 import tools.{SQuickSelect, SVQuickSelect}
 
 import scala.concurrent.duration._
@@ -19,10 +19,7 @@ import scala.io.Source
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
-object Program3 extends App {
-  val system = ActorSystem("RepetitionSystem")
-  val repetitionHandler = system.actorOf(Props[RepetitionHandlerProbe], name = "Repetition")
-}
+
 
 class RepetitionHandlerProbe extends Actor {
 
@@ -52,7 +49,6 @@ class RepetitionHandlerProbe extends Actor {
       this.dataSet = new Array(n)
       this.dataSetVisited = Array.fill[Boolean](n)(false)
       this.maxCands = maxCands
-      this.probeGenerator = probeScheme
       this.hashFunctions = new Array(internalReps)
       this.keys = new Array(internalReps)
       this.resultSet = new Array(maxCands)
@@ -88,6 +84,12 @@ class RepetitionHandlerProbe extends Actor {
         futures(i) = Future {
           buildRepetition(i, n)
         }
+      }
+
+      // Initializing the pgenerator
+      this.probeGenerator = probeScheme.toLowerCase match {
+        case "pq" => new PQProbeGenerator(functions, this.hashFunctions)
+        case "twostep" => new TwoStepProbeGenerator(functions, this.hashFunctions)
       }
 
       implicit val timeout = Timeout(20.hours)

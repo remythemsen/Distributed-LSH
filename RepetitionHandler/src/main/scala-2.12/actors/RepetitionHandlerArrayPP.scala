@@ -19,10 +19,7 @@ import scala.io.Source
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
-object Program2 extends App {
-  val system = ActorSystem("RepetitionSystem")
-  val repetitionHandler = system.actorOf(Props[RepetitionHandlerArrayPP], name = "Repetition")
-}
+
 
 class RepetitionHandlerArrayPP extends Actor {
 
