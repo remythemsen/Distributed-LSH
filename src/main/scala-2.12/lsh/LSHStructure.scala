@@ -1,16 +1,12 @@
 package lsh
 
-import messages.{InitRepetition, InitRepetitionProbe, Query}
-
+import messages.{InitRepetitionProbe, Query}
 import scala.concurrent.{Await, Future}
 import akka.actor._
 import akka.util.Timeout
-
 import scala.concurrent.duration._
 import akka.pattern.ask
-import hashfunctions.HashFunction
 import measures.Distance
-import multiprobing.PQProbeGenerator
 
 import scala.collection.mutable.ArrayBuffer
 

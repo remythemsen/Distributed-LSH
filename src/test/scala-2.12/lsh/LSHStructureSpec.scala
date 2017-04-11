@@ -15,7 +15,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     val a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
     //val a2 = system.actorOf(Props[actors.Repetition], name = "rep2")
     val lsh = new LSHStructure(Array(system.actorSelection(a1.path)/**, system.actorSelection(a2.path)**/))
-    lsh.build("data/descriptors-40000-reduced-128.data",39290, 1, "Hyperplane", 14, 128,Euclidean, rnd.nextLong())
+    lsh.build("data/descriptors-40000-reduced-128.data",39290, 1, "Hyperplane", "pq",1000, 14, 128,Euclidean, rnd.nextLong())
     println("Structure Was built!")
     val qp = Array.fill[Float](128)(rnd.nextFloat())//queryPoints.next
 

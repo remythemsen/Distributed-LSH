@@ -5,7 +5,7 @@ import hashfunctions.HashFunctionLong
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class ProbeTableLong(hashFunction: HashFunctionLong, maxCands:Int) {
+class ProbeTableLong(hashFunction: HashFunctionLong) {
   private val table = new mutable.LongMap[ArrayBuffer[Int]]()
 
   // internal Hash function
@@ -27,26 +27,12 @@ class ProbeTableLong(hashFunction: HashFunctionLong, maxCands:Int) {
   }
 
   /**
-    * @param v a query point
+    * @param key a query point hashed key
     * @return a list of vectors with same key as v
     */
-  def query(v:Array[Float]) : ArrayBuffer[Int] = {
-    // TODO optimize
-    val results = new ArrayBuffer[Int]
-    val probes = hf.generateProbes(hf(v))
-    var i = 0
-    while(results.size < this.maxCands && i < probes.length) {
-      this.table.get(probes(i)) match {
-        case Some(x) => results ++= x
-        case None =>
-      }
-      i+=1
-    }
-    results
-  }
-
-  def get(key:Long) : ArrayBuffer[Int] = {
+  def query(key:Long) : ArrayBuffer[Int] = {
     this.table.getOrElse(key, ArrayBuffer())
   }
+
 }
 

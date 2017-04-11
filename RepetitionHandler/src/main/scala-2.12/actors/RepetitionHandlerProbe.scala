@@ -43,12 +43,12 @@ class RepetitionHandlerProbe extends Actor {
 
   override def receive: Receive = {
     // Setting or resetting a repetition
-    case InitRepetitionProbe(buildFromFile, n, internalReps, hashFunction, probeScheme, maxCands, functions, dimensions, distance, seed) => {
+    case InitRepetitionProbe(buildFromFile, n, internalReps, hashFunction, probeScheme, qMaxCands, functions, dimensions, distance, seed) => {
 
       this.simMeasure = distance
       this.dataSet = new Array(n)
       this.dataSetVisited = Array.fill[Boolean](n)(false)
-      this.maxCands = maxCands
+      this.maxCands = qMaxCands
       this.hashFunctions = new Array(internalReps)
       this.keys = new Array(internalReps)
       this.resultSet = new Array(maxCands)
@@ -57,9 +57,10 @@ class RepetitionHandlerProbe extends Actor {
       // Loading in dataset
       println("Loading dataset...")
       val parser = DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
+      val percentile = n / 100
       var c = 0
       while (parser.hasNext) {
-        if (c % 100 == 0) println(c * 100 / n)
+        if (c % percentile == 0) println(n / (c * 100))
         this.dataSet(c) = parser.next
         c += 1
       }
@@ -79,7 +80,7 @@ class RepetitionHandlerProbe extends Actor {
             }
             //case "crosspolytope" => new Crosspolytope(functions, rnd.nextLong(), dimensions)
           }
-        }, functions*30)
+        })
 
         futures(i) = Future {
           buildRepetition(i, n)
@@ -113,7 +114,7 @@ class RepetitionHandlerProbe extends Actor {
       // Grab candidates from each probe bucket, take only distinct, measure dist to qp
       while(this.probeGenerator.hasNext() && c <= this.maxCands) {
         nextBucket = this.probeGenerator.next
-        candSet = this.repetitions(nextBucket._1).get(nextBucket._2)
+        candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
         j = 0
         while(j < candSet.length && c < resultSet.length ) { // TODO c < maxcands are checked twice
           if(!dataSetVisited(j)) {

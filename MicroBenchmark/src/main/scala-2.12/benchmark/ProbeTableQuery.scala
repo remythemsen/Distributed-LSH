@@ -36,7 +36,7 @@ class ProbeTableQuery {
     hp = new Hyperplane(k, rnd.nextLong(), dimensions)
     hp2 = new HyperplaneLong(k, rnd.nextLong(), dimensions)
     oldTable = new ProbeTableLongMapOld(hp, 30*k)
-    newTable = new ProbeTableLong(hp2, 30*k)
+    newTable = new ProbeTableLong(hp2)
     vectors = new Array(probetablesize)
 
     var i = 0
@@ -59,8 +59,8 @@ class ProbeTableQuery {
     bh.consume(oldTable.query(rndVector))
   }
 
-  @Benchmark
+/*  @Benchmark
   def queryLongMapNew(bh:Blackhole):Unit = {
     bh.consume(newTable.query(rndVector))
-  }
+  }*/
 }
