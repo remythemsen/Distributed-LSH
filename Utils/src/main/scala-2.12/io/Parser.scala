@@ -19,8 +19,9 @@ object Parser {
     override def hasNext: Boolean = iterator.hasNext
 
     override def next: Descriptor = {
-      val tuple = split(iterator.next, dimensions + 1) // number of components of vector + id
-      (tuple.head.toInt, tuple.tail)
+      //val tuple = split(iterator.next, dimensions + 1) // number of components of vector + id
+      val line = iterator.next.split(" ")
+      (line.head.toInt, line.tail.map(x => x.toFloat))
     }
   }
 

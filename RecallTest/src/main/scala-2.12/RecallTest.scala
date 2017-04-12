@@ -1,20 +1,20 @@
 import java.io.{File, FileInputStream, ObjectInputStream}
 
 import akka.actor.ActorSystem
-import io.{Parser, ResultWriter}
 import io.Parser.DisaParser
+import io.ResultWriter
 import lsh.LSHStructure
 import measures.{Cosine, Distance, Euclidean}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
 
-case class Config(dataDir:String, n:Int, dimensions:Int, queriesDir:String, repsPrNode:Int, hashFunction:String, functions:Int, probeScheme:String, queryMaxCands:Int,  measure:Distance, seed:Long, warmupIterations:Int, knn:Int, knnStructureDir:String, outDir:String)
+case class Config(dataDir:String, n:Int, dimensions:Int, queriesDir:String, repsPrNode:Int, hashFunction:String, functions:Int, probeScheme:String, queryMaxCands:Int,  measure:Distance, seed:Long, warmupIterations:Int, knn:Int, knnSetsDir:String, outDir:String)
 object RecallTest extends App {
 
   val INVOCATION_COUNT = 10
-  val OUTDIR = "data/out"
 
   // Remote Repetition references:
   val ips = Source.fromFile("data/ips").getLines().next.split(" ") // Ip's of tablehandlers
@@ -50,7 +50,7 @@ object RecallTest extends App {
   var lastQueriesDir = ""
   var lastDataDir = ""
 
-  val resWriter = new ResultWriter(OUTDIR,"recall-LSH", {
+  val resWriter = new ResultWriter("data/out","recall-LSH", {
     val sb = new StringBuilder
     sb.append("[ dataDir ]\t")
     sb.append("[ queriesDir ]\t")
@@ -90,30 +90,32 @@ object RecallTest extends App {
         case "euclidean" => Euclidean
         case "cosine" => Cosine
       },
-      tc(9).toLong, // random seed for hashfunction generation
-      tc(10).toInt, // Warmup iterations
-      tc(11).toInt, // k nearest neighbors to be tested
+      tc(10).toLong, // random seed for hashfunction generation
+      tc(11).toInt, // Warmup iterations
+      tc(12).toInt, // k nearest neighbors to be tested
       tc(13),       // knnstructure dir
       tc(14)        // output dir
     )
-    println("Loading knnstructure...")
-    val knnStructure = loadKNNStructure(new File(config.knnStructureDir))
+
+    println("Loading knnsets...")
+    val knnStructure = loadKNNSets(new File(config.knnSetsDir))
+
 
 
     println("Initializing repetitions...")
     if(lsh.build(config.dataDir, config.n, config.repsPrNode, config.hashFunction, config.probeScheme, config.queryMaxCands, config.functions, config.dimensions,config.measure, config.seed)) {
       println("LSH repetitions has been initialized..")
 
-      println("Loading DataSet")
       // Get dataSet, keep last set if fileDir is the same
       if(!config.dataDir.equals(lastDataDir)) {
+        println("Dataset has not been loaded. Loading Dataset...")
         this.dataSet = DisaParser(Source.fromFile(new File(config.dataDir)).getLines(), config.dimensions).toArray
         this.lastDataDir = config.dataDir
       }
 
-      println("Loading Queries")
       // Get queries, keep last set if fileDir is the same
       if(!config.queriesDir.equals(lastQueriesDir)) {
+        println("Queries has not been loaded. Loading Queries...")
         this.queries = DisaParser(Source.fromFile(new File(config.queriesDir)).getLines(), config.dimensions).toArray
         this.lastQueriesDir = config.queriesDir
       }
@@ -135,7 +137,7 @@ object RecallTest extends App {
       while(j < this.queries.length) {
         val qp:(Int, Array[Float]) = this.queries(this.rnd.nextInt(this.queries.length))
         var qRes: ArrayBuffer[Int] = ArrayBuffer()
-        var invocationTimes:Array[Double] = Array(INVOCATION_COUNT)
+        var invocationTimes:Array[Double] = new Array(INVOCATION_COUNT)
 
         // Time Test, every query is made 5 times
         var l = 0
@@ -143,6 +145,7 @@ object RecallTest extends App {
           invocationTimes(l) = timer {
             qRes = lsh.query(qp._2, config.knn)
           }
+          l+=1
         }
 
         queryTimes += invocationTimes.sum / INVOCATION_COUNT
@@ -198,17 +201,26 @@ object RecallTest extends App {
 
 
     }
+    tcc += 1
   }
   system.terminate()
   println("Testing has finished")
 
 
-  def loadKNNStructure(file:File): mutable.HashMap[Int, Array[(Int, Double)]] = {
-    println("Loading Optimal KNN structure")
-    val objReader = new ObjectInputStream(new FileInputStream(file))
-    val hashMap = objReader.readObject.asInstanceOf[mutable.HashMap[Int, Array[(Int, Double)]]]
-    objReader.close()
-    hashMap
+  def loadKNNSets(file:File): mutable.HashMap[Int, Array[(Int, Double)]] = {
+    val map = new mutable.HashMap[Int, Array[(Int, Double)]]
+    val fileLines = Source.fromFile(file).getLines()
+    // format is: key,id dist,id dist, ....  for each line
+    while(fileLines.hasNext) {
+      val pair = fileLines.next.split(",")
+      val key:String = pair.head
+      val nearestNeighbors:Array[(Int, Double)] = pair.tail.map(x => {
+        val set = x.split(" ")
+        (set(0).toInt, set(1).toDouble)
+      })
+      map.put(key.toInt, nearestNeighbors)
+    }
+    map
   }
 
   def timer[R](r: => R): Double = {

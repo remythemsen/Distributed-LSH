@@ -60,7 +60,7 @@ class RepetitionHandlerProbe extends Actor {
       val percentile = n / 100
       var c = 0
       while (parser.hasNext) {
-        if (c % percentile == 0) println(n / (c * 100))
+        if (c % percentile == 0) println(c * 100 / n)
         this.dataSet(c) = parser.next
         c += 1
       }
@@ -149,9 +149,10 @@ class RepetitionHandlerProbe extends Actor {
 
   def buildRepetition(mapRef:Int, dataSize:Int):Boolean = {
     var j = 0
+    var percentile = dataSize / 100
     while (j < this.dataSet.length) {
       // Insert key value pair of key generated from vector, and value: Index in dataSet
-      if (j % 100 == 0) println(j * 100 / dataSize)
+      if (j % percentile == 0) println(j * 100 / dataSize)
       this.repetitions(mapRef) += (this.dataSet(j), j)
       j += 1
     }
