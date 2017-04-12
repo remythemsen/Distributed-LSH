@@ -38,12 +38,12 @@ class PQProbeGenerator(k:Int, hfs:Array[HashFunctionLong]) extends ProbeKeyGener
       while(i < k) { // 1-Step Probes
 
         oneStepHash = checkAndFlip(hash, i)
-        pq += Tuple2(Tuple2(hashIndex, oneStepHash), Math.pow(epsilon, -Math.abs(this.dotProducts(i))))
+        pq += Tuple2(Tuple2(hashIndex, oneStepHash), Math.exp(-Math.abs(this.dotProducts(i))))
 
         j = i+1
         while(j < k) { // 2-Step Probes
           twoStepHash = checkAndFlip(oneStepHash, j)
-          pq += Tuple2(Tuple2(hashIndex, twoStepHash), Math.pow(epsilon, -Math.abs(this.dotProducts(i))-Math.abs(this.dotProducts(j))))
+          pq += Tuple2(Tuple2(hashIndex, twoStepHash), Math.exp(-Math.abs(this.dotProducts(i))-Math.abs(this.dotProducts(j))))
           j += 1
         }
         i += 1
