@@ -106,7 +106,6 @@ class RepetitionHandler extends Actor {
         }
         i += 1
       }
-
       // TODO Check correctness of k-1
       // TODO Find different version of quickselect
       val kthDist = SQuickSelect.quickSelect(candidates, {
@@ -116,6 +115,8 @@ class RepetitionHandler extends Actor {
 
       // TODO Dont use built in filter
       sender ! candidates.filter(x => x._2 <= kthDist)
+
+
       // Cleaning up
       var j = 0
       while(j < candidates.length) {

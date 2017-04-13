@@ -1,4 +1,5 @@
-import java.io.{File, FileInputStream, ObjectInputStream}
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import io.Parser.DisaParser
@@ -22,7 +23,7 @@ object RecallTest extends App {
   val repSystemName = "RepetitionSystem" // table handler Actor systemname
   val systemName = "akka.tcp://"+repSystemName+"@"
   val actorPath = "/user/Repetition"
-  val testCases = Source.fromFile("data/testcases").getLines().toArray // Ip's of tablehandlers
+  val testCases = Source.fromFile("data/testcases").getLines().toArray
 
   // Initialization
   val repetitionAddresses = for {
@@ -52,8 +53,6 @@ object RecallTest extends App {
 
   val resWriter = new ResultWriter("data/out","recall-LSH", {
     val sb = new StringBuilder
-    sb.append("[ dataDir ]\t")
-    sb.append("[ queriesDir ]\t")
     sb.append("[ N ]\t")
     sb.append("[ dimensions ]\t")
     sb.append("[ hashfuntion ]\t")
@@ -179,8 +178,6 @@ object RecallTest extends App {
       // Write result as line to file
       resWriter.writeResult({
         val sb = new StringBuilder
-        sb.append(config.dataDir+"\t")
-        sb.append(config.queriesDir+"\t")
         sb.append(config.n+"\t")
         sb.append(config.dimensions+"\t")
         sb.append(config.hashFunction+"\t")
@@ -194,8 +191,8 @@ object RecallTest extends App {
         sb.append(config.warmupIterations+"\t")
         sb.append(avgRecall+"\t")
         sb.append(stdDevRecall+"\t")
-        sb.append(avgTime+"\t")
-        sb.append(stdDevTime+"\t")
+        sb.append((avgTime / 1E6)+"ms\t")
+        sb.append((stdDevTime / 1E6)+"ms\t")
         sb.toString
       })
 
