@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import datastructures.{ProbeTableLong, ProbeTableLongMapOld}
 import hashfunctions.{Crosspolytope, HashFunctionLong, Hyperplane, HyperplaneLong}
-import io.Parser.DisaParser
+import io.Parser.{DisaParser, DisaParserBinary}
 import measures.Distance
 import messages._
 import multiprobing.{PQProbeGenerator, ProbeKeyGenerator, TwoStepProbeGenerator}
@@ -53,10 +53,11 @@ class RepetitionHandlerProbe extends Actor {
       this.keys = new Array(internalReps)
       this.resultSet = new Array(maxCands)
       val rnd = new Random(seed)
+      val parser = new DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
 
       // Loading in dataset
       println("Loading dataset...")
-      val parser = DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
+      val file = new File(buildFromFile)
       val percentile = n / 100
       var c = 0
       while (parser.hasNext) {

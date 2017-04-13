@@ -1,14 +1,30 @@
 package io
 
 import java.io.{File, InputStream}
-
-import io.Parser.DisaParser
-
-import scala.io.Source
+import scala.collection.mutable
 
 object Parser {
-  type Descriptor = (Int, Array[Float])
+  type DescriptorBit = (Int, mutable.BitSet)
+  case class DisaParserBinary(iterator: Iterator[String], dimensions:Int) extends Iterator[DescriptorBit] {
+    override def hasNext: Boolean = iterator.hasNext
 
+    override def next(): (Int, mutable.BitSet) = {
+      val line:Array[String] = iterator.next.split(" ")
+      val bitSet:mutable.BitSet = new mutable.BitSet()
+      val l = line(1).split("")
+      var i = 0
+      while(i < l.length) {
+        if(l(i) == "1") {
+          bitSet(i)
+        }
+        i+=1
+      }
+
+      (line.head.toInt, bitSet) // convert bitstring to bitset
+    }
+  }
+
+  type Descriptor = (Int, Array[Float])
   case class DisaParser(iterator: Iterator[String], dimensions:Int) extends Iterator[Descriptor] {
     /*
     * Expected format for file is:
@@ -60,7 +76,4 @@ object Parser {
     }
     go(s.indexOf(' ', 0), 0, 0, new Array[Float](l))
   }
-}
-object Program extends App {
-  DisaParser(Source.fromFile(new File("data/descriptors-1-million-reduced-128.data")).getLines, 128)
 }

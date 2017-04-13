@@ -13,7 +13,6 @@ class PQProbeGenerator(k:Int, hfs:Array[HashFunctionLong]) extends ProbeKeyGener
   }
 
   val pq = new mutable.PriorityQueue[((Int, Long), Double)]()(Ord)
-  val epsilon = 0.01
   var dotProducts:Array[Double] = new Array(k)
 
   override def generate(qp:Array[Float]) : Unit = {
