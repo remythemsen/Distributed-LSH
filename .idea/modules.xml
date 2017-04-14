@@ -4,8 +4,12 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/DistributedLSH.iml" filepath="$PROJECT_DIR$/.idea/modules/DistributedLSH.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/DistributedLSH-build.iml" filepath="$PROJECT_DIR$/.idea/modules/DistributedLSH-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/KNNFileBuilder.iml" filepath="$PROJECT_DIR$/.idea/modules/KNNFileBuilder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/KNNFileBuilder-build.iml" filepath="$PROJECT_DIR$/.idea/modules/KNNFileBuilder-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Preprocess.iml" filepath="$PROJECT_DIR$/.idea/modules/Preprocess.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Preprocess-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Preprocess-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/RecallTest.iml" filepath="$PROJECT_DIR$/.idea/modules/RecallTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/RecallTest-build.iml" filepath="$PROJECT_DIR$/.idea/modules/RecallTest-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/RepetitionHandler.iml" filepath="$PROJECT_DIR$/.idea/modules/RepetitionHandler.iml" />

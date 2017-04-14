@@ -21,4 +21,8 @@ lazy val RecallTest = project in file("RecallTest") dependsOn(DistributedLSH, Re
 
 lazy val MicroBenchmark = project in file("MicroBenchmark") dependsOn(DistributedLSH, RepetitionHandler, Utils) enablePlugins JmhPlugin
 
+lazy val KNNFileBuilder = project in file("KNNFileBuilder") dependsOn(Utils)
+
+lazy val Preprocess = project in file("Preprocess") dependsOn(Utils)
+
 lazy val RepetitionHandler = project in file("RepetitionHandler") dependsOn Utils

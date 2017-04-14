@@ -20,7 +20,6 @@ object EuclideanOld extends Distance {
 }
 
 object Euclidean extends Distance {
-  // TODO Consider single left shift instead
   override def measure(x: Array[Float], y: Array[Float]): Double = {
     var res = 0.0
     var i = 0
@@ -28,7 +27,7 @@ object Euclidean extends Distance {
       res += Math.pow(y(i) - x(i), 2)
       i += 1
     }
-    res
+    Math.sqrt(res)
   }
 }
 

@@ -56,7 +56,7 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
-      statuses += repetitions(i) ? InitRepetitionProbe(filePath, n, internalRepetitions, hashFunction, probeGenerator, maxCandsTotal/internalRepetitions, functions, dimensions, simMeasure, seed)
+      statuses += repetitions(i) ? InitRepetitionProbe(filePath, n, internalRepetitions, hashFunction, probeGenerator, maxCandsTotal/repetitions.length, functions, dimensions, simMeasure, seed)
       i += 1
     }
 

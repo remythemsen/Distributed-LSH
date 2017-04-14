@@ -10,7 +10,7 @@ import io.Parser.{DisaParser, DisaParserBinary}
 import measures.Distance
 import messages._
 import multiprobing.{PQProbeGenerator, ProbeKeyGenerator, TwoStepProbeGenerator}
-import tools.{SQuickSelect, SVQuickSelect}
+import tools.{SAQuickSelect, SQuickSelect, SVQuickSelect}
 
 import scala.concurrent.duration._
 import scala.collection.mutable.ArrayBuffer
@@ -51,7 +51,6 @@ class RepetitionHandlerProbe extends Actor {
       this.maxCands = qMaxCands
       this.hashFunctions = new Array(internalReps)
       this.keys = new Array(internalReps)
-      this.resultSet = new Array(maxCands)
       val rnd = new Random(seed)
       val parser = new DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
 
@@ -102,10 +101,10 @@ class RepetitionHandlerProbe extends Actor {
     }
 
     case Query(qp, k) => { // Returns Array[(Int,Double)]
-
-
       // Generate probes
       this.probeGenerator.generate(qp)
+      val candidates:ArrayBuffer[(Int, Double)] = new ArrayBuffer()
+      this.resultSet = new Array(k)
 
       var nextBucket:(Int, Long) = null
       var candSet:ArrayBuffer[Int] = null
@@ -117,10 +116,10 @@ class RepetitionHandlerProbe extends Actor {
         nextBucket = this.probeGenerator.next
         candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
         j = 0
-        while(j < candSet.length && c < resultSet.length ) { // TODO c < maxcands are checked twice
+        while(j < candSet.length) { // TODO c < maxcands are checked twice
           if(!dataSetVisited(j)) {
             index = candSet(j)
-            resultSet(c) = (index, this.simMeasure.measure(this.dataSet(index)._2, qp))
+            candidates += Tuple2(index, this.simMeasure.measure(this.dataSet(index)._2, qp))
             c += 1
             dataSetVisited(index) = true
           }
@@ -129,20 +128,33 @@ class RepetitionHandlerProbe extends Actor {
       }
 
       // Find kth Distance
-      // TODO Check correctness of k-1
+      // TODO Check correctness of k
       // TODO Find different version of quickselect
-      val kthDist = SQuickSelect.quickSelect(resultSet, {
-        if (resultSet.length < k) resultSet.length - 1
-        else k - 1
-      })
+      if(candidates.nonEmpty) {
+        val kthDist = SAQuickSelect.quickSelect(candidates, {
+          if (candidates.length < k) candidates.size - 1
+          else k
+        })
 
-      // TODO Dont use built in filter
-      sender ! resultSet.filter(x => x._2 <= kthDist)
+        sender ! {
+          // filter for distances smaller than the kth
+          var i,j = 0
+          while(j < resultSet.length && i < candidates.size) {
+            if(candidates(i)._2 < kthDist) {
+              resultSet(j) = candidates(i)
+              j+=1
+            }
+            i+=1
+          }
+          resultSet
+
+        }
+      } else { sender ! resultSet } // send empty set back
 
       // Cleaning up
       var h = 0
-      while(h < resultSet.length) {
-        dataSetVisited(resultSet(h)._1) = false
+      while(h < candidates.size) {
+        dataSetVisited(candidates(h)._1) = false
         h+=1
       }
     }

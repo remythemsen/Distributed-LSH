@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
 
-case class Config(dataDir:String, n:Int, dimensions:Int, queriesDir:String, repsPrNode:Int, hashFunction:String, functions:Int, probeScheme:String, queryMaxCands:Int,  measure:Distance, seed:Long, warmupIterations:Int, knn:Int, knnSetsDir:String, outDir:String)
+case class Config(dataDir:String, n:Int, queriesDir:String, dimensions:Int, repsPrNode:Int, hashFunction:String, functions:Int, probeScheme:String, queryMaxCands:Int, measure:Distance, seed:Long, warmupIterations:Int, knn:Int, knnSetsDir:String, outDir:String)
 object RecallTest extends App {
 
   val INVOCATION_COUNT = 10
@@ -46,10 +46,10 @@ object RecallTest extends App {
 
   // TEST SECTION
   val rnd = new Random(System.currentTimeMillis()) // TODO Get better random seed
-  var queries:Array[(Int, Array[Float])] = _
   var dataSet:Array[(Int, Array[Float])] = _
-  var lastQueriesDir = ""
+  var queries:Array[(Int, Array[Float])] = _
   var lastDataDir = ""
+  var lastQueriesDir = ""
 
   val resWriter = new ResultWriter("data/out","recall-LSH", {
     val sb = new StringBuilder
@@ -78,8 +78,8 @@ object RecallTest extends App {
     val config = new Config (
       tc(0),        // Datadir
       tc(1).toInt,  // N
-      tc(2).toInt,  // Dimensions
-      tc(3),        // queriesDir
+      tc(2),        // queriesdir
+      tc(3).toInt,  // Dimensions
       tc(4).toInt,  // repetitions per node
       tc(5),        // hashfunction
       tc(6).toInt,  // number of functions ( k )
@@ -113,8 +113,8 @@ object RecallTest extends App {
       }
 
       // Get queries, keep last set if fileDir is the same
-      if(!config.queriesDir.equals(lastQueriesDir)) {
-        println("Queries has not been loaded. Loading Queries...")
+      if(!config.dataDir.equals(lastQueriesDir)) {
+        println("queries has not been loaded. Loading queries...")
         this.queries = DisaParser(Source.fromFile(new File(config.queriesDir)).getLines(), config.dimensions).toArray
         this.lastQueriesDir = config.queriesDir
       }
@@ -150,12 +150,13 @@ object RecallTest extends App {
         queryTimes += invocationTimes.sum / INVOCATION_COUNT
 
         // Recall Test
-        val optimalRes = knnStructure(qp._1)
+        val optimalRes = knnStructure(qp._1).take(config.knn)
 
         // Here the recall is the ratio of the sum of distances to qp returned by a query
         queryRecalls += {
           val optSum = optimalRes.map(_._2).sum
           val qResSum = qRes.map(x => config.measure.measure(qp._2, dataSet(x)._2)).sum
+          if(optSum > qResSum) println("WAS BIGGER :( by " + (optSum - qResSum))
           optSum / qResSum
         }
         j += 1
