@@ -24,6 +24,7 @@ object RecallTest extends App {
   val systemName = "akka.tcp://"+repSystemName+"@"
   val actorPath = "/user/Repetition"
   val testCases = Source.fromFile("data/testcases").getLines().toArray
+  var rnd:Random = _
 
   // Initialization
   val repetitionAddresses = for {
@@ -45,7 +46,6 @@ object RecallTest extends App {
 
 
   // TEST SECTION
-  val rnd = new Random(System.currentTimeMillis()) // TODO Get better random seed
   var dataSet:Array[(Int, Array[Float])] = _
   var queries:Array[(Int, Array[Float])] = _
   var lastDataDir = ""
@@ -100,9 +100,10 @@ object RecallTest extends App {
     val knnStructure = loadKNNSets(new File(config.knnSetsDir))
 
 
+    this.rnd = new Random(config.seed)
 
     println("Initializing repetitions...")
-    if(lsh.build(config.dataDir, config.n, config.repsPrNode, config.hashFunction, config.probeScheme, config.queryMaxCands, config.functions, config.dimensions,config.measure, config.seed)) {
+    if(lsh.build(config.dataDir, config.n, config.repsPrNode, config.hashFunction, config.probeScheme, config.queryMaxCands, config.functions, config.dimensions,config.measure, rnd.nextLong)) {
       println("LSH repetitions has been initialized..")
 
       // Get dataSet, keep last set if fileDir is the same
@@ -120,10 +121,8 @@ object RecallTest extends App {
       }
 
       println("Warmup...")
-      // TODO Warmup section?
       var i = 0
       while(i < config.warmupIterations) {
-        // TODO is it fine with random queries ?
         val qRes = lsh.query(this.queries(rnd.nextInt(this.queries.length)), config.knn)
         if(qRes.nonEmpty) {
           qRes.head
@@ -136,7 +135,7 @@ object RecallTest extends App {
       val queryRecalls:ArrayBuffer[Double] = ArrayBuffer()
       var j = 0
       while(j < this.queries.length) {
-        val qp:(Int, Array[Float]) = this.queries(this.rnd.nextInt(this.queries.length))
+        val qp:(Int, Array[Float]) = this.queries(rnd.nextInt(this.queries.length))
         var qRes: ArrayBuffer[Int] = ArrayBuffer()
         var invocationTimes:Array[Double] = new Array(INVOCATION_COUNT)
 
@@ -212,7 +211,6 @@ object RecallTest extends App {
         sb.append((stdDevTime / 1E6)+"ms\t")
         sb.toString
       })
-
 
     }
     tcc += 1
