@@ -4,7 +4,7 @@ import scala.collection.mutable
 import scala.util.Random
 
 
-class BitHashLong(k:Int, dimensions:Int, seed:Long)  {
+class BitHash(k:Int, dimensions:Int, seed:Long)  {
 
   private val randomIndices:Array[Int] = generateRandomIndices(dimensions)
   val state: Array[Array[Float]] = ???
@@ -26,8 +26,6 @@ class BitHashLong(k:Int, dimensions:Int, seed:Long)  {
     // result is the bit value at position 'index'
 /*    v(index)*/
   }
-
-  def generateProbes(key: Long): Array[Long] = ???
 
   def generateRandomIndices(dimensions:Int) : Array[Int] = {
     val rnd = new Random(seed)

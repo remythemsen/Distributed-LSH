@@ -10,29 +10,32 @@ import scala.util.Random
   */
 class ProbeTableSpec extends FlatSpec with Matchers {
   "Query " should "return results given a valid query" in {
+    val k = 6
     val rnd = new Random(System.currentTimeMillis())
-    val hp = new Hyperplane(6, rnd.nextLong(), 128)
-    val vec = (1,Array.fill[Float](128)(rnd.nextFloat))
-    val vec1 = (2,Array.fill[Float](128)(rnd.nextFloat))
-    val vec2 = (3,Array.fill[Float](128)(rnd.nextFloat))
-
+    val hp = Hyperplane(k, rnd.nextLong(), 128)
     val pt = new ProbeTable(hp)
-    pt+=vec
-    pt+=vec1
-    pt+=vec2
 
-    assert(pt.query(vec._2).contains(vec)) // same object
-    assert(pt.query(vec1._2).contains(vec1)) // same object
-    assert(pt.query(vec2._2).contains(vec2)) // same object
+    var i = 0
+
+    val vec = ((1,Array.fill[Float](128)(rnd.nextFloat)),1)
+    pt+=vec
+    while(i < 100) {
+      pt+=((rnd.nextInt,Array.fill[Float](128)(rnd.nextFloat)),1)
+      i+=1
+    }
+
+    assert(pt.query(hp(vec._1._2)).contains(vec._2)) // same object
+
   }
   "Query " should "not throw exception given invalid query" in {
+    val k = 6
     val rnd = new Random(System.currentTimeMillis())
-    val hp = new Hyperplane(6, rnd.nextLong(), 128)
-    val vec = (1,Array.fill[Float](128)(rnd.nextFloat))
-    val vec2 = (3,Array.fill[Float](128)(rnd.nextFloat))
+    val hp = Hyperplane(k, rnd.nextLong(), 128)
+    val vec = ((1,Array.fill[Float](128)(rnd.nextFloat)),1)
+    val vec2 = ((3,Array.fill[Float](128)(rnd.nextFloat)),2)
     val pt = new ProbeTable(hp)
     pt+=vec
-    assert(!pt.query(vec2._2).contains(vec2)) // same object
+    assert(!pt.query(hp(vec2._1._2)).contains(vec2._2)) // same object
   }
 
 }

@@ -4,12 +4,13 @@ import java.io.File
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
-import datastructures.ProbeTableLongMapOld
-import hashfunctions.{Crosspolytope, Hyperplane, HyperplaneLong}
-import io.Parser.DisaParser
+import datastructures.ProbeTable
+import hashfunctions.{HashFunction, Hyperplane}
+import io.Parser.{DisaParser, DisaParserBinary}
 import measures.Distance
 import messages._
-import tools.{SQuickSelect, SVQuickSelect}
+import multiprobing.{ProbeScheme, TwoStep, PQ}
+import tools.{SAQuickSelect, SQuickSelect, SVQuickSelect}
 
 import scala.concurrent.duration._
 import scala.collection.mutable.ArrayBuffer
@@ -23,28 +24,43 @@ import scala.util.Random
 class RepetitionHandler extends Actor {
 
   // Set of internal repetitions
-  private var repetitions:Array[ProbeTableLongMapOld] = _
+  private var repetitions:Array[ProbeTable] = _
   private var simMeasure:Distance = _
 
   // Internal lookup map for vectors in datastructure
   private var dataSet:Array[(Int, Array[Float])] = _
   private var dataSetVisited:Array[Boolean] = _
 
+  private var probeGenerator:ProbeScheme = _
+
+  private var hashFunctions:Array[HashFunction] = _
+
+  private var maxCands:Int = _
+  private var resultSet:Array[(Int, Double)] = _
+
+  // Reusable array for hashed keys (query)
+  private var keys:Array[(Int,Long)] = _
+
   override def receive: Receive = {
     // Setting or resetting a repetition
-    case InitRepetition(buildFromFile, n, internalReps, hashFunction, functions, dimensions, distance, seed) => {
+    case InitRepetition(buildFromFile, n, internalReps, hashFunction, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
 
       this.simMeasure = distance
       this.dataSet = new Array(n)
       this.dataSetVisited = Array.fill[Boolean](n)(false)
+      this.maxCands = qMaxCands
+      this.hashFunctions = new Array(internalReps)
+      this.keys = new Array(internalReps)
       val rnd = new Random(seed)
+      val parser = DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
 
       // Loading in dataset
       println("Loading dataset...")
-      val parser = DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
+      val file = new File(buildFromFile)
+      val percentile = n / 100
       var c = 0
       while (parser.hasNext) {
-        if (c % 100 == 0) println(c * 100 / n)
+        if (c % percentile == 0) println(c * 100 / n)
         this.dataSet(c) = parser.next
         c += 1
       }
@@ -56,16 +72,24 @@ class RepetitionHandler extends Actor {
 
       //var i = 0
       for (i <- 0 until internalReps) {
-        this.repetitions(i) = new ProbeTableLongMapOld({
+        this.repetitions(i) = new ProbeTable({
           hashFunction.toLowerCase() match {
-            case "hyperplane" => new Hyperplane(functions, rnd.nextLong(), dimensions)
-            //case "crosspolytope" => new Crosspolytope(functions, rnd.nextLong(), dimensions)
+            case "hyperplane" =>
+              this.hashFunctions(i) = Hyperplane(functions, rnd.nextLong(), dimensions)
+              this.hashFunctions(i)
+
           }
-        }, functions*30)
+        })
 
         futures(i) = Future {
           buildRepetition(i, n)
         }
+      }
+
+      // Initializing the pgenerator
+      this.probeGenerator = probeScheme.toLowerCase match {
+        case "pq" => new PQ(functions, this.hashFunctions)
+        case "twostep" => new TwoStep(functions, this.hashFunctions)
       }
 
       implicit val timeout = Timeout(20.hours)
@@ -73,65 +97,74 @@ class RepetitionHandler extends Actor {
 
 
       sender ! true
-    }
-
-    case Query(qp, k) => { // Returns Array[(Int,Double)]
-      var candidates: Array[(Int,Double)] = new Array[(Int,Double)](0) // faster append than vector for up to 64 size
 
 
-      // Getting candidates
-      // Here we need global access to each repetition.
-      // Pseudocode: 
-      // var maxCandidates = ... 
-      // priority queue q where entries are (hashcode, rep_index)
-      // get all the probing sequences from each repetition 
-      // hf.generateProbes(hf(v))
-      // in the beginning: put probing sequence + repetition number in priority queue
-      // priority: actual hashcode: "highest priority", one bit difference: "second-highest priority", 
-      // two-steps different "lowest priority".
-      // query: 
-      // while (candidates.length < maxCandidates && !q.empty()) {
-      //  (bucket, rep_index) = q.top();
-      //   "Get the elements in the bucket for repetition rep_index" 
-      var i = 0
-      while (i < this.repetitions.length) {
-        val candI:ArrayBuffer[Int] = this.repetitions(i).query(qp)
-        var j = 0
-        while(j < candI.length) {
-          if(!dataSetVisited(candI(j))) {
-            candidates = candidates :+ (candI(j), this.simMeasure.measure(dataSet(candI(j))._2, qp))
-            dataSetVisited(candI(j)) = true
+    case Query(qp, k) => // Returns Array[(Int,Double)]
+      // Generate probes
+      this.probeGenerator.generate(qp)
+      val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
+      //this.resultSet = new Array(k)
+
+      var nextBucket: (Int, Long) = null
+      var candSet: ArrayBuffer[Int] = null
+      var j, c = 0
+      var index = 0
+
+      // Grab candidates from each probe bucket, take only distinct, measure dist to qp
+      while (this.probeGenerator.hasNext() && c <= this.maxCands) {
+        nextBucket = this.probeGenerator.next()
+        candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
+        j = 0
+        while (j < candSet.length) {
+          // TODO c < maxcands are checked twice
+          if (!dataSetVisited(j)) {
+            index = candSet(j)
+            val dist = this.simMeasure.measure(this.dataSet(index)._2, qp)
+            if (dist > 0) {
+              // if it's not the qp itself
+              candidates += Tuple2(index, dist)
+              c += 1
+              dataSetVisited(index) = true
+            }
           }
           j += 1
         }
-        i += 1
       }
-      // TODO Check correctness of k-1
+
+      // Find kth Distance
+      // TODO Check correctness of k
       // TODO Find different version of quickselect
-      val kthDist = SQuickSelect.quickSelect(candidates, {
-        if (candidates.length < k) candidates.length - 1
-        else k - 1
-      })
+      if (candidates.nonEmpty) {
+        val kthDist = SAQuickSelect.quickSelect(candidates, {
+          if (candidates.length < k) candidates.size - 1
+          else k
+        })
 
-      // TODO Dont use built in filter
-      sender ! candidates.filter(x => x._2 <= kthDist)
+        sender ! {
+          // filter for distances smaller than the kth
+          candidates.filter(_._2 < kthDist)
 
+        }
+      } else {
+        sender ! ArrayBuffer()
+      } // send empty set back
 
       // Cleaning up
-      var j = 0
-      while(j < candidates.length) {
-        dataSetVisited(candidates(j)._1) = false
-        j+=1
+      var h = 0
+      while (h < candidates.size) {
+        dataSetVisited(candidates(h)._1) = false
+        h += 1
       }
 
-    }
   }
+
 
   def buildRepetition(mapRef:Int, dataSize:Int):Boolean = {
     var j = 0
+    var percentile = dataSize / 100
     while (j < this.dataSet.length) {
       // Insert key value pair of key generated from vector, and value: Index in dataSet
-      if (j % 100 == 0) println(j * 100 / dataSize)
+      if (j % percentile == 0) println(j * 100 / dataSize)
       this.repetitions(mapRef) += (this.dataSet(j), j)
       j += 1
     }

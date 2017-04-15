@@ -7,5 +7,5 @@ import akka.actor.{ActorSystem, Props}
   */
 object Program extends App {
   val system = ActorSystem("RepetitionSystem")
-  val repetitionHandler = system.actorOf(Props[RepetitionHandlerProbe], name = "Repetition")
+  val repetitionHandler = system.actorOf(Props[RepetitionHandler], name = "Repetition")
 }

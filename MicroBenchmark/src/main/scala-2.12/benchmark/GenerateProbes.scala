@@ -1,6 +1,7 @@
 package benchmark
 
-import hashfunctions.{Hyperplane, HyperplaneLong}
+import hashfunctions.Hyperplane
+import multiprobing.{PQ, ProbeScheme}
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
@@ -14,29 +15,23 @@ class GenerateProbes {
   var k:Int = 0
 
   var rnd:Random = new Random(System.currentTimeMillis())
-  var key:Array[Int] = Array()
-  var key2:Long = _
-  var hp:Hyperplane = new Hyperplane(k, rnd.nextLong(), 128)
-  var hp2:HyperplaneLong = new HyperplaneLong(k, rnd.nextLong(), 128)
+  var key:Array[Float] = Array()
+  var hp:Hyperplane = Hyperplane(k, rnd.nextLong(), 128)
+  var mp:PQ = _
 
   @Setup(Level.Iteration)
   def setup(): Unit = {
-    hp = new Hyperplane(k, rnd.nextLong(), 128)
-    hp2 = new HyperplaneLong(k, rnd.nextLong(), 128)
+    hp = Hyperplane(k, rnd.nextLong(), 128)
+    mp = new PQ(k, Array(hp))
   }
 
   @Setup(Level.Invocation)
   def genKey(): Unit = {
-    key = hp(Array.fill(128)(rnd.nextFloat))
-    key2 = hp2(Array.fill(128)(rnd.nextFloat))
+    key = Array.fill(128)(rnd.nextFloat)
   }
 
   @Benchmark
-  def hyperplane(bh:Blackhole):Unit = {
-    bh.consume(hp.generateProbes(key))
-  }
-  @Benchmark
-  def hyperplaneLong(bh:Blackhole):Unit = {
-    bh.consume(hp2.generateProbes(key2))
+  def pqProbes(bh:Blackhole):Unit = {
+    bh.consume(mp.generate(key))
   }
 }

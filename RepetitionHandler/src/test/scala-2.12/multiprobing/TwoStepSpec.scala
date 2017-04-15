@@ -1,6 +1,6 @@
 package multiprobing
 
-import hashfunctions.HyperplaneLong
+import hashfunctions.Hyperplane
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.Random
@@ -8,12 +8,12 @@ import scala.util.Random
 /**
   * Created by remeeh on 07-04-2017.
   */
-class TwoStepProbeGeneratorSpec extends FlatSpec with Matchers {
+class TwoStepSpec extends FlatSpec with Matchers {
   "generate" should "make correct probeset on simple input" in {
     val rnd = new Random
     val k = 2
-    val hfs = Array(new HyperplaneLong(k, rnd.nextLong, 128))
-    val gen = new TwoStepProbeGenerator(k, Array(new HyperplaneLong(k, rnd.nextLong, 128))) // k=2 L=1
+    val hfs = Array(Hyperplane(k, rnd.nextLong, 128))
+    val gen = new TwoStep(k, Array(Hyperplane(k, rnd.nextLong, 128))) // k=2 L=1
     val qp = Array.fill[Float](128)(rnd.nextFloat)
     gen.generate(qp)
     val res = gen.map(x => x._2).toArray
@@ -28,8 +28,8 @@ class TwoStepProbeGeneratorSpec extends FlatSpec with Matchers {
   "generate" should "make correct probeset on simple input with 2 keys" in {
     val rnd = new Random
     val k = 2
-    val hfs = Array(new HyperplaneLong(k, rnd.nextLong, 128))
-    val gen = new TwoStepProbeGenerator(k, Array(new HyperplaneLong(k, rnd.nextLong, 128))) // k=2 L=1
+    val hfs = Array(Hyperplane(k, rnd.nextLong, 128))
+    val gen = new TwoStep(k, Array(Hyperplane(k, rnd.nextLong, 128))) // k=2 L=1
     val res = gen.toArray
     val res1 = res.filter(x=>x._1 ==0).map(x => x._2)
     val res2 = res.filter(x=>x._1 ==1).map(x => x._2)

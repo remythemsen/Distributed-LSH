@@ -1,7 +1,6 @@
 package benchmark
 
-import hashfunctions.Hyperplane
-import measures.Distance
+import tools.Tools._
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
@@ -24,12 +23,7 @@ class DotProduct {
   }
 
   @Benchmark
-  def parDot(bh:Blackhole) : Unit = {
-    bh.consume(Distance.parDotProduct(vector, vector2))
-  }
-
-  @Benchmark
-  def SpecDot(bh:Blackhole) : Unit = {
-    bh.consume(Distance.dotProduct(vector, vector2))
+  def dot(bh:Blackhole) : Unit = {
+    bh.consume(dotProduct(vector, vector2))
   }
 }

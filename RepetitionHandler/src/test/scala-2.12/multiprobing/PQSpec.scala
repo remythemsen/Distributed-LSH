@@ -1,6 +1,6 @@
 package multiprobing
 
-import hashfunctions.HyperplaneLong
+import hashfunctions.Hyperplane
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.Random
@@ -8,11 +8,11 @@ import scala.util.Random
 /**
   * Created by remeeh on 07-04-2017.
   */
-class PQProbeGeneratorSpec extends FlatSpec with Matchers {
+class PQSpec extends FlatSpec with Matchers {
   "generate" should "make correct probeset on simple input" in {
     val k = 2
     val rnd = new Random(System.currentTimeMillis())
-    val gen = new PQProbeGenerator(k, Array(new HyperplaneLong(k,rnd.nextLong,128))) // k=2 L=1
+    val gen = new PQ(k, Array(Hyperplane(k,rnd.nextLong,128))) // k=2 L=1
     gen.generate(Array.fill[Float](128)(rnd.nextFloat()))
     val res = gen.map(x => x._2).toArray
     assert(res.contains(0l))
@@ -26,8 +26,8 @@ class PQProbeGeneratorSpec extends FlatSpec with Matchers {
   "generate" should "make correct probeset on simple input with 2 keys" in {
     val k = 2
     val rnd = new Random(System.currentTimeMillis())
-    val gen = new PQProbeGenerator(k, {
-      Array(new HyperplaneLong(k,rnd.nextLong,128),new HyperplaneLong(k,rnd.nextLong,128))
+    val gen = new PQ(k, {
+      Array(Hyperplane(k,rnd.nextLong,128),Hyperplane(k,rnd.nextLong,128))
     }) // k=2 L=1
     gen.generate(Array.fill[Float](128)(rnd.nextFloat()))
     val res = gen.toArray

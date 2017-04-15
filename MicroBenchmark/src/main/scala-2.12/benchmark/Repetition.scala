@@ -41,12 +41,12 @@ class Repetition {
     a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
 
 
-    val ready = a1 ? InitRepetition("../data/descriptors-40000-reduced-128.data", 39290, internalTables, "hyperplane", 16, 128, Euclidean, rnd.nextLong)
+    val ready = a1 ? InitRepetition("../data/descriptors-40000-reduced-128.data", 39290, internalTables, "hyperplane", "twostep", 100000, 16, 128, Euclidean, rnd.nextLong)
     Await.result(ready, timeout.duration)
 
   }
   @Setup(Level.Iteration)
-  def getQueries() = {
+  def queries():Unit = {
     val points = DisaParser(Source.fromFile(new File("../data/descriptors-40000-reduced-128.data")).getLines(), 128).map(x => x._2).toIndexedSeq
     rnd.shuffle(points)
     queryPoints = points.toIterator
@@ -58,7 +58,7 @@ class Repetition {
   }
 
   @TearDown(Level.Trial)
-  def td:Unit = {
+  def td():Unit = {
     val nothing = system.terminate()
   }
 

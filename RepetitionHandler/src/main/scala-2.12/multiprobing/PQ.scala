@@ -1,15 +1,15 @@
 package multiprobing
 
-import hashfunctions.{HashFunctionLong, HyperplaneLong}
-import measures.Distance
+import hashfunctions.HashFunction
+import tools.Tools._
 
 import scala.collection.mutable
 
-class PQProbeGenerator(k:Int, hfs:Array[HashFunctionLong]) extends ProbeKeyGenerator {
+class PQ(k:Int, hfs:Array[HashFunction]) extends ProbeScheme {
   // ((idOfRepetition, generatedKey), score)
 
   object Ord extends Ordering[((Int, Long), Double)] {	// not implicit
-    def compare(x: ((Int, Long), Double), y: ((Int, Long), Double)) = y._2.compare(x._2)
+    def compare(x: ((Int, Long), Double), y: ((Int, Long), Double)):Int = y._2.compare(x._2)
   }
 
   val pq = new mutable.PriorityQueue[((Int, Long), Double)]()(Ord)
@@ -26,7 +26,7 @@ class PQProbeGenerator(k:Int, hfs:Array[HashFunctionLong]) extends ProbeKeyGener
     while (hashIndex < hfs.length) {
       // Get dot products between qp and hyperplane for each k hyperplanes in hashFunction
       while(hyperIndex < hfs(i).state.length) {
-        this.dotProducts(hyperIndex) = Distance.dotProduct(qp, hfs(hashIndex).state(hyperIndex))
+        this.dotProducts(hyperIndex) = dotProduct(qp, hfs(hashIndex).state(hyperIndex))
         hyperIndex += 1
       }
 

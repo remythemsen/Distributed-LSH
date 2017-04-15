@@ -1,15 +1,15 @@
 package multiprobing
 
-import hashfunctions.{HashFunction, HashFunctionLong}
+import hashfunctions.HashFunction
 
 /**
   * Created by remeeh on 07-04-2017.
   */
-class TwoStepProbeGenerator(k:Int, hfs:Array[HashFunctionLong]) extends ProbeKeyGenerator {
+class TwoStep(k:Int, hfs:Array[HashFunction]) extends ProbeScheme {
   // Set of resulting probes for all keys
   var probes:Array[(Int, Long)] = new Array(hfs.length*(1+(k*(k+1)/2)))
   var probesLeft:Int = 0
-  var hashFunctions:Array[HashFunctionLong] = hfs
+  var hashFunctions:Array[HashFunction] = hfs
   var keys:Array[(Int, Long)] = new Array(hfs.length)
 
   override def generate(qp:Array[Float]): Unit = {

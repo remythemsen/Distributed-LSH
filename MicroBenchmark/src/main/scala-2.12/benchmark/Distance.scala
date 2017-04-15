@@ -1,6 +1,6 @@
 package benchmark
 
-import measures.{Cosine, Euclidean, EuclideanOld}
+import measures.{Cosine, CosineUnit, Euclidean}
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
@@ -24,16 +24,16 @@ class Distance {
 
   @Benchmark
   def euclidean(bh:Blackhole) : Unit = {
-    bh.consume(EuclideanOld.measure(vector, vector2))
-  }
-
-  @Benchmark
-  def euclideanSimple(bh:Blackhole) : Unit = {
     bh.consume(Euclidean.measure(vector, vector2))
   }
 
   @Benchmark
   def cosine(bh:Blackhole) : Unit = {
     bh.consume(Cosine.measure(vector, vector2))
+  }
+
+  @Benchmark
+  def cosineUnit(bh:Blackhole) : Unit = {
+    bh.consume(CosineUnit.measure(vector, vector2))
   }
 }

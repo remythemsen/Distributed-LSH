@@ -1,14 +1,12 @@
 package datastructures
 
-import java.util
-
-import hashfunctions.{HashFunction, Hyperplane}
+import hashfunctions.HashFunction
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 class ProbeTable(hashFunction: HashFunction) {
-  private val table = new mutable.HashMap[Int, ArrayBuffer[(Int, Array[Float])]]()
+  private val table = new mutable.LongMap[ArrayBuffer[Int]]()
 
   // internal Hash function
   private val hf = hashFunction
@@ -17,31 +15,24 @@ class ProbeTable(hashFunction: HashFunction) {
     * Insert vector
     * @param v vector to be inserted into internal hashmap
     */
-  def +=(v:(Int, Array[Float])) : Unit = {
-    val key = util.Arrays.hashCode(hf(v._2))
-    val value = {
-      if(this.table.contains(key)) this.table(key)++ArrayBuffer(v)
-      else ArrayBuffer(v)
+  def +=(v:((Int, Array[Float]), Int)) : Unit = {
+    // add address of vector to the buffer in map
+    val key = hf(v._1._2)
+    // TODO remove this branch if possible
+    if(!this.table.contains(key)) {
+      this.table(key) = new ArrayBuffer()
     }
-    this.table += (key -> value)
+
+    this.table(key) += v._2
   }
 
   /**
-    * @param v a query point
+    * @param key a query point hashed key
     * @return a list of vectors with same key as v
     */
-  def query(v:Array[Float]) : ArrayBuffer[(Int, Array[Float])] = {
-    // TODO dont use Array.hashCode
-    // TODO dont append arrays!
-    // TODO optimize
-    val results = new ArrayBuffer[(Int, Array[Float])]
-    val probes = hf.generateProbes(hf(v))
-    var i = 0
-    while(i < probes.length) {
-      results ++= this.table.getOrElse(util.Arrays.hashCode(probes(i)), ArrayBuffer())
-      i+=1
-    }
-    results
+  def query(key:Long) : ArrayBuffer[Int] = {
+    this.table.getOrElse(key, ArrayBuffer())
   }
+
 }
 
