@@ -28,28 +28,24 @@ class LSHStructure(repetitions:Array[ActorSelection]) {
   implicit val timeout = Timeout(20.hours)
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def query(qp:Array[Float], k:Int) : ArrayBuffer[Int] = {
-    // TODO we know that size of resultSet is at most k*Repetitions, is it somehow possible to move it out of query
-    val candidates = new ArrayBuffer[Array[(Int,Double)]](k*repetitions.length) // TODO 100 is kind of a magic number, should not be less than k
+  def query(qp:(Int, Array[Float]), k:Int) : ArrayBuffer[Int] = {
+    val candidates = new ArrayBuffer[(Int,Double)]()
 
     // for each rep, send query, wait for result from all. return set
     var i = 0
     while(i < repetitions.length) {
-      futureResults(i) = repetitions(i) ? Query(qp, k)
+      futureResults(i) = repetitions(i) ? Query(qp._2, k)
       i += 1
     }
 
-    // TODO check if efficient await over futures is possible combining following applications to result set
-
     // Wait for all results to return
-    // TODO Future sequence is a linear cost
     var j = 0
     while(j < futureResults.length) {
-      candidates += Await.result(futureResults(j), timeout.duration).asInstanceOf[Array[(Int, Double)]]
+      candidates ++= Await.result(futureResults(j), timeout.duration).asInstanceOf[ArrayBuffer[(Int, Double)]]
       j+=1
     }
 
-    candidates.flatten.sortBy(x => x._2).take(k).map(x => x._1)
+    candidates.distinct.sortBy(x => x._2).take(k).map(x => x._1)
   }
 
   def build(filePath:String, n:Int, internalRepetitions:Int, hashFunction:String, probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {

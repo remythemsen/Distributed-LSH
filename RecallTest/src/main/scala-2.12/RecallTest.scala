@@ -124,8 +124,10 @@ object RecallTest extends App {
       var i = 0
       while(i < config.warmupIterations) {
         // TODO is it fine with random queries ?
-        val qRes = lsh.query(this.queries(rnd.nextInt(this.queries.length))._2, config.knn)
-        qRes.head
+        val qRes = lsh.query(this.queries(rnd.nextInt(this.queries.length)), config.knn)
+        if(qRes.nonEmpty) {
+          qRes.head
+        }
         i+=1
       }
 
@@ -142,7 +144,7 @@ object RecallTest extends App {
         var l = 0
         while(l < INVOCATION_COUNT) {
           invocationTimes(l) = timer {
-            qRes = lsh.query(qp._2, config.knn)
+            qRes = lsh.query(qp, config.knn)
           }
           l+=1
         }
@@ -154,9 +156,23 @@ object RecallTest extends App {
 
         // Here the recall is the ratio of the sum of distances to qp returned by a query
         queryRecalls += {
-          val optSum = optimalRes.map(_._2).sum
-          val qResSum = qRes.map(x => config.measure.measure(qp._2, dataSet(x)._2)).sum
-          if(optSum > qResSum) println("WAS BIGGER :( by " + (optSum - qResSum))
+          val optSum:Double = optimalRes.map(_._2).sum
+          var qResSum = qRes.map(x => config.measure.measure(dataSet(x)._2, qp._2)).sum
+          if(qRes.size < config.knn) {
+            // Punishment
+            println("optimal sum: " + optSum)
+            println("punished " + qResSum +" + "+ (config.knn - qRes.size))
+            qResSum += 2* (config.knn - qRes.size)
+          }
+          if(optSum > qResSum){
+            println("WAS BIGGER :( by " + (optSum - qResSum))
+            println("Qres: distances.... ")
+            for(y <- qRes) {
+              print(config.measure.measure(dataSet(y)._2, qp._2) + " ")
+
+            }
+          }
+
           optSum / qResSum
         }
         j += 1

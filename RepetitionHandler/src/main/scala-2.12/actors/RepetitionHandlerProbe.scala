@@ -104,7 +104,7 @@ class RepetitionHandlerProbe extends Actor {
       // Generate probes
       this.probeGenerator.generate(qp)
       val candidates:ArrayBuffer[(Int, Double)] = new ArrayBuffer()
-      this.resultSet = new Array(k)
+      //this.resultSet = new Array(k)
 
       var nextBucket:(Int, Long) = null
       var candSet:ArrayBuffer[Int] = null
@@ -119,9 +119,12 @@ class RepetitionHandlerProbe extends Actor {
         while(j < candSet.length) { // TODO c < maxcands are checked twice
           if(!dataSetVisited(j)) {
             index = candSet(j)
-            candidates += Tuple2(index, this.simMeasure.measure(this.dataSet(index)._2, qp))
-            c += 1
-            dataSetVisited(index) = true
+            val dist = this.simMeasure.measure(this.dataSet(index)._2, qp)
+            if(dist > 0) { // if it's not the qp itself
+              candidates += Tuple2(index, dist)
+              c += 1
+              dataSetVisited(index) = true
+            }
           }
           j += 1
         }
@@ -138,18 +141,10 @@ class RepetitionHandlerProbe extends Actor {
 
         sender ! {
           // filter for distances smaller than the kth
-          var i,j = 0
-          while(j < resultSet.length && i < candidates.size) {
-            if(candidates(i)._2 < kthDist) {
-              resultSet(j) = candidates(i)
-              j+=1
-            }
-            i+=1
-          }
-          resultSet
+          candidates.filter(_._2 < kthDist)
 
         }
-      } else { sender ! resultSet } // send empty set back
+      } else { sender ! ArrayBuffer() } // send empty set back
 
       // Cleaning up
       var h = 0

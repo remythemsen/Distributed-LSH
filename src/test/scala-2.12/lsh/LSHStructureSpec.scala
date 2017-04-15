@@ -17,7 +17,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     val lsh = new LSHStructure(Array(system.actorSelection(a1.path)/**, system.actorSelection(a2.path)**/))
     lsh.build("data/descriptors-40000-reduced-128.data",39290, 1, "Hyperplane", "pq",1000, 14, 128,Euclidean, rnd.nextLong())
     println("Structure Was built!")
-    val qp = Array.fill[Float](128)(rnd.nextFloat())//queryPoints.next
+    val qp = (1, Array.fill[Float](128)(rnd.nextFloat()))//queryPoints.next
 
     lsh.query(qp, 10)
 

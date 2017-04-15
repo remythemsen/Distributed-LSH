@@ -22,8 +22,8 @@ import scala.util.Random
 @State(Scope.Thread)
 class LSHStructureQuery {
   var lsh:LSHStructure = _
-  var queryPoints:Iterator[Array[Float]] = _
-  var nextPoint:Array[Float] = _
+  var queryPoints:Iterator[(Int, Array[Float])] = _
+  var nextPoint:(Int, Array[Float]) = _
   val rnd = new Random(System.currentTimeMillis())
   var system:ActorSystem = _
 
@@ -41,7 +41,7 @@ class LSHStructureQuery {
 
   @Setup(Level.Iteration) // (is group of invocations)
   def ite = {
-    val points = DisaParser(Source.fromFile(new File("../data/descriptors-40000-reduced-128.data")).getLines(), 128).map(x => x._2).toIndexedSeq
+    val points = DisaParser(Source.fromFile(new File("../data/descriptors-40000-reduced-128.data")).getLines(), 128).toIndexedSeq
     rnd.shuffle(points)
     queryPoints = points.toIterator
   }
