@@ -2,21 +2,27 @@ package hashfunctions
 
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.collection.mutable
 import scala.util.Random
 
 /**
   * Created by remeeh on 23-03-2017.
   */
-class HyperplaneSpec extends FlatSpec with Matchers {
+class BitHashSpec extends FlatSpec with Matchers {
   "Apply method" should "return a long" in {
     val rnd = new Random(System.currentTimeMillis())
-    val hp = Hyperplane(6, rnd.nextLong(), 128)
-    val vec = Array.fill[Float](128)(rnd.nextFloat)
+    val k = 6
+    val hp = BitHash(k, rnd.nextLong(), 128)
+    val vec = mutable.BitSet()
+    for(i <- 0 until k) {
+      // TODO is this correct order
+      vec(i) = rnd.nextBoolean()
+    }
     val l:Long = 0
     val r = hp(vec)
     assert(r.getClass == l.getClass)
   }
 
-  // TODO Make test for hyperplane correctness
+  // TODO Make test for bithash correctness
 
 }

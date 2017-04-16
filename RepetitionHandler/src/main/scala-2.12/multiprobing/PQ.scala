@@ -9,7 +9,7 @@ class PQ(k:Int, hfs:Array[HashFunction]) extends ProbeScheme {
   // ((idOfRepetition, generatedKey), score)
 
   object Ord extends Ordering[((Int, Long), Double)] {	// not implicit
-    def compare(x: ((Int, Long), Double), y: ((Int, Long), Double)):Int = y._2.compare(x._2)
+    def compare(x: ((Int, Long), Double), y: ((Int, Long), Double)):Int = x._2.compare(y._2)
   }
 
   val pq = new mutable.PriorityQueue[((Int, Long), Double)]()(Ord)

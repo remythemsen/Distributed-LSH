@@ -5,9 +5,6 @@ import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.Random
 
-/**
-  * Created by remeeh on 23-03-2017.
-  */
 class ProbeTableSpec extends FlatSpec with Matchers {
   "Query " should "return results given a valid query" in {
     val k = 6

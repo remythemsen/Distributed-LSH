@@ -4,7 +4,7 @@ import scala.collection.mutable
 import scala.util.Random
 
 
-class BitHash(k:Int, dimensions:Int, seed:Long)  {
+case class BitHash(k:Int, seed:Long, dimensions:Int)  {
 
   private val randomIndices:Array[Int] = generateRandomIndices(dimensions)
   val state: Array[Array[Float]] = ???
