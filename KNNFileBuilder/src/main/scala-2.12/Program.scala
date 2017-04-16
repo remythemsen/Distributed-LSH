@@ -1,7 +1,7 @@
 import java.io._
 
 import io.Parser.DisaParser
-import measures.{Cosine, Distance, Euclidean}
+import measures.{Cosine, CosineUnit, Distance, Euclidean}
 import scopt.OptionParser
 
 import scala.collection.mutable
@@ -18,6 +18,7 @@ object Program extends App {
       val measure = config.measure.toLowerCase match {
         case "cosine" => Cosine
         case "euclidean" => Euclidean
+        case "cosineunit" => CosineUnit
       }
 
       val knnSName = config.outDir + "/optimal-"+config.measure+".txt"

@@ -2,6 +2,8 @@ package measures
 
 import tools.Tools._
 
+import scala.collection.mutable
+
 trait Distance {
   def measure(x:Array[Float], y:Array[Float]) : Double
 }
@@ -30,4 +32,10 @@ object CosineUnit extends Distance {
   }
 }
 
-// TODO Hamming
+object Hamming {
+  def measure(x: mutable.BitSet, y:mutable.BitSet): Double = {
+    ???
+    // TODO Hamming
+  }
+}
+

@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import io.Parser.DisaParser
 import io.ResultWriter
 import lsh.LSHStructure
-import measures.{Cosine, Distance, Euclidean}
+import measures.{Cosine, CosineUnit, Distance, Euclidean}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -53,21 +53,21 @@ object RecallTest extends App {
 
   val resWriter = new ResultWriter("data/out","recall-LSH", {
     val sb = new StringBuilder
-    sb.append("[ N ]\t")
-    sb.append("[ dimensions ]\t")
-    sb.append("[ hashfuntion ]\t")
-    sb.append("[ nodes ]\t")
-    sb.append("[ repetitionsPrNode ]\t")
-    sb.append("[ measure ]\t")
-    sb.append("[ functions ]\t")
-    sb.append("[ probescheme ]\t")
-    sb.append("[ knn ]\t")
-    sb.append("[ queryMaxCands ]\t")
-    sb.append("[ warmUpIterations ]\t")
-    sb.append("[ avgRecall ]\t")
-    sb.append("[ stdDevRecall ]\t")
-    sb.append("[ avgTime ]\t")
-    sb.append("[ stdDevTime ]\t")
+    sb.append("N ")
+    sb.append("dim ")
+    sb.append("hf ")
+    sb.append("#nodes ")
+    sb.append("#totalReps ")
+    sb.append("measure ")
+    sb.append("#functions ")
+    sb.append("probingScheme ")
+    sb.append("#knn ")
+    sb.append("#queryMaxCands ")
+    sb.append("warmUpIts ")
+    sb.append("avgRecall ")
+    sb.append("stdDevRecall ")
+    sb.append("avgTime ")
+    sb.append("stdDevTime ")
     sb.toString
   })
 
@@ -88,6 +88,7 @@ object RecallTest extends App {
       tc(9).toLowerCase match {
         case "euclidean" => Euclidean
         case "cosine" => Cosine
+        case "cosineunit" => CosineUnit
       },
       tc(10).toLong, // random seed for hashfunction generation
       tc(11).toInt, // Warmup iterations
@@ -194,21 +195,21 @@ object RecallTest extends App {
       // Write result as line to file
       resWriter.writeResult({
         val sb = new StringBuilder
-        sb.append(config.n+"\t")
-        sb.append(config.dimensions+"\t")
-        sb.append(config.hashFunction+"\t")
-        sb.append(this.repetitionAddresses.length+"\t")
-        sb.append(config.repsPrNode+"\t")
-        sb.append(config.measure.getClass.getSimpleName+"\t")
-        sb.append(config.functions+"\t")
-        sb.append(config.probeScheme+"\t")
-        sb.append(config.knn+"\t")
-        sb.append(config.queryMaxCands+"\t")
-        sb.append(config.warmupIterations+"\t")
-        sb.append(avgRecall+"\t")
-        sb.append(stdDevRecall+"\t")
-        sb.append((avgTime / 1E6)+"ms\t")
-        sb.append((stdDevTime / 1E6)+"ms\t")
+        sb.append(config.n+" ")
+        sb.append(config.dimensions+" ")
+        sb.append(config.hashFunction+" ")
+        sb.append(this.repetitionAddresses.length+" ")
+        sb.append(config.repsPrNode+" ")
+        sb.append(config.measure.getClass.getSimpleName+" ")
+        sb.append(config.functions+" ")
+        sb.append(config.probeScheme+" ")
+        sb.append(config.knn+" ")
+        sb.append(config.queryMaxCands+" ")
+        sb.append(config.warmupIterations+" ")
+        sb.append(avgRecall+" ")
+        sb.append(stdDevRecall+" ")
+        sb.append((avgTime / 1E6)+"ms ")
+        sb.append((stdDevTime / 1E6)+"ms")
         sb.toString
       })
 

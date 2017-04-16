@@ -106,7 +106,10 @@ class RepetitionHandler extends Actor {
       //this.resultSet = new Array(k)
 
       var nextBucket: (Int, Long) = null
+
+      // Contains pointers to the dataset
       var candSet: ArrayBuffer[Int] = null
+
       var j, c = 0
       var index = 0
 
@@ -115,12 +118,12 @@ class RepetitionHandler extends Actor {
         nextBucket = this.probeGenerator.next()
         candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
         j = 0
-        while (j < candSet.length) {
+        while (j < candSet.size) {
           // TODO c < maxcands are checked twice
-          if (!dataSetVisited(j)) {
+          if (!dataSetVisited(candSet(j))) {
             index = candSet(j)
             val dist = this.simMeasure.measure(this.dataSet(index)._2, qp)
-            if (dist > 0) {
+            if (dist > 0.0) {
               // if it's not the qp itself
               candidates += Tuple2(index, dist)
               c += 1

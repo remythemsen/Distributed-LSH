@@ -25,7 +25,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
       // Preparing tests
       val rnd = new Random(System.currentTimeMillis())
       val k = 4
-      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128))
+      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong(), 128))
       val system = ActorSystem("UnitTestSystem")
       val a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
       val dataSet = DisaParser(Source.fromFile(new File("data/descriptors-40000-reduced-128.data")).getLines(), 128).toArray
