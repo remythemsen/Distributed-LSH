@@ -28,7 +28,7 @@ object Cosine extends Distance {
 
 object CosineUnit extends Distance {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
-    1-dotProduct(x, y)
+    (1-dotProduct(x, y)) / 2 //normalizing the result to [0,1]
   }
 }
 
