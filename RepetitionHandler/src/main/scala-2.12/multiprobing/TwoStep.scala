@@ -5,7 +5,7 @@ import hashfunctions.HashFunction
 /**
   * Created by remeeh on 07-04-2017.
   */
-class TwoStep(k:Int, hfs:Array[HashFunction]) extends ProbeScheme {
+class TwoStep(k:Int, hfs:Array[HashFunction[Array[Float]]]) extends ProbeScheme {
   // Set of resulting probes for all keys
   var probes:Array[(Int, Long)] = new Array(hfs.length*(1+(k*(k+1)/2)))
   var probesLeft:Int = 0

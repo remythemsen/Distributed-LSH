@@ -2,7 +2,7 @@ package hashfunctions
 import tools.Tools._
 import scala.util.Random
 
-case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction {
+case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction[Array[Float]](k, seed, numOfDim) {
   private val rnd:Random = new Random(seed)
   private val numberOfDimensions:Int = numOfDim
   val hyperPlanes:Array[Array[Float]] = generateHyperplanes(numberOfDimensions, k)

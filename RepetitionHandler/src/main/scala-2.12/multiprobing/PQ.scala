@@ -5,7 +5,7 @@ import tools.Tools._
 
 import scala.collection.mutable
 
-class PQ(k:Int, hfs:Array[HashFunction]) extends ProbeScheme {
+class PQ(k:Int, hfs:Array[HashFunction[Array[Float]]]) extends ProbeScheme {
   // ((idOfRepetition, generatedKey), score)
 
   object Ord extends Ordering[((Int, Long), Double)] {	// not implicit

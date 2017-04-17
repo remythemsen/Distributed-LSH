@@ -4,11 +4,11 @@ import tools.Tools._
 
 import scala.collection.mutable
 
-trait Distance {
-  def measure(x:Array[Float], y:Array[Float]) : Double
+trait Distance[A] {
+  def measure(x:A, y:A) : Double
 }
 
-object Euclidean extends Distance {
+object Euclidean extends Distance[Array[Float]] {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
     var res = 0.0
     var i = 0
@@ -20,19 +20,19 @@ object Euclidean extends Distance {
   }
 }
 
-object Cosine extends Distance {
+object Cosine extends Distance[Array[Float]] {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
     1-(dotProduct(x, y)/(magnitude(x)*magnitude(y))) // TODO remove mag due to unit
   }
 }
 
-object CosineUnit extends Distance {
+object CosineUnit extends Distance[Array[Float]] {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
     (1-dotProduct(x, y)) / 2 //normalizing the result to [0,1]
   }
 }
 
-object Hamming {
+object Hamming extends Distance[mutable.BitSet] {
   def measure(x: mutable.BitSet, y:mutable.BitSet): Double = {
     ???
     // TODO Hamming

@@ -1,5 +1,5 @@
 package messages
 
-case class Query(vec:Array[Float], k:Int) {
+case class Query[A](vec:A, k:Int) {
 
 }

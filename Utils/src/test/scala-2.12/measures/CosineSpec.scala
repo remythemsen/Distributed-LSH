@@ -9,6 +9,7 @@ import scala.io.Source
 
 class CosineSpec extends FlatSpec with Matchers {
   "Cosine" should "return correct distance" in {
+    
   }
 
 }

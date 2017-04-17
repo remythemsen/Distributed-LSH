@@ -16,19 +16,20 @@ import scala.collection.mutable.ArrayBuffer
   * stored in its internal hashmaps
   */
 
-class LSHStructure(repetitions:Array[ActorSelection]) {
+class LSHStructure[A](repetitions:Array[ActorSelection]) {
 
   /**
     * When Initializing LSH with a set of repetitions
     * Each repetition is reset, and rebuilt
     */
 
+
   // TODO Change content in messages between nodes to be simple arrays instead of objects
   val futureResults:Array[Future[Any]] = new Array(repetitions.length) // TODO Cannot use array in .sequence method, ... consider another method.
   implicit val timeout = Timeout(20.hours)
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def query(qp:(Int, Array[Float]), k:Int) : ArrayBuffer[Int] = {
+  def query(qp:(Int, A), k:Int) : ArrayBuffer[Int] = {
     val candidates = new ArrayBuffer[(Int,Double)]()
 
     // for each rep, send query, wait for result from all. return set

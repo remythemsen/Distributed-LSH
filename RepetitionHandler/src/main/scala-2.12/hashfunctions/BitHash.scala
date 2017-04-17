@@ -3,7 +3,7 @@ package hashfunctions
 import scala.collection.mutable
 import scala.util.Random
 
-case class BitHash(k:Int, seed:Long, dimensions:Int) {
+case class BitHash(k:Int, seed:Long, dimensions:Int) extends HashFunction[mutable.BitSet](k, seed, dimensions) {
 
   private val randomIndices:Array[Int] = generateRandomIndices(dimensions)
 
@@ -31,4 +31,5 @@ case class BitHash(k:Int, seed:Long, dimensions:Int) {
     result
   }
 
+  override val state: Array[mutable.BitSet] = Array(mutable.BitSet())
 }

@@ -1,8 +1,8 @@
 package hashfunctions
 
-trait HashFunction {
-  def apply(v: Array[Float]): Long
-  val state:Array[Array[Float]]
+abstract class HashFunction[A](k: Int, seed: Long, numOfDim:Int) {
+  def apply(v: A): Long
+  val state:Array[A]
 }
 
 

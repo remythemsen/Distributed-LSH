@@ -1,6 +1,8 @@
 package messages
 
+import actors.HashFunctionFactory
+import hashfunctions.HashFunction
+import io.Parser.DisaParser
 import measures.Distance
-import multiprobing.ProbeScheme
 
-case class InitRepetition(filePath:String, n:Int, internalRepetitions:Int, hashFunction:String, probeGenerator:String, maxCands:Int, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long)
+case class InitRepetition[A](filePath:String, n:Int, dataParser:DisaParser[A], internalRepetitions:Int, hashFunction:HashFunctionFactory[A], probeGenerator:String, maxCands:Int, functions:Int, dimensions:Int, simMeasure:Distance[A], seed:Long)

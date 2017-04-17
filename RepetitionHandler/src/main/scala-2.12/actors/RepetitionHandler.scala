@@ -5,13 +5,14 @@ import java.io.File
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import datastructures.ProbeTable
-import hashfunctions.{HashFunction, Hyperplane}
-import io.Parser.{DisaParser, DisaParserBinary}
+import hashfunctions.{BitHash, HashFunction, Hyperplane}
+import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import measures.Distance
 import messages._
-import multiprobing.{ProbeScheme, TwoStep, PQ}
+import multiprobing.{PQ, ProbeScheme, TwoStep}
 import tools.{SAQuickSelect, SQuickSelect, SVQuickSelect}
 
+import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
@@ -21,20 +22,18 @@ import scala.util.Random
 
 
 
-class RepetitionHandler extends Actor {
+class RepetitionHandler[A] extends Actor {
 
   // Set of internal repetitions
-  private var repetitions:Array[ProbeTable] = _
-  private var simMeasure:Distance = _
+  private var repetitions:Array[ProbeTable[A]] = _
+  private var simMeasure:Distance[A] = _
+  private var hfFac:HashFunctionFactory[A] = _
 
   // Internal lookup map for vectors in datastructure
-  private var dataSet:Array[(Int, Array[Float])] = _
+  private var dataSet:Array[(Int, A)] = _
   private var dataSetVisited:Array[Boolean] = _
-
   private var probeGenerator:ProbeScheme = _
-
-  private var hashFunctions:Array[HashFunction] = _
-
+  private var hashFunctions:Array[HashFunction[A]] = _
   private var maxCands:Int = _
   private var resultSet:Array[(Int, Double)] = _
 
@@ -43,16 +42,18 @@ class RepetitionHandler extends Actor {
 
   override def receive: Receive = {
     // Setting or resetting a repetition
-    case InitRepetition(buildFromFile, n, internalReps, hashFunction, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
+    case InitRepetition(buildFromFile, n, dataParser, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
 
-      this.simMeasure = distance
+      this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.dataSet = new Array(n)
+      this.hfFac = hashFunctionFac.asInstanceOf[HashFunctionFactory[A]]
       this.dataSetVisited = Array.fill[Boolean](n)(false)
       this.maxCands = qMaxCands
       this.hashFunctions = new Array(internalReps)
       this.keys = new Array(internalReps)
       val rnd = new Random(seed)
-      val parser = DisaParser(Source.fromFile(new File(buildFromFile)).getLines(), dimensions)
+
+      val parser:DisaParser[A] = dataParser.asInstanceOf[DisaParser[A]]
 
       // Loading in dataset
       println("Loading dataset...")
@@ -73,12 +74,8 @@ class RepetitionHandler extends Actor {
       //var i = 0
       for (i <- 0 until internalReps) {
         this.repetitions(i) = new ProbeTable({
-          hashFunction.toLowerCase() match {
-            case "hyperplane" =>
-              this.hashFunctions(i) = Hyperplane(functions, rnd.nextLong(), dimensions)
+              this.hashFunctions(i) = this.hfFac(functions, rnd.nextLong(), dimensions)
               this.hashFunctions(i)
-
-          }
         })
 
         futures(i) = Future {
@@ -87,10 +84,19 @@ class RepetitionHandler extends Actor {
       }
 
       // Initializing the pgenerator
-      this.probeGenerator = probeScheme.toLowerCase match {
-        case "pq" => new PQ(functions, this.hashFunctions)
-        case "twostep" => new TwoStep(functions, this.hashFunctions)
+      this match {
+        case rh:RepetitionHandler[Array[Float]] => {
+          this.probeGenerator = probeScheme.toLowerCase match {
+            case "pq" => new PQ(functions, this.hashFunctions.asInstanceOf[Array[HashFunction[Array[Float]]]])
+            case "twostep" => new TwoStep(functions, this.hashFunctions.asInstanceOf[Array[HashFunction[Array[Float]]]])
+          }
+        }
+        case rh:RepetitionHandler[mutable.BitSet] =>  {
+          throw new Exception("BitSet not implemented")
+        }
+        case _ => throw new Exception("Unknown Type")
       }
+
 
       implicit val timeout = Timeout(20.hours)
       Await.result(Future.sequence(futures.toIndexedSeq), timeout.duration)
@@ -122,7 +128,7 @@ class RepetitionHandler extends Actor {
           // TODO c < maxcands are checked twice
           if (!dataSetVisited(candSet(j))) {
             index = candSet(j)
-            val dist = this.simMeasure.measure(this.dataSet(index)._2, qp)
+            val dist = this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A])
             if (dist > 0.0) {
               // if it's not the qp itself
               candidates += Tuple2(index, dist)
@@ -172,5 +178,18 @@ class RepetitionHandler extends Actor {
       j += 1
     }
     true
+  }
+}
+abstract class HashFunctionFactory[A] {
+  def apply(k:Int, seed:Long, numOfDim:Int):HashFunction[A]
+}
+case object HyperplaneFactory extends HashFunctionFactory[Array[Float]] {
+  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[Array[Float]] = {
+    Hyperplane(k, seed, numOfDim)
+  }
+}
+case object BitHashFactory extends HashFunctionFactory[mutable.BitSet] {
+  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[mutable.BitSet] = {
+    BitHash(k, seed, numOfDim)
   }
 }
