@@ -7,9 +7,10 @@ import akka.pattern.ask
 import akka.util.Timeout
 import hashfunctions.Hyperplane
 import io.Parser.DisaParser
-import measures.Euclidean
+import measures.{Cosine, CosineUnit, Euclidean}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}
+
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -35,6 +36,33 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
     }
   }
 
+  "Query result (if not empty)" should "not contain query point itself using Cosine" in {
+    val dataSet = DisaParser(Source.fromFile(new File("data/0/descriptors-1-million-reduced-128-normalized.data")).getLines(), 128).toArray
+    val rnd = new Random(System.currentTimeMillis())
+    val k = 1
+    val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong(), 128))
+    val system = ActorSystem("UnitTestSystem")
+    val a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
+    // Populating repetition
+    val ready = a1 ? InitRepetition("data/0/descriptors-1-million-reduced-128-normalized.data", 1008263, hashFunctions.length, "hyperplane", "pq", 100000, k, 128, CosineUnit, rnd.nextLong)
+    Await.result(ready, timeout.duration)
+
+    val results:Array[Boolean] = new Array(150)
+
+    for(i <- 0 until 150) {
+      val qp = dataSet(rnd.nextInt(dataSet.length))
+      val res = Await.result(
+        a1 ? Query(qp._2, 30)
+        , timeout.duration
+      ).asInstanceOf[ArrayBuffer[(Int,Double)]]
+      results(i) = !res.map(x => x._1).contains(qp._1)
+    }
+
+    // Cleaning up
+    Await.result(system.terminate(), timeout.duration)
+
+    assert(results.forall(_ == true))
+  }
   "Query " should "return 0 or more results given any query" in {
     val f = fixture
     val results:Array[Boolean] = new Array(50)
@@ -50,7 +78,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
     assert(res != null)
   }
 
-  "Query result (if not empty)" should "not contain query point itself" in {
+  "Query result (if not empty)" should "not contain query point itself using Euclidean" in {
     val f = fixture
     val results:Array[Boolean] = new Array(50)
 
@@ -60,7 +88,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
         f.a1 ? Query(qp._2, 30)
         , timeout.duration
       ).asInstanceOf[ArrayBuffer[(Int,Double)]]
-      results(i) = !res.contains(qp._1)
+      results(i) = !res.map(x => x._1).contains(qp._1)
     }
 
     // Cleaning up
@@ -68,6 +96,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
 
     assert(results.forall(_ == true))
   }
+
 
   "Query result (if not empty)" should "only contain distinct ids" in {
     val f = fixture

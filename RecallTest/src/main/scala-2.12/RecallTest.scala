@@ -115,7 +115,7 @@ object RecallTest extends App {
       }
 
       // Get queries, keep last set if fileDir is the same
-      if(!config.dataDir.equals(lastQueriesDir)) {
+      if(!config.queriesDir.equals(lastQueriesDir)) {
         println("queries has not been loaded. Loading queries...")
         this.queries = DisaParser(Source.fromFile(new File(config.queriesDir)).getLines(), config.dimensions).toArray
         this.lastQueriesDir = config.queriesDir
@@ -165,12 +165,19 @@ object RecallTest extends App {
             qResSum += 2* (config.knn - qRes.size)
           }
           if(optSum > qResSum){
-            println("WAS BIGGER :( by " + (optSum - qResSum))
-            println("Qres: distances.... ")
-            for(y <- qRes) {
-              print(config.measure.measure(dataSet(y)._2, qp._2) + " ")
-
+            println(" ")
+            println("opt sum was lt app sum by " + (optSum - qResSum))
+            println("for qp: "+ qp._1)
+            println("opt result ("+optimalRes.length+") : ")
+            for(y <- optimalRes) {
+              print(y._2 + " ")
             }
+            println(" ")
+            println("app result ("+qRes.size+") : ")
+            for(y <- qRes) {
+              print("("+dataSet(y)._1+","+config.measure.measure(dataSet(y)._2, qp._2) + ") ")
+            }
+            println(" ")
           }
 
           optSum / qResSum
