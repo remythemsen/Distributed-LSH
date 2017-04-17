@@ -5,14 +5,14 @@ import hashfunctions.HashFunction
 /**
   * Created by remeeh on 07-04-2017.
   */
-class TwoStep(k:Int, hfs:Array[HashFunction[Array[Float]]]) extends ProbeScheme {
+class TwoStep[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
   // Set of resulting probes for all keys
   var probes:Array[(Int, Long)] = new Array(hfs.length*(1+(k*(k+1)/2)))
   var probesLeft:Int = 0
-  var hashFunctions:Array[HashFunction] = hfs
+  var hashFunctions:Array[HashFunction[A]] = hfs
   var keys:Array[(Int, Long)] = new Array(hfs.length)
 
-  override def generate(qp:Array[Float]): Unit = {
+  override def generate(qp:A): Unit = {
 
     // Get keys of qp
     var i = 0

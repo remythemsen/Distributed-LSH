@@ -1,12 +1,17 @@
 package lsh
 
+import actors.{HashFunctionFactory, RepetitionHandler}
 import messages.{InitRepetition, Query}
+
 import scala.concurrent.{Await, Future}
 import akka.actor._
 import akka.util.Timeout
+
 import scala.concurrent.duration._
 import akka.pattern.ask
 import measures.Distance
+import akka.actor.{Address, AddressFromURIString, Deploy, Props}
+import akka.remote.RemoteScope
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -16,13 +21,20 @@ import scala.collection.mutable.ArrayBuffer
   * stored in its internal hashmaps
   */
 
-class LSHStructure[A](repetitions:Array[ActorSelection]) {
+class LSHStructure[A](actorAdresses:Array[String]) {
 
   /**
     * When Initializing LSH with a set of repetitions
     * Each repetition is reset, and rebuilt
     */
 
+  val system = ActorSystem("LSHSystem")
+  println("System started")
+  // Start RepetitionHandler actors
+  val repetitions:Array[ActorRef] = new Array[ActorRef](actorAdresses.length)
+  for(i <- actorAdresses.indices) {
+    this.repetitions(i) = system.actorOf(Props[RepetitionHandler[A]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(actorAdresses(i))))))
+  }
 
   // TODO Change content in messages between nodes to be simple arrays instead of objects
   val futureResults:Array[Future[Any]] = new Array(repetitions.length) // TODO Cannot use array in .sequence method, ... consider another method.
@@ -49,11 +61,11 @@ class LSHStructure[A](repetitions:Array[ActorSelection]) {
     candidates.distinct.sortBy(x => x._2).take(k).map(x => x._1)
   }
 
-  def build(filePath:String, n:Int, internalRepetitions:Int, hashFunction:String, probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
+  def build(filePath:String, n:Int, internalRepetitions:Int, hashFunctionFac:HashFunctionFactory[A], probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
-      statuses += repetitions(i) ? InitRepetition(filePath, n, internalRepetitions, hashFunction, probeGenerator, maxCandsTotal/repetitions.length, functions, dimensions, simMeasure, seed)
+      statuses += repetitions(i) ? InitRepetition(filePath, n, internalRepetitions, hashFunctionFac, probeGenerator, maxCandsTotal/repetitions.length, functions, dimensions, simMeasure, seed)
       i += 1
     }
 

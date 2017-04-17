@@ -5,7 +5,7 @@ import tools.Tools._
 
 import scala.collection.mutable
 
-class PQ(k:Int, hfs:Array[HashFunction[Array[Float]]]) extends ProbeScheme {
+class PQ[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
   // ((idOfRepetition, generatedKey), score)
 
   object Ord extends Ordering[((Int, Long), Double)] {	// not implicit
@@ -15,7 +15,7 @@ class PQ(k:Int, hfs:Array[HashFunction[Array[Float]]]) extends ProbeScheme {
   val pq = new mutable.PriorityQueue[((Int, Long), Double)]()(Ord)
   var dotProducts:Array[Double] = new Array(k)
 
-  override def generate(qp:Array[Float]) : Unit = {
+  override def generate(qp:A) : Unit = {
     pq.clear
     // Compute each set of probes from each key
     var hashIndex, hyperIndex, i, j = 0
@@ -26,7 +26,7 @@ class PQ(k:Int, hfs:Array[HashFunction[Array[Float]]]) extends ProbeScheme {
     while (hashIndex < hfs.length) {
       // Get dot products between qp and hyperplane for each k hyperplanes in hashFunction
       while(hyperIndex < hfs(i).state.length) {
-        this.dotProducts(hyperIndex) = dotProduct(qp, hfs(hashIndex).state(hyperIndex))
+        this.dotProducts(hyperIndex) = dotProduct[A](qp, hfs(hashIndex).state(hyperIndex))
         hyperIndex += 1
       }
 

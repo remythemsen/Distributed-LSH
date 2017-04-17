@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
-import datastructures.ProbeTable
+import datastructures.Table
 import hashfunctions.{BitHash, HashFunction, Hyperplane}
 import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import measures.Distance
@@ -25,14 +25,14 @@ import scala.util.Random
 class RepetitionHandler[A] extends Actor {
 
   // Set of internal repetitions
-  private var repetitions:Array[ProbeTable[A]] = _
+  private var repetitions:Array[Table[A]] = _
   private var simMeasure:Distance[A] = _
   private var hfFac:HashFunctionFactory[A] = _
 
   // Internal lookup map for vectors in datastructure
   private var dataSet:Array[(Int, A)] = _
   private var dataSetVisited:Array[Boolean] = _
-  private var probeGenerator:ProbeScheme = _
+  private var probeGenerator:ProbeScheme[A] = _
   private var hashFunctions:Array[HashFunction[A]] = _
   private var maxCands:Int = _
   private var resultSet:Array[(Int, Double)] = _
@@ -42,7 +42,7 @@ class RepetitionHandler[A] extends Actor {
 
   override def receive: Receive = {
     // Setting or resetting a repetition
-    case InitRepetition(buildFromFile, n, dataParser, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
+    case InitRepetition(buildFromFile, n, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
 
       this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.dataSet = new Array(n)
@@ -53,7 +53,10 @@ class RepetitionHandler[A] extends Actor {
       this.keys = new Array(internalReps)
       val rnd = new Random(seed)
 
-      val parser:DisaParser[A] = dataParser.asInstanceOf[DisaParser[A]]
+      val parser:DisaParser[A] = hashFunctionFac match {
+        case
+      }
+      val parser:DisaParser[A] = new DisaParser[A](Iterator[String](), 128)
 
       // Loading in dataset
       println("Loading dataset...")
@@ -73,7 +76,7 @@ class RepetitionHandler[A] extends Actor {
 
       //var i = 0
       for (i <- 0 until internalReps) {
-        this.repetitions(i) = new ProbeTable({
+        this.repetitions(i) = new Table({
               this.hashFunctions(i) = this.hfFac(functions, rnd.nextLong(), dimensions)
               this.hashFunctions(i)
         })
@@ -84,17 +87,9 @@ class RepetitionHandler[A] extends Actor {
       }
 
       // Initializing the pgenerator
-      this match {
-        case rh:RepetitionHandler[Array[Float]] => {
-          this.probeGenerator = probeScheme.toLowerCase match {
-            case "pq" => new PQ(functions, this.hashFunctions.asInstanceOf[Array[HashFunction[Array[Float]]]])
-            case "twostep" => new TwoStep(functions, this.hashFunctions.asInstanceOf[Array[HashFunction[Array[Float]]]])
-          }
-        }
-        case rh:RepetitionHandler[mutable.BitSet] =>  {
-          throw new Exception("BitSet not implemented")
-        }
-        case _ => throw new Exception("Unknown Type")
+      this.probeGenerator = probeScheme.toLowerCase match {
+        case "pq" => new PQ(functions, this.hashFunctions)
+        case "twostep" => new TwoStep(functions, this.hashFunctions)
       }
 
 
@@ -107,7 +102,7 @@ class RepetitionHandler[A] extends Actor {
 
     case Query(qp, k) => // Returns Array[(Int,Double)]
       // Generate probes
-      this.probeGenerator.generate(qp)
+      this.probeGenerator.generate(qp.asInstanceOf[A])
       val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
       //this.resultSet = new Array(k)
 

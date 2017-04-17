@@ -5,7 +5,7 @@ import hashfunctions.HashFunction
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class ProbeTable[A](hashFunction: HashFunction[A]) {
+class Table[A](hashFunction: HashFunction[A]) {
   private val table = new mutable.LongMap[ArrayBuffer[Int]]()
 
   // internal Hash function
@@ -15,7 +15,7 @@ class ProbeTable[A](hashFunction: HashFunction[A]) {
     * Insert vector
     * @param v vector to be inserted into internal hashmap
     */
-  def +=[A](v:((Int, A), Int)) : Unit = {
+  def +=(v:((Int, A), Int)) : Unit = {
     // add address of vector to the buffer in map
     val key:Long = hf(v._1._2)
     // TODO remove this branch if possible

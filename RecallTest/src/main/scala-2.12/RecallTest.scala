@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
 
-case class Config(dataDir:String, n:Int, queriesDir:String, dimensions:Int, repsPrNode:Int, hashFunction:String, functions:Int, probeScheme:String, queryMaxCands:Int, measure:Distance, seed:Long, warmupIterations:Int, knn:Int, knnSetsDir:String, outDir:String)
+case class Config[A](dataDir:String, n:Int, queriesDir:String, dimensions:Int, repsPrNode:Int, hashFunction:String, functions:Int, probeScheme:String, queryMaxCands:Int, measure:Distance[A], seed:Long, warmupIterations:Int, knn:Int, knnSetsDir:String, outDir:String)
 object RecallTest extends App {
 
   val INVOCATION_COUNT = 10
@@ -34,13 +34,9 @@ object RecallTest extends App {
     }
   } yield repetitionAddress
 
-  val system = ActorSystem("RecallTestSystem")
-  println("System started")
 
-  val lsh = new LSHStructure(for {
-    address <- repetitionAddresses
-    repetition <- Seq(system.actorSelection(address))
-  } yield repetition)
+  val lsh = new LSHStructure(repetitionAddresses)
+
   println("Structure initialized")
 
 
