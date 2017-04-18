@@ -1,8 +1,9 @@
 import java.io.File
 import java.util.concurrent.TimeUnit
 
+import actors.{DisaParserFacNumeric, HyperplaneFactory}
 import akka.actor.ActorSystem
-import io.Parser.DisaParser
+import io.Parser.{DisaParser, DisaParserNumeric}
 import io.ResultWriter
 import lsh.LSHStructure
 import measures.{Cosine, CosineUnit, Distance, Euclidean}
@@ -35,7 +36,7 @@ object RecallTest extends App {
   } yield repetitionAddress
 
 
-  val lsh = new LSHStructure(repetitionAddresses)
+  val lsh = new LSHStructure[Array[Float]](repetitionAddresses)
 
   println("Structure initialized")
 
@@ -100,20 +101,20 @@ object RecallTest extends App {
     this.rnd = new Random(config.seed)
 
     println("Initializing repetitions...")
-    if(lsh.build(config.dataDir, config.n, config.repsPrNode, config.hashFunction, config.probeScheme, config.queryMaxCands, config.functions, config.dimensions,config.measure, rnd.nextLong)) {
+    if(lsh.build(config.dataDir, config.n, DisaParserFacNumeric, config.repsPrNode, HyperplaneFactory, config.probeScheme, config.queryMaxCands, config.functions, config.dimensions,Euclidean, rnd.nextLong)) {
       println("LSH repetitions has been initialized..")
 
       // Get dataSet, keep last set if fileDir is the same
       if(!config.dataDir.equals(lastDataDir)) {
         println("Dataset has not been loaded. Loading Dataset...")
-        this.dataSet = DisaParser(Source.fromFile(new File(config.dataDir)).getLines(), config.dimensions).toArray
+        this.dataSet = DisaParserNumeric(Source.fromFile(new File(config.dataDir)).getLines(), config.dimensions).toArray
         this.lastDataDir = config.dataDir
       }
 
       // Get queries, keep last set if fileDir is the same
       if(!config.queriesDir.equals(lastQueriesDir)) {
         println("queries has not been loaded. Loading queries...")
-        this.queries = DisaParser(Source.fromFile(new File(config.queriesDir)).getLines(), config.dimensions).toArray
+        this.queries = DisaParserNumeric(Source.fromFile(new File(config.queriesDir)).getLines(), config.dimensions).toArray
         this.lastQueriesDir = config.queriesDir
       }
 
@@ -219,7 +220,6 @@ object RecallTest extends App {
     }
     tcc += 1
   }
-  system.terminate()
   println("Testing has finished")
 
 

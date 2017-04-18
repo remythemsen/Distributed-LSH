@@ -1,6 +1,6 @@
 package lsh
 
-import actors.{HashFunctionFactory, RepetitionHandler}
+import actors.{DisaParserFac, HashFunctionFactory, RepetitionHandler}
 import messages.{InitRepetition, Query}
 
 import scala.concurrent.{Await, Future}
@@ -61,11 +61,11 @@ class LSHStructure[A](actorAdresses:Array[String]) {
     candidates.distinct.sortBy(x => x._2).take(k).map(x => x._1)
   }
 
-  def build(filePath:String, n:Int, internalRepetitions:Int, hashFunctionFac:HashFunctionFactory[A], probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance, seed:Long) : Boolean = {
+  def build(filePath:String, n:Int, parserFac:DisaParserFac[A], internalRepetitions:Int, hashFunctionFac:HashFunctionFactory[A], probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance[A], seed:Long) : Boolean = {
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
-      statuses += repetitions(i) ? InitRepetition(filePath, n, internalRepetitions, hashFunctionFac, probeGenerator, maxCandsTotal/repetitions.length, functions, dimensions, simMeasure, seed)
+      statuses += repetitions(i) ? InitRepetition(filePath, n, parserFac, internalRepetitions, hashFunctionFac, probeGenerator, maxCandsTotal/repetitions.length, functions, dimensions, simMeasure, seed)
       i += 1
     }
 

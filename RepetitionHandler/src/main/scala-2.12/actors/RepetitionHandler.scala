@@ -42,7 +42,7 @@ class RepetitionHandler[A] extends Actor {
 
   override def receive: Receive = {
     // Setting or resetting a repetition
-    case InitRepetition(buildFromFile, n, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
+    case InitRepetition(buildFromFile, n, parserFac, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
 
       this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.dataSet = new Array(n)
@@ -52,11 +52,7 @@ class RepetitionHandler[A] extends Actor {
       this.hashFunctions = new Array(internalReps)
       this.keys = new Array(internalReps)
       val rnd = new Random(seed)
-
-      val parser:DisaParser[A] = hashFunctionFac match {
-        case
-      }
-      val parser:DisaParser[A] = new DisaParser[A](Iterator[String](), 128)
+      val parser:DisaParser[A] = parserFac.asInstanceOf[DisaParserFac[A]](Source.fromFile(new File(buildFromFile)).getLines(),dimensions)
 
       // Loading in dataset
       println("Loading dataset...")
@@ -175,6 +171,20 @@ class RepetitionHandler[A] extends Actor {
     true
   }
 }
+abstract class DisaParserFac[A] {
+  def apply(ite:Iterator[String], numOfDim:Int):DisaParser[A]
+}
+case object DisaParserFacNumeric extends DisaParserFac[Array[Float]] {
+  def apply(data:Iterator[String], numOfDim:Int) : DisaParserNumeric = {
+    DisaParserNumeric(data, numOfDim)
+  }
+}
+case object DisaParserFacBitSet extends DisaParserFac[mutable.BitSet] {
+  def apply(data:Iterator[String], numOfDim:Int) : DisaParserBinary = {
+    DisaParserBinary(data, numOfDim)
+  }
+}
+
 abstract class HashFunctionFactory[A] {
   def apply(k:Int, seed:Long, numOfDim:Int):HashFunction[A]
 }
