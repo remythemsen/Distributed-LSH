@@ -1,40 +1,45 @@
 import java.io.File
-import java.util.concurrent.TimeUnit
-
 import actors.{DisaParserFacNumeric, HyperplaneFactory}
-import akka.actor.ActorSystem
 import io.Parser.{DisaParser, DisaParserNumeric}
 import io.ResultWriter
+import scopt.OptionParser
 import lsh.LSHStructure
 import measures.{Cosine, CosineUnit, Distance, Euclidean}
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
 
-case class Config[A](dataDir:String, n:Int, queriesDir:String, dimensions:Int, repsPrNode:Int, hashFunction:String, functions:Int, probeScheme:String, queryMaxCands:Int, measure:Distance[A], seed:Long, warmupIterations:Int, knn:Int, knnSetsDir:String, outDir:String)
+/*
+* data+props, type(bin/num),
+*
+* */
+
+case class Config(data:File, dataSize:Int, dimensions:Int, dataType:String, nodes:File, invocationCount:Int, warmUpIterations:Int, outDir:String, seed:Long)
+case class TestCase[A](queriesDir:String, repsPrNode:Int, functions:Int, probeScheme:String, queryMaxCands:Int, measure:Distance[A], knn:Int, knnSetsPath:String)
+
 object RecallTest extends App {
 
-  val INVOCATION_COUNT = 10
+  getArgsParser.parse(args, Config()) match {
+    case Some(config) => {
+
+    }
+    case None => {
+     // Do nothing
+    }
+  }
+
+  var rnd:Random = new Random(config.seed)
 
   // Remote Repetition references:
-  val ips = Source.fromFile("data/ips").getLines().next.split(" ") // Ip's of tablehandlers
-  val repPort = 2552
-  val repSystemName = "RepetitionSystem" // table handler Actor systemname
-  val systemName = "akka.tcp://"+repSystemName+"@"
-  val actorPath = "/user/Repetition"
+  val nodesAdresses = Source.fromFile("data/ips").getLines.map(x => {
+    val y = x.split(" ")
+    "akka.tcp://RepetitionSystem@"+y(0)+":"+y(1)+"/user/Repetition"
+  })
+
   val testCases = Source.fromFile("data/testcases").getLines().toArray
-  var rnd:Random = _
 
   // Initialization
-  val repetitionAddresses = for {
-    ip <- ips
-    repetitionAddress <- {
-      Array(systemName+ip+":"+repPort+actorPath)
-    }
-  } yield repetitionAddress
-
 
   val lsh = new LSHStructure[Array[Float]](repetitionAddresses)
 
@@ -72,7 +77,7 @@ object RecallTest extends App {
   while(tcc < testCases.length) {
     println("Testcase "+(tcc+1)+" out of "+testCases.length+"...")
     val tc = testCases(tcc).split(" ")
-    val config = new Config (
+    val config = new TestCase (
       tc(0),        // Datadir
       tc(1).toInt,  // N
       tc(2),        // queriesdir
@@ -222,6 +227,42 @@ object RecallTest extends App {
   }
   println("Testing has finished")
 
+
+
+  def getArgsParser : OptionParser[Config] = {
+    new OptionParser[Config]("Recall Test") {
+      head("Recall Test", "1.0")
+
+      opt[File]('d', "data").required().valueName("<file>").action((x, c) =>
+        c.copy(data = x)).text("input data file!")
+
+      opt[Int]('n', "size").required().valueName("<int>").action((x, c) =>
+        c.copy(n = x)).text("input data file size")
+
+      opt[Int]('c', "dimensions").required().valueName("<int>").action((x, c) =>
+        c.copy(k = x)).text("number of components in a vector")
+
+      opt[Int]('t', "dataType").required().valueName("<string>").action((x, c) =>
+        c.copy(k = x)).text("number of components in a vector")
+
+      opt[Int]('c', "dimensions").required().valueName("<int>").action((x, c) =>
+        c.copy(k = x)).text("number of components in a vector")
+
+      opt[Int]('k', "knn").required().valueName("<int>").action((x, c) =>
+        c.copy(k = x)).text("input data file size")
+
+      opt[File]('q', "querypoints").required().valueName("<file>").action((x, c) =>
+        c.copy(queryPoints = x)).text("optimal dataset query points")
+
+      opt[String]('m', "measure").valueName("<string>").required().action((x, c) =>
+        c.copy(measure = x)).text("measure chosen for optimal set generation")
+
+      opt[String]('o', "out").valueName("<string>").required().action((x, c) =>
+        c.copy(outDir = x)).text("out file directory (without trailing slash")
+
+      help("help").text("prints this usage text")
+    }
+  }
 
   def loadKNNSets(file:File): mutable.HashMap[Int, Array[(Int, Double)]] = {
     val map = new mutable.HashMap[Int, Array[(Int, Double)]]
