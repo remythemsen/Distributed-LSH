@@ -10,7 +10,6 @@ import io.Parser.{DisaParser, DisaParserNumeric}
 import measures.{Cosine, CosineUnit, Euclidean}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}
-
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

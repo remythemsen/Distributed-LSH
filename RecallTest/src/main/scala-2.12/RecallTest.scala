@@ -10,9 +10,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
 
-case class TestCase(queriesDir:String, repsPrNode:Int, functions:Int, probeScheme:String, queryMaxCands:Int, measure:String, knn:Int, knnSetsPath:String)
+case class TestCase(queriesDir:String, eucQueriesDir:String, repsPrNode:Int, functions:Int, probeScheme:String, queryMaxCands:Int, measure:String, knn:Int, knnSetsPath:String)
 case class Config(
                    data:String = " ",
+                   dataeuc:String = " ",
                    dataSize:Int = 0,
                    dimensions:Int = 128,
                    dataType:String = "numeric",
@@ -29,6 +30,8 @@ object RecallTest extends App {
 
   var queries:Array[(Int, Array[Float])] = _
   var lastQueriesDir = ""
+  var eucqueries:Array[(Int, Array[Float])] = _
+  var lastEucQueriesDir = ""
 
 
   getArgsParser.parse(args, Config()) match {
@@ -80,13 +83,14 @@ object RecallTest extends App {
             val tc = testCases(tcc).split(" ")
             val testCase = TestCase (
               tc(0),        // queriesdir
-              tc(1).toInt,  // repetitions per node
-              tc(2).toInt,  // number of functions ( k )
-              tc(3),        // probescheme
-              tc(4).toInt,  // max cands considered in query before returning
-              tc(5),        // similarity measure
-              tc(6).toInt, // k nearest neighbors to be tested
-              tc(7)        // knnSetsDir dir
+              tc(1),        // eucqueriesDir (only used when bithash)
+              tc(2).toInt,  // repetitions per node
+              tc(3).toInt,  // number of functions ( k )
+              tc(4),        // probescheme
+              tc(5).toInt,  // max cands considered in query before returning
+              tc(6),        // similarity measure
+              tc(7).toInt, // k nearest neighbors to be tested
+              tc(8)        // knnSetsDir dir
             )
 
             println("Loading knnsets...")
@@ -99,7 +103,7 @@ object RecallTest extends App {
               case "cosineunit" => CosineUnit
             }
 
-            if(lsh.build(config.data, config.dataSize, DisaParserFacNumeric, testCase.repsPrNode, HyperplaneFactory, testCase.probeScheme, testCase.queryMaxCands, testCase.functions, config.dimensions, simMeasure, rnd.nextLong)) {
+            if(lsh.build(config.data, config.dataeuc, config.dataType, config.dataSize, DisaParserFacNumeric, testCase.repsPrNode, HyperplaneFactory, testCase.probeScheme, testCase.queryMaxCands, testCase.functions, config.dimensions, simMeasure, rnd.nextLong)) {
               println("LSH repetitions has been initialized..")
 
               // Get queries, keep last set if fileDir is the same
@@ -109,10 +113,18 @@ object RecallTest extends App {
                 this.lastQueriesDir = testCase.queriesDir
               }
 
+              // Get euclidean queries, keep last set if fileDir is the same // Only used for bit hashing
+              if(!testCase.eucQueriesDir.equals(lastEucQueriesDir)) {
+                println("euc queries has not been loaded. Loading queries...")
+                this.eucqueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), config.dimensions).toArray
+                this.lastEucQueriesDir = testCase.eucQueriesDir
+              }
+
               println("Warmup...")
               var i = 0
               while(i < config.warmUpIterations) {
-                val qRes = lsh.query(this.queries(rnd.nextInt(this.queries.length)), testCase.knn)
+                val index = rnd.nextInt(this.queries.length)
+                val qRes = lsh.query(this.queries(index), this.eucqueries(index), testCase.knn)
                 if(qRes.nonEmpty) {
                   qRes.head
                 }
@@ -124,15 +136,17 @@ object RecallTest extends App {
               val queryRecalls:ArrayBuffer[Double] = ArrayBuffer()
               var j = 0
               while(j < this.queries.length) {
-                val qp:(Int, Array[Float]) = this.queries(rnd.nextInt(this.queries.length))
-                var qRes: ArrayBuffer[(Int,Double)] = ArrayBuffer()
+                val index = rnd.nextInt(this.queries.length)
+                val qp:(Int, Array[Float]) = this.queries(index)
+                val qpeuc:(Int, Array[Float]) = this.queries(index)
+                var qRes: ArrayBuffer[(Int,Double,Int)] = ArrayBuffer()
                 var invocationTimes:Array[Double] = new Array(INVOCATION_COUNT)
 
                 // Time Test, every query is made 5 times
                 var l = 0
                 while(l < INVOCATION_COUNT) {
                   invocationTimes(l) = timer {
-                    qRes = lsh.query(qp, testCase.knn)
+                    qRes = lsh.query(qp,qpeuc, testCase.knn)
                   }
                   l+=1
                 }

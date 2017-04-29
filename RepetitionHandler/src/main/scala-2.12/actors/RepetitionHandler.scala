@@ -99,7 +99,7 @@ class RepetitionHandler[A] extends Actor {
     case Query(qp, k) => // Returns Array[(Int,Double)]
       // Generate probes
       this.probeGenerator.generate(qp.asInstanceOf[A])
-      val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
+      val candidates: ArrayBuffer[(Int, Double, Int)] = new ArrayBuffer()
       //this.resultSet = new Array(k)
 
       var nextBucket: (Int, Long) = null
@@ -118,7 +118,7 @@ class RepetitionHandler[A] extends Actor {
           // TODO c < maxcands are checked twice
           index = candSet(j)
           // Insert candidate with id, and distance from qp
-          candidates += Tuple2(this.dataSet(index)._1, this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A]))
+          candidates += Tuple3(this.dataSet(index)._1, this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A]), index)
           c += 1
           j += 1
         }
@@ -138,7 +138,7 @@ class RepetitionHandler[A] extends Actor {
           candidates.filter(_._2 < kthDist)
         }
       } else {
-        sender ! ArrayBuffer[(Int,Double)]()
+        sender ! ArrayBuffer[(Int,Double,Int)]()
       } // send empty set back
 
 
