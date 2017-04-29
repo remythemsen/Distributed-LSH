@@ -17,7 +17,7 @@ class GenerateProbes {
   var rnd:Random = new Random(System.currentTimeMillis())
   var key:Array[Float] = Array()
   var hp:Hyperplane = Hyperplane(k, rnd.nextLong(), 128)
-  var mp:PQ = _
+  var mp:PQ[Array[Float]] = _
 
   @Setup(Level.Iteration)
   def setup(): Unit = {

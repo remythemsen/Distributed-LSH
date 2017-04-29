@@ -3,18 +3,37 @@ services:
   repetitionhandler1:
     image: remeeh/repetitionhandler:latest
     volumes:
-     - ./data:/opt/docker/data
+     - D:\datasets\disa:/opt/docker/data
 
   repetitionhandler2:
     image: remeeh/repetitionhandler:latest
     volumes:
-     - ./data:/opt/docker/data
+     - D:\datasets\disa:/opt/docker/data
+
+  repetitionhandler3:
+    image: remeeh/repetitionhandler:latest
+    volumes:
+     - D:\datasets\disa:/opt/docker/data
+
+  repetitionhandler4:
+    image: remeeh/repetitionhandler:latest
+    volumes:
+     - D:\datasets\disa:/opt/docker/data
+
+  repetitionhandler5:
+    image: remeeh/repetitionhandler:latest
+    volumes:
+     - D:\datasets\disa:/opt/docker/data
 
   recalltest:
     image: remeeh/recalltest:latest
+    command: --data data/0/descriptors-40000-reduced-128-normalized.data --size 39290 --dimensions 128 --dataType numeric --nodesAddresses data/0/ips --testCases data/0/testcases --invocationCount 10 --warmUpIterations 1 --out data/0/out --seed 1283798324
     volumes:
-     - ./data:/opt/docker/data
+     - D:\datasets\disa:/opt/docker/data
     links:
      - repetitionhandler1:repetitionhandler1
      - repetitionhandler2:repetitionhandler2
+     - repetitionhandler3:repetitionhandler3
+     - repetitionhandler4:repetitionhandler4
+     - repetitionhandler5:repetitionhandler5
 

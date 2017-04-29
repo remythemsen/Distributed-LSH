@@ -6,7 +6,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import hashfunctions.Hyperplane
-import io.Parser.DisaParser
+import io.Parser.{DisaParser, DisaParserNumeric}
 import measures.{Cosine, CosineUnit, Euclidean}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}
@@ -28,23 +28,24 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
       val k = 4
       val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong(), 128))
       val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
-      val dataSet = DisaParser(Source.fromFile(new File("data/descriptors-40000-reduced-128.data")).getLines(), 128).toArray
+      val a1 = system.actorOf(Props[actors.RepetitionHandler[Array[Float]]], name = "rep1")
+      val dataSet = DisaParserNumeric(Source.fromFile(new File("data/descriptors-40000-reduced-128.data")).getLines(), 128).toArray
       // Populating repetition
-      val ready = a1 ? InitRepetition("data/descriptors-40000-reduced-128.data", 39290, hashFunctions.length, "hyperplane", "pq", 1000, k, 128, Euclidean, rnd.nextLong)
+      val ready = a1 ? InitRepetition("data/descriptors-40000-reduced-128.data", 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "pq", 1000, k, 128, Euclidean, rnd.nextLong)
       Await.result(ready, timeout.duration)
     }
   }
 
-  "Query result (if not empty)" should "not contain query point itself using Cosine" in {
-    val dataSet = DisaParser(Source.fromFile(new File("data/0/descriptors-1-million-reduced-128-normalized.data")).getLines(), 128).toArray
+/*  "Query result (if not empty)" should "not contain query point itself using Cosine" in {
+    val dataSet = DisaParserNumeric(Source.fromFile(new File("data/descriptors-40000-reduced-128-normalized.data")).getLines(), 128).toArray
     val rnd = new Random(System.currentTimeMillis())
     val k = 1
     val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong(), 128))
     val system = ActorSystem("UnitTestSystem")
-    val a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
+    val a1 = system.actorOf(Props[actors.RepetitionHandler[Array[Float]]], name = "rep1")
     // Populating repetition
-    val ready = a1 ? InitRepetition("data/0/descriptors-1-million-reduced-128-normalized.data", 1008263, hashFunctions.length, "hyperplane", "pq", 100000, k, 128, CosineUnit, rnd.nextLong)
+
+    val ready = a1 ? InitRepetition("data/descriptors-40000-reduced-128-normalized.data", 1008263, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "pq", 100000, k, 128, CosineUnit, rnd.nextLong)
     Await.result(ready, timeout.duration)
 
     val results:Array[Boolean] = new Array(150)
@@ -62,7 +63,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
     Await.result(system.terminate(), timeout.duration)
 
     assert(results.forall(_ == true))
-  }
+  }*/
   "Query " should "return 0 or more results given any query" in {
     val f = fixture
     val results:Array[Boolean] = new Array(50)
@@ -78,6 +79,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
     assert(res != null)
   }
 
+/*
   "Query result (if not empty)" should "not contain query point itself using Euclidean" in {
     val f = fixture
     val results:Array[Boolean] = new Array(50)
@@ -96,6 +98,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
 
     assert(results.forall(_ == true))
   }
+*/
 
 
   "Query result (if not empty)" should "only contain distinct ids" in {

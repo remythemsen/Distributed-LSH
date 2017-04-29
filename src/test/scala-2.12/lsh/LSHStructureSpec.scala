@@ -5,7 +5,7 @@ import java.io.File
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import hashfunctions.Hyperplane
-import io.Parser.DisaParser
+import io.Parser.{DisaParser, DisaParserNumeric}
 import measures.Euclidean
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -19,7 +19,7 @@ import scala.util.Random
   * Created by remeeh on 28-03-2017.
   */
 class LSHStructureSpec extends FlatSpec with Matchers {
-  implicit val timeout = Timeout(10.hours)
+/*  implicit val timeout = Timeout(10.hours)
 
   def fixture = {
     new {
@@ -27,12 +27,10 @@ class LSHStructureSpec extends FlatSpec with Matchers {
       val rnd = new Random(System.currentTimeMillis())
       val k = 4
       val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128))
+      val dataSet = DisaParserNumeric(Source.fromFile(new File("data/descriptors-40000-reduced-128.data")).getLines(), 128).toArray
       val system = ActorSystem("UnitTestSystem")
-      val dataSet = DisaParser(Source.fromFile(new File("data/descriptors-40000-reduced-128.data")).getLines(), 128).toArray
-      val a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
-      val lsh = new LSHStructure(Array(system.actorSelection(a1.path)
+      val lsh = new LSHStructure(Array())
 
-        /** , system.actorSelection(a2.path) **/))
       lsh.build("data/descriptors-40000-reduced-128.data", 39290, 1, "Hyperplane", "pq", 1000, k, 128, Euclidean, rnd.nextLong())
     }
   }
@@ -125,5 +123,5 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     Await.result(f.system.terminate(), timeout.duration)
 
     assert(results.forall(_ == true))
-  }
+  }*/
 }

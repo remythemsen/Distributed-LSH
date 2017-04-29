@@ -2,7 +2,7 @@ package actors
 
 import java.io.File
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
 import akka.util.Timeout
 import datastructures.Table
 import hashfunctions.{BitHash, HashFunction, Hyperplane}
@@ -20,8 +20,6 @@ import scala.io.Source
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
-
-
 class RepetitionHandler[A] extends Actor {
 
   // Set of internal repetitions
@@ -31,7 +29,6 @@ class RepetitionHandler[A] extends Actor {
 
   // Internal lookup map for vectors in datastructure
   private var dataSet:Array[(Int, A)] = _
-  private var dataSetVisited:Array[Boolean] = _
   private var probeGenerator:ProbeScheme[A] = _
   private var hashFunctions:Array[HashFunction[A]] = _
   private var maxCands:Int = _
@@ -43,16 +40,18 @@ class RepetitionHandler[A] extends Actor {
   override def receive: Receive = {
     // Setting or resetting a repetition
     case InitRepetition(buildFromFile, n, parserFac, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
+      println("recieved an init message")
 
       this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.dataSet = new Array(n)
       this.hfFac = hashFunctionFac.asInstanceOf[HashFunctionFactory[A]]
-      this.dataSetVisited = Array.fill[Boolean](n)(false)
       this.maxCands = qMaxCands
       this.hashFunctions = new Array(internalReps)
       this.keys = new Array(internalReps)
       val rnd = new Random(seed)
-      val parser:DisaParser[A] = parserFac.asInstanceOf[DisaParserFac[A]](Source.fromFile(new File(buildFromFile)).getLines(),dimensions)
+      val parserFact:DisaParserFac[A] = parserFac.asInstanceOf[DisaParserFac[A]]
+      val parser:DisaParser[A] = parserFact(buildFromFile,dimensions)
+
 
       // Loading in dataset
       println("Loading dataset...")
@@ -82,16 +81,17 @@ class RepetitionHandler[A] extends Actor {
         }
       }
 
+
       // Initializing the pgenerator
       this.probeGenerator = probeScheme.toLowerCase match {
         case "pq" => new PQ(functions, this.hashFunctions)
         case "twostep" => new TwoStep(functions, this.hashFunctions)
+        case _ => throw new Exception("unknown probescheme")
       }
 
 
       implicit val timeout = Timeout(20.hours)
       Await.result(Future.sequence(futures.toIndexedSeq), timeout.duration)
-
 
       sender ! true
 
@@ -110,23 +110,16 @@ class RepetitionHandler[A] extends Actor {
       var j, c = 0
       var index = 0
 
-      // Grab candidates from each probe bucket, take only distinct, measure dist to qp
       while (this.probeGenerator.hasNext() && c <= this.maxCands) {
         nextBucket = this.probeGenerator.next()
         candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
         j = 0
         while (j < candSet.size) {
           // TODO c < maxcands are checked twice
-          if (!dataSetVisited(candSet(j))) {
-            index = candSet(j)
-            val dist = this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A])
-            if (dist > 0.0) {
-              // if it's not the qp itself
-              candidates += Tuple2(index, dist)
-              c += 1
-              dataSetVisited(index) = true
-            }
-          }
+          index = candSet(j)
+          // Insert candidate with id, and distance from qp
+          candidates += Tuple2(this.dataSet(index)._1, this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A]))
+          c += 1
           j += 1
         }
       }
@@ -135,27 +128,26 @@ class RepetitionHandler[A] extends Actor {
       // TODO Check correctness of k
       // TODO Find different version of quickselect
       if (candidates.nonEmpty) {
-        val kthDist = SAQuickSelect.quickSelect(candidates, {
-          if (candidates.length < k) candidates.size - 1
+        val distinctCands = candidates.distinct
+        val kthDist = SAQuickSelect.quickSelect(distinctCands, {
+          if (distinctCands.size < k) distinctCands.size - 1
           else k
         })
-
         sender ! {
           // filter for distances smaller than the kth
           candidates.filter(_._2 < kthDist)
-
         }
       } else {
-        sender ! ArrayBuffer()
+        sender ! ArrayBuffer[(Int,Double)]()
       } // send empty set back
 
-      // Cleaning up
-      var h = 0
-      while (h < candidates.size) {
-        dataSetVisited(candidates(h)._1) = false
-        h += 1
-      }
 
+    case Stop =>
+      println("Stopping...")
+      context.self ! PoisonPill
+      println("Terminating system...")
+      context.system.terminate()
+      println("System terminated")
   }
 
 
@@ -172,16 +164,16 @@ class RepetitionHandler[A] extends Actor {
   }
 }
 abstract class DisaParserFac[A] {
-  def apply(ite:Iterator[String], numOfDim:Int):DisaParser[A]
+  def apply(pathToFile:String, numOfDim:Int):DisaParser[A]
 }
 case object DisaParserFacNumeric extends DisaParserFac[Array[Float]] {
-  def apply(data:Iterator[String], numOfDim:Int) : DisaParserNumeric = {
-    DisaParserNumeric(data, numOfDim)
+  def apply(pathToFile:String, numOfDim:Int) : DisaParserNumeric = {
+    DisaParserNumeric(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
 }
 case object DisaParserFacBitSet extends DisaParserFac[mutable.BitSet] {
-  def apply(data:Iterator[String], numOfDim:Int) : DisaParserBinary = {
-    DisaParserBinary(data, numOfDim)
+  def apply(pathToFile:String, numOfDim:Int) : DisaParserBinary = {
+    DisaParserBinary(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
 }
 

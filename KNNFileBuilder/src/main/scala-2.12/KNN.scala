@@ -1,14 +1,20 @@
 import java.util.concurrent.Executors
-import io.Parser.DisaParser
+
+import io.Parser.{DisaParser, DisaParserNumeric}
 import measures.Distance
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+/**
+  * Finds K nearest neighbors of a given set of query points, if the querypoint itself is in the dataset, that will be included
+  * in the result set
+  */
 object KNN {
 
-  def search[A](data:DisaParser, queries:DisaParser, K:Int, distance:Distance, dataSetSize:Int) = {
+  def search(data:DisaParserNumeric, queries:DisaParserNumeric, K:Int, distance:Distance[Array[Float]], dataSetSize:Int) = {
     implicit val ec = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(8))
 
     implicit object Ord extends Ordering[((Int, Array[Float]), Double)] {
@@ -33,13 +39,11 @@ object KNN {
         Future {
           val distFromQ = distance.measure(pq._1._2, dp._2)
           // Update pq if better tuple is found
-          if(!pq._1._1.equals(dp._1)) {
-            if (pq._2.size < K) {
-              pq._2.enqueue((dp, distFromQ))
-            } else if (pq._2.head._2 > distFromQ) {
-              pq._2.dequeue()
-              pq._2.enqueue((dp, distFromQ))
-            }
+          if (pq._2.size < K) {
+            pq._2.enqueue((dp, distFromQ))
+          } else if (pq._2.head._2 > distFromQ) {
+            pq._2.dequeue()
+            pq._2.enqueue((dp, distFromQ))
           }
         }
       }

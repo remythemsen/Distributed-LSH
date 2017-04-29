@@ -26,7 +26,7 @@ class ProbeTableQuery {
   var vectors:Array[(Int, Array[Float])] = _
   var hp:Hyperplane = _
   var hp2:Hyperplane = _
-  var newTable:Table = _
+  var newTable:Table[Array[Float]] = _
   var rndVector:Array[Float] = _
 
   @Setup(Level.Trial)

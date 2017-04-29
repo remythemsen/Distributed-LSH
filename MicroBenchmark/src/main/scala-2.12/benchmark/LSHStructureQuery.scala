@@ -21,7 +21,8 @@ import scala.util.Random
 @BenchmarkMode(Array(Mode.AverageTime))
 @State(Scope.Thread)
 class LSHStructureQuery {
-  var lsh:LSHStructure = _
+/*
+  var lsh:LSHStructure[Array[Float]] = _
   var queryPoints:Iterator[(Int, Array[Float])] = _
   var nextPoint:(Int, Array[Float]) = _
   val rnd = new Random(System.currentTimeMillis())
@@ -61,6 +62,7 @@ class LSHStructureQuery {
   }
 
 
+*/
 
 
 }

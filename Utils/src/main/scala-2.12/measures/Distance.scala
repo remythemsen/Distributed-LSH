@@ -22,13 +22,13 @@ object Euclidean extends Distance[Array[Float]] {
 
 object Cosine extends Distance[Array[Float]] {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
-    1-(dotProduct(x, y)/(magnitude(x)*magnitude(y))) // TODO remove mag due to unit
+    1.0-(dotProduct(x, y)/(magnitude(x)*magnitude(y)))// TODO remove mag due to unit
   }
 }
 
 object CosineUnit extends Distance[Array[Float]] {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
-    (1-dotProduct(x, y)) / 2 //normalizing the result to [0,1]
+    (1.0-dotProduct(x, y)) / 2.0 //normalizing the result to [0,1]
   }
 }
 

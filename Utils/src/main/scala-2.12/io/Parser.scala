@@ -11,6 +11,20 @@ object Parser {
     override def next: (Int, A)
   }
 
+  case class DisaParserRaw(iterator: Iterator[String], dimensions:Int) extends DisaParser[Array[Float]](iterator, dimensions) {
+    /*
+    * Expected format for file is:
+    * id
+    * comp   comp  comp   comp ... comp(i) .. comp(dimensions)
+    *
+    * ####################################      (x49) 1234
+    * 1.3143 2.031 4.3102 -12.212
+    */
+    override def next: (Int, Array[Float]) = {
+      (iterator.next.substring(49).toInt, iterator.next.split(" ").map(x => x.toFloat))
+    }
+  }
+
   case class DisaParserNumeric(iterator: Iterator[String], dimensions:Int) extends DisaParser[Array[Float]](iterator, dimensions) {
     /*
     * Expected format for file is:

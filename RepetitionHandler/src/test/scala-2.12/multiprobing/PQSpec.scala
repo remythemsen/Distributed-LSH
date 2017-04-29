@@ -13,7 +13,7 @@ class PQSpec extends FlatSpec with Matchers {
       val rnd = new Random(System.currentTimeMillis())
       val hf = Hyperplane(k,rnd.nextLong,128)
       val hf2 = Hyperplane(k,rnd.nextLong,128)
-      val gen = new PQ(k, Array(hf,hf2)) // k=2 L=1
+      val gen = new PQ[Array[Float]](k, Array(hf,hf2)) // k=2 L=1
     }
   }
 
@@ -29,7 +29,7 @@ class PQSpec extends FlatSpec with Matchers {
 
   "generate" should "make correct probeset on simple input with 2 keys" in {
     val f = fixture
-    val gen = new PQ(f.k, {
+    val gen = new PQ[Array[Float]](f.k, {
       Array(Hyperplane(f.k,f.rnd.nextLong,128),Hyperplane(f.k,f.rnd.nextLong,128))
     }) // k=2 L=1
     gen.generate(Array.fill[Float](128)(f.rnd.nextFloat()))

@@ -3,7 +3,8 @@ package benchmark
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-import io.Parser.DisaParser
+import actors.{DisaParserFacNumeric, HyperplaneFactory}
+import io.Parser.{DisaParser, DisaParserNumeric}
 import messages.{InitRepetition, Query}
 import org.openjdk.jmh.annotations.{OutputTimeUnit, _}
 import org.openjdk.jmh.infra.Blackhole
@@ -38,16 +39,16 @@ class Repetition {
   def setup(): Unit = {
     rnd = new Random(System.currentTimeMillis())
     system = ActorSystem("BenchmarkSystem")
-    a1 = system.actorOf(Props[actors.RepetitionHandler], name = "rep1")
+    a1 = system.actorOf(Props[actors.RepetitionHandler[Array[Float]]], name = "rep1")
 
 
-    val ready = a1 ? InitRepetition("../data/descriptors-40000-reduced-128.data", 39290, internalTables, "hyperplane", "twostep", 100000, 16, 128, Euclidean, rnd.nextLong)
+    val ready = a1 ? InitRepetition("../data/descriptors-40000-reduced-128.data", 39290, DisaParserFacNumeric, 1, HyperplaneFactory, "twostep", 100000, 16, 128, Euclidean, rnd.nextLong)
     Await.result(ready, timeout.duration)
 
   }
   @Setup(Level.Iteration)
   def queries():Unit = {
-    val points = DisaParser(Source.fromFile(new File("../data/descriptors-40000-reduced-128.data")).getLines(), 128).map(x => x._2).toIndexedSeq
+    val points = DisaParserNumeric(Source.fromFile(new File("../data/descriptors-40000-reduced-128.data")).getLines(), 128).map(x => x._2).toIndexedSeq
     rnd.shuffle(points)
     queryPoints = points.toIterator
   }

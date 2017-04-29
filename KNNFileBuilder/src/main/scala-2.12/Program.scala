@@ -1,6 +1,6 @@
 import java.io._
 
-import io.Parser.DisaParser
+import io.Parser.{DisaParser, DisaParserNumeric}
 import measures.{Cosine, CosineUnit, Distance, Euclidean}
 import scopt.OptionParser
 
@@ -21,17 +21,16 @@ object Program extends App {
         case "cosineunit" => CosineUnit
       }
 
-      val knnSName = config.outDir + "/optimal-"+config.measure+".txt"
+      val knnSName = config.outDir + "/"+config.data.getName.substring(0,config.data.getName.length-5)+"-"+config.measure.toLowerCase+".knn"
       val qpfile = config.queryPoints
-      buildKNNStructure(new File(knnSName), new DisaParser(Source.fromFile(config.data).getLines(), config.dimensions), new DisaParser(Source.fromFile(qpfile).getLines(), config.dimensions), config.k, measure, config.n)
+      buildKNNStructure(new File(knnSName), DisaParserNumeric(Source.fromFile(config.data).getLines(), config.dimensions), DisaParserNumeric(Source.fromFile(qpfile).getLines(), config.dimensions), config.k, measure, config.n)
 
     }
     case None => // Nothing
   }
 
 
-  def buildKNNStructure(file:File, optData: DisaParser, queries: DisaParser, K: Int, measure: Distance, N: Int): mutable.HashMap[Int, Array[(Int, Double)]] = {
-    type NumericTuple = (Int,Array[Float])
+  def buildKNNStructure(file:File, optData: DisaParserNumeric, queries: DisaParserNumeric, K: Int, measure: Distance[(Array[Float])], N: Int): mutable.HashMap[Int, Array[(Int, Double)]] = {
     val structure = new mutable.HashMap[Int, Array[(Int, Double)]]
     val resultSets = KNN.search(optData, queries, K, measure, N)
 

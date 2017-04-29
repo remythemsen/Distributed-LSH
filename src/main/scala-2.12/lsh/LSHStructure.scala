@@ -1,7 +1,7 @@
 package lsh
 
 import actors.{DisaParserFac, HashFunctionFactory, RepetitionHandler}
-import messages.{InitRepetition, Query}
+import messages.{InitRepetition, Query, Stop}
 
 import scala.concurrent.{Await, Future}
 import akka.actor._
@@ -33,6 +33,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
   // Start RepetitionHandler actors
   val repetitions:Array[ActorRef] = new Array[ActorRef](actorAdresses.length)
   for(i <- actorAdresses.indices) {
+    println("making rep "+i+" on remote!!")
     this.repetitions(i) = system.actorOf(Props[RepetitionHandler[A]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(actorAdresses(i))))))
   }
 
@@ -41,7 +42,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
   implicit val timeout = Timeout(20.hours)
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def query(qp:(Int, A), k:Int) : ArrayBuffer[Int] = {
+  def query(qp:(Int, A), k:Int) : ArrayBuffer[(Int, Double)] = {
     val candidates = new ArrayBuffer[(Int,Double)]()
 
     // for each rep, send query, wait for result from all. return set
@@ -58,10 +59,11 @@ class LSHStructure[A](actorAdresses:Array[String]) {
       j+=1
     }
 
-    candidates.distinct.sortBy(x => x._2).take(k).map(x => x._1)
+    candidates.distinct.sortBy(x => x._2).take(k)
   }
 
   def build(filePath:String, n:Int, parserFac:DisaParserFac[A], internalRepetitions:Int, hashFunctionFac:HashFunctionFactory[A], probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance[A], seed:Long) : Boolean = {
+    println("build was called!")
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
@@ -74,5 +76,15 @@ class LSHStructure[A](actorAdresses:Array[String]) {
     println("Done sending of build signals for repetitions")
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     res.forall(x => x)
+  }
+  def destroy : Unit = {
+    println("initiated shut down sequence..")
+    var i = 0
+    while(i < repetitions.length) {
+      repetitions(i) ! Stop
+      i += 1
+    }
+    println("Shutting down lsh...")
+    this.system.terminate()
   }
 }

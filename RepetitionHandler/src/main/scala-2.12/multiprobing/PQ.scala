@@ -26,7 +26,7 @@ class PQ[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
     while (hashIndex < hfs.length) {
       // Get dot products between qp and hyperplane for each k hyperplanes in hashFunction
       while(hyperIndex < hfs(i).state.length) {
-        this.dotProducts(hyperIndex) = dotProduct[A](qp, hfs(hashIndex).state(hyperIndex))
+        this.dotProducts(hyperIndex) = dotProduct(qp, hfs(hashIndex).state(hyperIndex))
         hyperIndex += 1
       }
 
