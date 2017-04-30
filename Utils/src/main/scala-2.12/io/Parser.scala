@@ -51,7 +51,7 @@ object Parser {
       var i = 0
       while(i < l.length) {
         if(l(i) == "1") {
-          bitSet(i)
+          bitSet.add(i)
         }
         i+=1
       }

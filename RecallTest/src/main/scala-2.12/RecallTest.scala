@@ -263,7 +263,7 @@ object RecallTest extends App {
 
             println("Initializing repetitions...")
             val simMeasure = testCase.measure.toLowerCase match {
-              case "hamming" => Hamming
+              case "hamming" => new Hamming(config.dimensions)
               case _ => throw new Exception("Unknown Measure!")
             }
 

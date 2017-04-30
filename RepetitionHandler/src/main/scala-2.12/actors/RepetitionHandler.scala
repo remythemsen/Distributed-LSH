@@ -10,7 +10,7 @@ import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import measures.Distance
 import messages._
 import multiprobing.{PQ, ProbeScheme, TwoStep}
-import tools.{SAQuickSelect, SQuickSelect, SVQuickSelect}
+import tools.QuickSelect
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -129,13 +129,13 @@ class RepetitionHandler[A] extends Actor {
       // TODO Find different version of quickselect
       if (candidates.nonEmpty) {
         val distinctCands = candidates.distinct
-        val kthDist = SAQuickSelect.quickSelect(distinctCands, {
+        val kthDist = QuickSelect.selectKthDist(distinctCands, {
           if (distinctCands.size < k) distinctCands.size - 1
-          else k
+          else k-1
         })
         sender ! {
           // filter for distances smaller than the kth
-          candidates.filter(_._2 < kthDist)
+          distinctCands.filter(_._2 <= kthDist)
         }
       } else {
         sender ! ArrayBuffer[(Int,Double,Int)]()

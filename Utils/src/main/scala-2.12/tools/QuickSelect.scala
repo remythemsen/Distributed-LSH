@@ -1,23 +1,46 @@
 package tools
 
-import scala.util.Random
+import scala.collection.mutable.ArrayBuffer
 
 /**
-  * QuickSelect algorithm from rosettacode.org
+  * Heavily inspired from
+  * http://blog.teamleadnet.com/2012/07/quick-select-algorithm-find-kth-element.html
+  *
   */
-
 object QuickSelect {
-  def quickSelect[A <% Ordered[A]](seq: Seq[A], n: Int, rand: Random = new Random): A = {
-    val pivot = rand.nextInt(seq.length)
-    val (left, right) = seq.partition(_ < seq(pivot))
-    if (left.length == n) {
-      seq(pivot)
-    } else if (left.length < n) {
-      quickSelect(right, n - left.length, rand)
-    } else {
-      quickSelect(left, n, rand)
+  def selectKthDist(data:ArrayBuffer[(Int, Double, Int)], k:Int):Double = {
+    var from = 0
+    var to = data.size - 1
+
+    // if from and to is equal, it's the kth element
+    while (from < to) {
+      var r = from
+      var w = to
+      var pivot = data((r + w) / 2)
+
+      // stop run if r and w meets
+      while (r < w) {
+        if (data(r)._2 >= pivot._2) {
+          var tmp = data(w)
+          data(w) = data(r)
+          data(r) = tmp
+          w -= 1
+        } else {
+          r += 1
+        }
+      }
+
+      // if r is incremented then we need to decrement one
+      if (data(r)._2 > pivot._2) {
+        r -= 1
+      }
+
+      if (k <= r) {
+        to = r
+      } else {
+        from = r + 1
+      }
     }
+    data(k)._2
   }
-
 }
-

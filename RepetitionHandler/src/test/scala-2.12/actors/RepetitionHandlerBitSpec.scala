@@ -5,44 +5,66 @@ import java.io.File
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import hashfunctions.Hyperplane
-import io.Parser.{DisaParser, DisaParserNumeric}
-import measures.{Cosine, CosineUnit, Euclidean}
+import hashfunctions.{BitHash, Hyperplane}
+import io.Parser.{DisaParserBinary, DisaParserNumeric}
+import measures.{Euclidean, Hamming}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}
+
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.io.Source
 import scala.util.Random
 
-class RepetitionHandlerSpec extends FlatSpec with Matchers {
+class RepetitionHandlerBitSpec extends FlatSpec with Matchers {
 
   implicit val timeout = Timeout(10.hours)
+
+  def randomBitSet(dim:Int, seed:Long):mutable.BitSet = {
+    val rnd = new Random(seed)
+    var i = 0
+    var res = new mutable.BitSet
+    while(i < dim) {
+      if(rnd.nextBoolean()) {
+        res.add(i)
+      }
+      i+=1
+    }
+    res
+  }
 
   def fixture = {
     new {
       // Preparing tests
       val rnd = new Random(System.currentTimeMillis())
-      val k = 4
-      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong(), 128))
+      val data = "D:\\datasets\\disa\\0\\descriptors-1-million-reduced-128-hamming-256bit.data"
+      val k = 2
+      val maxCands = 10000
+      val n = 1008263
+      val dimensions = 256
+      val hashFunctions = Array(BitHash(k, rnd.nextLong, dimensions), BitHash(k, rnd.nextLong(), dimensions))
       val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[actors.RepetitionHandler[Array[Float]]], name = "rep1")
-      val dataSet = DisaParserNumeric(Source.fromFile(new File("data/descriptors-40000-reduced-128.data")).getLines(), 128).toArray
+      val a1 = system.actorOf(Props[actors.RepetitionHandler[mutable.BitSet]], name = "rep1")
+      println("making dataset")
+      //val dataSet = DisaParserBinary(Source.fromFile(new File(data)).getLines(), dimensions)
+
       // Populating repetition
-      val ready = a1 ? InitRepetition("data/descriptors-40000-reduced-128.data", 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "pq", 1000, k, 128, Euclidean, rnd.nextLong)
+      val ready = a1 ? InitRepetition(data, n, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", maxCands, k, dimensions, new Hamming(dimensions), rnd.nextLong)
       Await.result(ready, timeout.duration)
     }
   }
+
 
   "Query " should "return 0 or more results given any query" in {
     val f = fixture
     val results:Array[Boolean] = new Array(50)
 
     val res = Await.result(
-      f.a1 ? Query(Array.fill[Float](128)(f.rnd.nextFloat), 30)
+      f.a1 ? Query(randomBitSet(f.dimensions, f.rnd.nextLong()), 30)
       , timeout.duration
-    ).asInstanceOf[ArrayBuffer[(Int, Double)]]
+    ).asInstanceOf[ArrayBuffer[(Int, Double, Int)]]
 
     // Cleaning up
     Await.result(f.system.terminate(), timeout.duration)
@@ -51,18 +73,20 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
   }
 
 
+
   "Query result (if not empty)" should "only contain distinct ids" in {
     val f = fixture
     val results:Array[Boolean] = new Array(50)
 
     for(i <- 0 until 50) {
-      val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val qp = randomBitSet(f.dimensions, f.rnd.nextLong())
       val res = Await.result(
-        f.a1 ? Query(qp._2, 30)
+        f.a1 ? Query(qp, 30)
         , timeout.duration
       ).asInstanceOf[ArrayBuffer[(Int, Double, Int)]].map(x => x._1)
 
       results(i) = res.size == res.distinct.size
+
     }
 
     // Cleaning up
@@ -74,9 +98,10 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
   "Query result (if not empty)" should "be of type Arraybuffer[(Int, Double, Int)]" in {
     val f = fixture
 
-    val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+
+    val qp = randomBitSet(f.dimensions, f.rnd.nextLong())
     val res = Await.result(
-      f.a1 ? Query(qp._2, 30)
+      f.a1 ? Query(qp, 30)
       , timeout.duration
     ).asInstanceOf[ArrayBuffer[(Int, Double, Int)]]
 

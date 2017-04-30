@@ -32,10 +32,15 @@ object CosineUnit extends Distance[Array[Float]] {
   }
 }
 
-object Hamming extends Distance[mutable.BitSet] {
-  def measure(x: mutable.BitSet, y:mutable.BitSet): Double = {
-    ???
-    // TODO Hamming
+class Hamming(dimensions:Int) extends Distance[mutable.BitSet] {
+  override def measure(x: mutable.BitSet, y:mutable.BitSet): Double = {
+    var i = 0
+    var res:Double = 0.0
+    while(i < dimensions) {
+      if(x(i) != y(i)) res+=1
+      i+=1
+    }
+    res
   }
 }
 

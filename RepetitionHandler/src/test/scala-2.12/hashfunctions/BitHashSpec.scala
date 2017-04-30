@@ -7,7 +7,7 @@ import scala.util.Random
 class BitHashSpec extends FlatSpec with Matchers {
   def fixture = {
     new {
-      val dimensions = 128
+      val dimensions = 256
       val rnd = new Random(System.currentTimeMillis())
 
       def getRndVec(dimensions:Int, seed:Long) = {
@@ -15,7 +15,7 @@ class BitHashSpec extends FlatSpec with Matchers {
         val vec = new mutable.BitSet()
         for(i <- 0 until dimensions) {
           if(rnd.nextBoolean()) {
-            vec(i) = true
+            vec.add(i)
           }
         }
         vec
@@ -45,11 +45,12 @@ class BitHashSpec extends FlatSpec with Matchers {
   "Apply method" should "always return the same key from a vector" in {
     val f = fixture
     val hf = BitHash(6, f.rnd.nextLong(), f.dimensions)
-    val vec = f.getRndVec(f.dimensions, f.rnd.nextLong())
-    val firstKey = hf(vec)
     for(i <- 0 until 15) {
+      val vec = f.getRndVec(f.dimensions, f.rnd.nextLong())
+      val firstKey = hf(vec)
       assert(firstKey.equals(hf(vec)))
     }
   }
+
 
 }
