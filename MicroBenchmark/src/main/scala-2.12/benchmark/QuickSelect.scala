@@ -33,9 +33,9 @@ class QuickSelect {
     k = qsRnd.nextInt(n)
   }
 
-  @Benchmark
+/*  @Benchmark
   def genericQSArrayBufferTuple(bh:Blackhole) : Unit = {
-    bh.consume(tools.QuickSelect.quickSelect(candSet, k, qsRnd))
+    bh.consume(tools.QuickSelect.selectKthDist(candSet, k))
   }
 
   @Benchmark
@@ -46,6 +46,6 @@ class QuickSelect {
   @Benchmark
   def specializedQSArraySingle(bh:Blackhole) : Unit = {
     bh.consume(tools.SSQuickSelect.quickSelect(arrCandSetSingle, k, qsRnd))
-  }
+  }*/
 
 }

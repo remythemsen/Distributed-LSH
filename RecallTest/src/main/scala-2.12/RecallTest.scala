@@ -413,6 +413,9 @@ object RecallTest extends App {
       opt[String]('d', "data").required().valueName("<string>").action((x, c) =>
         c.copy(data = x)).text("input data path!")
 
+      opt[String]('u', "dataeuc").required().valueName("<string>").action((x, c) =>
+        c.copy(dataeuc = x)).text("input data euclidean path! (not necessary if it's numeric test)")
+
       opt[Int]('n', "size").required().valueName("<int>").action((x, c) =>
         c.copy(dataSize = x)).text("input data file size")
 

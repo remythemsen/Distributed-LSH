@@ -41,7 +41,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
   var pq:mutable.PriorityQueue[(Int, Double, Int)] = _
   var eucDataSet:Array[(Int, Array[Float])] = _
   for(i <- actorAdresses.indices) {
-    println("making rep "+i+" on remote!!")
+    println("init'ing rephandler "+i+"!")
     this.repetitions(i) = system.actorOf(Props[RepetitionHandler[A]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(actorAdresses(i))))))
   }
 
@@ -72,7 +72,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
 
     // If the its bithash we need to do some extra work comparing points in euclidean space
     if(this.bit) {
-      // Use knn
+      // Find actual nearest neighbors from candidates set in euclidean space
       var l = 0
       while(l < distinctCandidates.size) {
         // TODO Verify that euclidean is in fact better than cosineUnit here (97% vs 95% in tests so far)
@@ -90,6 +90,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
       var m = 0
       while(m < k) {
         result+=pq.dequeue()
+        m+=1
       }
       this.pq.clear
       result
