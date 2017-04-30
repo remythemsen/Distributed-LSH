@@ -133,6 +133,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
         Array()
       }
     }
+    println("Done building internal euclidean dataset!")
 
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     res.forall(x => x)

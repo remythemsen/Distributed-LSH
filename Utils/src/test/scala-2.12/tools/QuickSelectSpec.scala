@@ -31,6 +31,19 @@ class QuickSelectSpec extends FlatSpec with Matchers {
     }
   }
 
+  "quick select" should "work on bad inputs (sorted)" in {
+    val rnd = new Random
+    val v = new ArrayBuffer[(Int, Double, Int)]
+    val kSetSize = 250
+
+    for(j <- 0 until kSetSize) {
+      v+=Tuple3(rnd.nextInt, j.toDouble, rnd.nextInt)
+    }
+
+    val r = QuickSelect.selectKthDist(v, 123)
+    assert(r == 123.0)
+  }
+
   "quick select" should "never crash on shuffled predefined inputs" in {
     val rnd = new Random
     val v = new ArrayBuffer[(Int, Double, Int)]

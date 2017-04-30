@@ -352,13 +352,13 @@ object RecallTest extends App {
               }
 
               // Queries has been run. Its time to write out results
-              val avgTime = queryTimes.sum / this.queries.length
+              val avgTime = queryTimes.sum / this.bitQueries.length
               val stdDevTime:Double = {
                 val variance = queryTimes.map(a => math.pow(a - avgTime, 2)).sum / queryTimes.size
                 Math.sqrt(variance)
               }
 
-              val avgRecall = queryRecalls.sum / this.queries.length
+              val avgRecall = queryRecalls.sum / this.bitQueries.length
               val stdDevRecall:Double = {
                 val variance = queryRecalls.map(a => math.pow(a - avgRecall, 2)).sum / queryRecalls.size
                 Math.sqrt(variance)
