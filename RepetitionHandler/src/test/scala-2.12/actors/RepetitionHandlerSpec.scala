@@ -24,13 +24,14 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
     new {
       // Preparing tests
       val rnd = new Random(System.currentTimeMillis())
-      val k = 4
-      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong(), 128))
+      val k = 8
+      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong(), 128), Hyperplane(k, rnd.nextLong(), 128), Hyperplane(k, rnd.nextLong(), 128))
       val system = ActorSystem("UnitTestSystem")
+      val data = "C:\\datasets\\disa\\0\\descriptors-1-million-reduced-128-normalized.data"
       val a1 = system.actorOf(Props[actors.RepetitionHandler[Array[Float]]], name = "rep1")
-      val dataSet = DisaParserNumeric(Source.fromFile(new File("data/descriptors-40000-reduced-128.data")).getLines(), 128).toArray
+      val queries = DisaParserNumeric(Source.fromFile(new File(data)).getLines(), 128).take(50).toArray
       // Populating repetition
-      val ready = a1 ? InitRepetition("data/descriptors-40000-reduced-128.data", 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "pq", 1000, k, 128, Euclidean, rnd.nextLong)
+      val ready = a1 ? InitRepetition(data, 1008263, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 100000, k, 128, Euclidean, rnd.nextLong)
       Await.result(ready, timeout.duration)
     }
   }
@@ -56,7 +57,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
     val results:Array[Boolean] = new Array(50)
 
     for(i <- 0 until 50) {
-      val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val qp = f.queries(f.rnd.nextInt(f.queries.length))
       val res = Await.result(
         f.a1 ? Query(qp._2, 30)
         , timeout.duration
@@ -74,7 +75,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
   "Query result (if not empty)" should "be of type Arraybuffer[(Int, Double, Int)]" in {
     val f = fixture
 
-    val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+    val qp = f.queries(f.rnd.nextInt(f.queries.length))
     val res = Await.result(
       f.a1 ? Query(qp._2, 30)
       , timeout.duration

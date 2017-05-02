@@ -13,7 +13,7 @@ class Table[A](hashFunction: HashFunction[A]) {
 
   /**
     * Insert vector
-    * @param v vector to be inserted into internal hashmap
+    * @param v vector reference to be inserted into internal hashmap
     */
   def +=(v:((Int, A), Int)) : Unit = {
     // add address of vector to the buffer in map

@@ -32,10 +32,40 @@ object Parser {
     * 1234 1.3143 2.031 4.3102 -12.212
     */
     override def next: (Int, Array[Float]) = {
-      //val tuple = split(iterator.next, dimensions + 1) // number of components of vector + id
       val line = iterator.next.split(" ")
       (line.head.toInt, line.tail.map(x => x.toFloat))
     }
+
+      /*val resultArray:Array[Float] = new Array(dimensions)
+
+      //val tuple = split(iterator.next, dimensions + 1) // number of components of vector + id
+      val line = iterator.next
+      var id = 0
+      var sc = true
+      var j,fc = 0
+      while(sc) {
+        if(line.charAt(j) == ' ') {
+          sc = false
+          fc = j+1
+          id = line.substring(0, j).toInt
+        }
+        j+=1
+      }
+      val vector = line.substring(fc)
+      var i,ws,c = 0
+      while(i < vector.length) {
+        if(vector.charAt(i) == ' ') {
+          // we just passed over a 'component', it's between ws and i-1
+          resultArray(c) = vector.substring(ws, i).toFloat
+
+          // setting next 'component' start
+          ws = i+1
+          c+=1
+        }
+        i+=1
+      }
+      (id, resultArray)
+    }*/
   }
   case class DisaParserBinary(iterator: Iterator[String], dimensions:Int) extends DisaParser[mutable.BitSet](iterator, dimensions) {
     /*

@@ -46,7 +46,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
   }
 
   // TODO Change content in messages between nodes to be simple arrays instead of objects
-  val futureResults:Array[Future[Any]] = new Array(repetitions.length) // TODO Cannot use array in .sequence method, ... consider another method.
+  var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another method.
   implicit val timeout = Timeout(20.hours)
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -103,6 +103,7 @@ class LSHStructure[A](actorAdresses:Array[String]) {
 
   def build(filePath:String, eucFilePath:String, dataType:String, n:Int, parserFac:DisaParserFac[A], internalRepetitions:Int, hashFunctionFac:HashFunctionFactory[A], probeGenerator:String, maxCandsTotal:Int, functions:Int, dimensions:Int, simMeasure:Distance[A], seed:Long) : Boolean = {
     println("build was called!")
+    this.futureResults = new Array(repetitions.length)
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(repetitions.length)
     var i = 0
     while(i < repetitions.length) {
@@ -126,14 +127,15 @@ class LSHStructure[A](actorAdresses:Array[String]) {
 
         this.distance = distance
         this.pq = new mutable.PriorityQueue[(Int, Double, Int)]
+        println("building internal euclidean dataset!")
         DisaParserFacNumeric(eucFilePath, dimensions).toArray
       }
       case _ => {
         // We dont need euc dataset
+        this.bit = false
         Array()
       }
     }
-    println("Done building internal euclidean dataset!")
 
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     res.forall(x => x)

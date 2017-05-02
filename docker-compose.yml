@@ -4,11 +4,17 @@ services:
     image: remeeh/repetitionhandler:latest
     volumes:
      - C:\datasets\disa:/opt/docker/data
+    environment:
+      #- JAVA_OPTS="-Xms512M -Xmx1324M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256M"
+      - JAVA_OPTS=-Xmx1850M
 
   repetitionhandler2:
     image: remeeh/repetitionhandler:latest
     volumes:
      - C:\datasets\disa:/opt/docker/data
+    environment:
+      #- JAVA_OPTS="-Xms512M -Xmx1324M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256M"
+      - JAVA_OPTS=-Xmx1850M
 
   recalltest:
     image: remeeh/recalltest:latest
@@ -19,4 +25,7 @@ services:
     links:
      - repetitionhandler1:repetitionhandler1
      - repetitionhandler2:repetitionhandler2
+    environment:
+      #- JAVA_OPTS="-Xms512M -Xmx1324M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256M"
+      - JAVA_OPTS=-Xmx1850M
 

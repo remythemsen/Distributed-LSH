@@ -1,11 +1,21 @@
 package datastructures
 
+import java.io.File
+
 import hashfunctions.Hyperplane
+import io.Parser.DisaParserNumeric
+import multiprobing.{PQ, TwoStep}
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.io.Source
 import scala.util.Random
 
 class ProbeTableSpec extends FlatSpec with Matchers {
+
+  val arr = new Array[Float](128)
+  val rnd = new Random(System.currentTimeMillis())
+
+
   "Query " should "return results given a valid query" in {
     val k = 6
     val rnd = new Random(System.currentTimeMillis())

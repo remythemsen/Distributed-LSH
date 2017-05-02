@@ -33,6 +33,7 @@ class RepetitionHandler[A] extends Actor {
   private var hashFunctions:Array[HashFunction[A]] = _
   private var maxCands:Int = _
   private var resultSet:Array[(Int, Double)] = _
+  private var lastDataSet:String = ""
 
   // Reusable array for hashed keys (query)
   private var keys:Array[(Int,Long)] = _
@@ -43,7 +44,6 @@ class RepetitionHandler[A] extends Actor {
       println("recieved an init message")
 
       this.simMeasure = distance.asInstanceOf[Distance[A]]
-      this.dataSet = new Array(n)
       this.hfFac = hashFunctionFac.asInstanceOf[HashFunctionFactory[A]]
       this.maxCands = qMaxCands
       this.hashFunctions = new Array(internalReps)
@@ -53,15 +53,20 @@ class RepetitionHandler[A] extends Actor {
       val parser:DisaParser[A] = parserFact(buildFromFile,dimensions)
 
 
-      // Loading in dataset
-      println("Loading dataset...")
-      val file = new File(buildFromFile)
-      val percentile = n / 100
-      var c = 0
-      while (parser.hasNext) {
-        if (c % percentile == 0) println(c * 100 / n)
-        this.dataSet(c) = parser.next
-        c += 1
+      if(buildFromFile != this.lastDataSet) {
+        this.dataSet = new Array(n)
+        // Loading in dataset
+        println("Loading dataset...")
+        val percentile = n / 100
+        var c = 0
+        while (parser.hasNext) {
+          if (c % percentile == 0) println(c * 100 / n)
+          this.dataSet(c) = parser.next
+          c += 1
+        }
+        this.lastDataSet = buildFromFile
+      } else {
+        println("Dataset already loaded.. ")
       }
 
       // Initializing internal repetitions

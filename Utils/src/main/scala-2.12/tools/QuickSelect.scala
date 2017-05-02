@@ -17,8 +17,7 @@ object QuickSelect {
     while (from < to) {
       var r = from
       var w = to
-      //var pivot = data((r + w) / 2)
-      var pivot = data(rnd.nextInt(data.size))
+      var pivot = data((r + w) / 2)
 
       // stop run if r and w meets
       while (r < w) {
