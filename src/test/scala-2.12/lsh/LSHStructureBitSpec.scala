@@ -6,29 +6,26 @@ import actors.{DisaParserFacNumeric, HyperplaneFactory, RepetitionHandler}
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import hashfunctions.Hyperplane
-import io.Parser.{DisaParser, DisaParserNumeric}
+import io.Parser.DisaParserNumeric
 import measures.Euclidean
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.io.Source
 import scala.util.Random
 
 /**
   * Created by remeeh on 28-03-2017.
   */
-class LSHStructureSpec extends FlatSpec with Matchers {
+class LSHStructureBitSpec extends FlatSpec with Matchers {
   implicit val timeout = Timeout(10.hours)
 
   def fixture = {
     new {
 
       // Preparing tests
-
-      val r = "akka.tcp://UnitTestSystem@127.0.0.1:2552/user/Repetition"
-
 
       val rnd = new Random(System.currentTimeMillis())
       val k = 4

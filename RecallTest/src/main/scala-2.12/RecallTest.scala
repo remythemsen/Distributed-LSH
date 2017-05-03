@@ -1,6 +1,8 @@
 import java.io.File
 
-import actors.{BitHashFactory, DisaParserFacBitSet, DisaParserFacNumeric, HyperplaneFactory}
+import actors._
+import akka.actor.{ActorRef, ActorSystem, AddressFromURIString, Deploy, Props}
+import akka.remote.RemoteScope
 import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import io.ResultWriter
 import scopt.OptionParser
@@ -35,19 +37,26 @@ object RecallTest extends App {
   var lastQueriesDir = ""
   var eucqueries:Array[(Int, Array[Float])] = _
   var lastEucQueriesDir = ""
+  var repetitions:Array[ActorRef] = _
 
 
   getArgsParser.parse(args, Config()) match {
     case Some(config) => {
-
-      var rnd:Random = new Random(config.seed)
-      val INVOCATION_COUNT = config.invocationCount
 
       // Remote Repetition references:
       val nodesAddresses = Source.fromFile(config.nodes).getLines.map(x => {
         val y = x.split(":")
         "akka.tcp://RepetitionSystem@"+y(0)+":"+y(1)+"/user/Repetition"
       }).toArray
+
+      val system = ActorSystem("RecallTestSystem")
+      println("System started")
+
+      this.repetitions = new Array(nodesAddresses.length)
+
+
+      var rnd:Random = new Random(config.seed)
+      val INVOCATION_COUNT = config.invocationCount
 
       val testCases = Source.fromFile(config.testCases).getLines().toArray
 
@@ -76,7 +85,13 @@ object RecallTest extends App {
         case "numeric" => {
           println("Running test as 'Numeric'")
           // Initialization
-          val lsh = new LSHStructure[Array[Float]](nodesAddresses)
+
+          for(i <- nodesAddresses.indices) {
+            println("init'ing rephandler "+i+"!")
+            repetitions(i) = system.actorOf(Props[RepetitionHandler[Array[Float]]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(nodesAddresses(i))))))
+          }
+
+          val lsh = new LSHStructure[Array[Float]](repetitions)
 
           // TEST SECTION
 
@@ -178,7 +193,7 @@ object RecallTest extends App {
                   if(qRes.size < testCase.knn) {
                     // Punishment
                     println("optimal sum: " + optSum)
-                    println("punished " + qResSum +" + 2*"+ (testCase.knn - qRes.size))
+                    println("punished " + qResSum +" + 10*("+optSum+")" + (testCase.knn - qRes.size))
                     qResSum += 10*(optSum)*(testCase.knn - qRes.size)
                   }
                   if(optSum > qResSum){
@@ -246,11 +261,19 @@ object RecallTest extends App {
           }
           println("Testing has finished")
           lsh.destroy
+
         }
         case "binary" => {
           println("Running test as 'Binary'")
           // Initialization
-          val lsh = new LSHStructure[mutable.BitSet](nodesAddresses)
+
+          for(i <- nodesAddresses.indices) {
+            println("init'ing rephandler "+i+"!")
+            repetitions(i) = system.actorOf(Props[RepetitionHandler[Array[Float]]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(nodesAddresses(i))))))
+          }
+
+
+          val lsh = new LSHStructure[mutable.BitSet](repetitions)
 
           // TEST SECTION
 
@@ -410,6 +433,9 @@ object RecallTest extends App {
         }
         case _ => throw new Exception("Unknown datatype")
       }
+
+      println("Shutting down lsh...")
+      system.terminate()
 
 
     }

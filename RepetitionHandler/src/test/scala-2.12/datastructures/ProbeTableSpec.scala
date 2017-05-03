@@ -15,6 +15,31 @@ class ProbeTableSpec extends FlatSpec with Matchers {
   val arr = new Array[Float](128)
   val rnd = new Random(System.currentTimeMillis())
 
+  "b " should " h " in {
+    val k = 6
+    val rnd = new Random(System.currentTimeMillis())
+    val hp = Hyperplane(k, rnd.nextLong(), 128)
+    val pts = new Array[Table[Array[Float]]](9)
+    var j = 0
+    while(j < 1) {
+      val pt = new Table[Array[Float]](hp)
+
+      var i = 0
+
+      val vec = ((1,Array.fill[Float](128)(rnd.nextFloat)),1)
+      pt+=vec
+      while(i < 20000000) {
+        pt+=((rnd.nextInt,Array.fill[Float](128)(rnd.nextFloat)),1)
+        i+=1
+      }
+      pts(j) = pt
+      j+=1
+    }
+    while(true) {
+      val k = pts(rnd.nextInt(pts.length-1))
+      Thread.sleep(2000)
+    }
+  }
 
   "Query " should "return results given a valid query" in {
     val k = 6

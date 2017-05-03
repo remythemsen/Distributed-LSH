@@ -32,7 +32,6 @@ class RepetitionHandler[A] extends Actor {
   private var probeGenerator:ProbeScheme[A] = _
   private var hashFunctions:Array[HashFunction[A]] = _
   private var maxCands:Int = _
-  private var resultSet:Array[(Int, Double)] = _
   private var lastDataSet:String = ""
 
   // Reusable array for hashed keys (query)
@@ -95,8 +94,10 @@ class RepetitionHandler[A] extends Actor {
       }
 
 
+
       implicit val timeout = Timeout(20.hours)
       Await.result(Future.sequence(futures.toIndexedSeq), timeout.duration)
+
 
       sender ! true
 

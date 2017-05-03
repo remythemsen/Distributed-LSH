@@ -25,25 +25,19 @@ import scala.io.Source
   * stored in its internal hashmaps
   */
 
-class LSHStructure[A](actorAdresses:Array[String]) {
+case class LSHStructure[A](repetitions:Array[ActorRef]) {
 
   /**
     * When Initializing LSH with a set of repetitions
     * Each repetition is reset, and rebuilt
     */
 
-  val system = ActorSystem("LSHSystem")
-  println("System started")
   // Start RepetitionHandler actors
   var distance:Distance[A] = _
-  val repetitions:Array[ActorRef] = new Array[ActorRef](actorAdresses.length)
+  //val repetitions:Array[ActorRef] = new Array[ActorRef](actorAdresses.length)
   var bit:Boolean = _
   var pq:mutable.PriorityQueue[(Int, Double, Int)] = _
   var eucDataSet:Array[(Int, Array[Float])] = _
-  for(i <- actorAdresses.indices) {
-    println("init'ing rephandler "+i+"!")
-    this.repetitions(i) = system.actorOf(Props[RepetitionHandler[A]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(actorAdresses(i))))))
-  }
 
   // TODO Change content in messages between nodes to be simple arrays instead of objects
   var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another method.
@@ -147,7 +141,5 @@ class LSHStructure[A](actorAdresses:Array[String]) {
       repetitions(i) ! Stop
       i += 1
     }
-    println("Shutting down lsh...")
-    this.system.terminate()
   }
 }

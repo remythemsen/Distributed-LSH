@@ -9,8 +9,8 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.0",
   "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-  "com.typesafe.akka" %% "akka-actor" % "2.4.17",
-  "com.typesafe.akka" %% "akka-remote" % "2.4.17"
+  "com.typesafe.akka" %% "akka-actor" % "2.5.1",
+  "com.typesafe.akka" %% "akka-remote" % "2.5.1"
 )
 
 lazy val DistributedLSH = project in file(".") dependsOn RepetitionHandler
