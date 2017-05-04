@@ -1,5 +1,3 @@
-package tools
-
 import java.io.{BufferedWriter, File, FileWriter}
 
 import io.Parser.DisaParserNumeric

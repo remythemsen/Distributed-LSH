@@ -173,18 +173,6 @@ object RecallTest extends App {
 
                 // Recall Test
                 val optimalRes = knnStructure(qp._1).take(testCase.knn)
-/*                println(" Opt: ")
-                for(i <- optimalRes.take(10)) {
-                  print("("+i._1+","+i._2+") ")
-                }
-                println("")
-                println(" Res: ")
-                for(i <- qRes.take(10)) {
-                  print("("+i._1+","+i._2+") ")
-                }
-                println("")
-                println(optimalRes.map(x => x._2).sum + " vs: " + qRes.map(x => x._2).sum)
-                println("")*/
 
                 // Here the recall is the ratio of the sum of distances to qp returned by a query
                 queryRecalls += {
@@ -193,7 +181,7 @@ object RecallTest extends App {
                   if(qRes.size < testCase.knn) {
                     // Punishment
                     println("optimal sum: " + optSum)
-                    println("punished " + qResSum +" + 10*("+optSum+")" + (testCase.knn - qRes.size))
+                    println("punished " + qResSum +" + 10*("+optSum+")*" + (testCase.knn - qRes.size))
                     qResSum += 10*(optSum)*(testCase.knn - qRes.size)
                   }
                   if(optSum > qResSum){
@@ -383,6 +371,7 @@ object RecallTest extends App {
 
                   optSum / qResSum
                 }
+
                 j += 1
               }
 
@@ -427,6 +416,7 @@ object RecallTest extends App {
 
             }
             tcc += 1
+            System.gc()
           }
           println("Testing has finished")
           lsh.destroy
@@ -499,6 +489,7 @@ object RecallTest extends App {
     }
     map
   }
+
 
   def timer[R](r: => R): Double = {
     val now = System.nanoTime

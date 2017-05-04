@@ -33,7 +33,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
       val rnd = new Random(System.currentTimeMillis())
       val k = 4
       val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128))
-      val eucDataDir = "data/descriptors-40000-reduced-128.data"
+      val eucDataDir = "data/descriptors-40000-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).toArray
       val system = ActorSystem("UnitTestSystem")
       val a1 = system.actorOf(Props[RepetitionHandler[Array[Float]]])

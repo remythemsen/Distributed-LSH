@@ -2,14 +2,15 @@ package lsh
 
 import java.io.File
 
-import actors.{DisaParserFacNumeric, HyperplaneFactory, RepetitionHandler}
+import actors._
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
-import hashfunctions.Hyperplane
-import io.Parser.DisaParserNumeric
-import measures.Euclidean
+import hashfunctions.{BitHash, Hyperplane}
+import io.Parser.{DisaParserBinary, DisaParserNumeric}
+import measures.{Euclidean, Hamming}
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -28,16 +29,18 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
       // Preparing tests
 
       val rnd = new Random(System.currentTimeMillis())
-      val k = 4
-      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128))
-      val eucDataDir = "data/descriptors-40000-reduced-128.data"
-      val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).toArray
+      val k = 16
+      val dim = 256
+      val hashFunctions = Array(BitHash(k, rnd.nextLong, dim))
+      val bitDataDir = "data/descriptors-1-million-reduced-128-hamming-256bit.data"
+      val eucDataDir = "data/descriptors-1-million-reduced-128-normalized.data"
+      val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
+      val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 128).take(50).toArray
       val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[RepetitionHandler[Array[Float]]])
-      val lsh = new LSHStructure[Array[Float]](Array(a1))
-      val dim = 128
+      val a1 = system.actorOf(Props[RepetitionHandler[mutable.BitSet]])
+      val lsh = new LSHStructure[mutable.BitSet](Array(a1))
 
-      lsh.build(eucDataDir, eucDataDir, "numeric", 39290, DisaParserFacNumeric, 1, HyperplaneFactory, "pq", 5000, k, dim, Euclidean, rnd.nextLong())
+      lsh.build(bitDataDir, eucDataDir, "binary", 1008263, DisaParserFacBitSet, 1, BitHashFactory, "twostep", 5000, k, dim, new Hamming(dim), rnd.nextLong())
     }
   }
 
@@ -45,8 +48,10 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
     val f = fixture
     val results: Array[Boolean] = new Array(50)
     for (i <- 0 until 50) {
-      val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qp,30).map(_._2)
+      println("making q")
+      val qp = f.dataSetBit(f.rnd.nextInt(f.dataSetBit.length))
+      val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val res = f.lsh.query(qp,qpe,30).map(_._2)
 
       var isAsc = true
       var oldDist = 0.0
@@ -71,8 +76,9 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
     val results: Array[Boolean] = new Array(50)
     // Preparing tests
     for (i <- 0 until 50) {
-      val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qp, 30)
+      val qp = f.dataSetBit(f.rnd.nextInt(f.dataSet.length))
+      val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val res = f.lsh.query(qp,qpe, 30)
 
       results(i) = res.size <= 30
     }
@@ -86,8 +92,9 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
   "Query result (if not empty)" should "be of type Arraybuffer[(Int,double,Int)]" in {
     val f = fixture
 
-    val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-    val res = f.lsh.query(qp,qp, 30)
+    val qp = f.dataSetBit(f.rnd.nextInt(f.dataSetBit.length))
+    val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+    val res = f.lsh.query(qp,qpe, 30)
     // Cleaning up
     Await.result(f.system.terminate(), timeout.duration)
 
@@ -105,8 +112,9 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
     val results:Array[Boolean] = new Array(50)
 
     for(i <- 0 until 50) {
-      val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp, qp, 30)
+      val qp = f.dataSetBit(f.rnd.nextInt(f.dataSet.length))
+      val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val res = f.lsh.query(qp, qpe, 30)
       results(i) = res.size == res.distinct.size
     }
 

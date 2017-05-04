@@ -38,6 +38,7 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
   var bit:Boolean = _
   var pq:mutable.PriorityQueue[(Int, Double, Int)] = _
   var eucDataSet:Array[(Int, Array[Float])] = _
+  var lastEucDir = ""
 
   // TODO Change content in messages between nodes to be simple arrays instead of objects
   var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another method.
@@ -51,7 +52,10 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
     // for each rep, send query, wait for result from all. return set
     var i = 0
     while(i < repetitions.length) {
-      futureResults(i) = repetitions(i) ? Query(qp._2, k)
+      futureResults(i) = repetitions(i) ? Query(qp._2, {
+        if(bit) k*4
+        else k
+      })
       i += 1
     }
 
@@ -87,7 +91,7 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
         m+=1
       }
       this.pq.clear
-      result
+      result.sortBy(x => x._2)
 
     } else {
       distinctCandidates.sortBy(x => x._2).take(k)
@@ -121,8 +125,14 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
 
         this.distance = distance
         this.pq = new mutable.PriorityQueue[(Int, Double, Int)]
-        println("building internal euclidean dataset!")
-        DisaParserFacNumeric(eucFilePath, dimensions).toArray
+        if(this.lastEucDir == eucFilePath) {
+          println("building internal euclidean dataset!")
+          this.lastEucDir = eucFilePath
+          DisaParserFacNumeric(eucFilePath, dimensions).toArray
+        } else {
+          println("skipping building internal euclidean dataset, one was already built!")
+          this.eucDataSet
+        }
       }
       case _ => {
         // We dont need euc dataset

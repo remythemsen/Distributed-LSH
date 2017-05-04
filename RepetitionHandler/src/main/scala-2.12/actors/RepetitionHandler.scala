@@ -97,7 +97,7 @@ class RepetitionHandler[A] extends Actor {
 
       implicit val timeout = Timeout(20.hours)
       Await.result(Future.sequence(futures.toIndexedSeq), timeout.duration)
-
+      System.gc
 
       sender ! true
 
@@ -166,6 +166,7 @@ class RepetitionHandler[A] extends Actor {
       this.repetitions(mapRef) += (this.dataSet(j), j)
       j += 1
     }
+
     true
   }
 }
