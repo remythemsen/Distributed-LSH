@@ -38,7 +38,7 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
   var bit:Boolean = _
   var pq:mutable.PriorityQueue[(Int, Double, Int)] = _
   var eucDataSet:Array[(Int, Array[Float])] = _
-  var lastEucDir = ""
+  var lastEucDir = " "
 
   // TODO Change content in messages between nodes to be simple arrays instead of objects
   var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another method.
@@ -126,12 +126,12 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
         this.distance = distance
         this.pq = new mutable.PriorityQueue[(Int, Double, Int)]
         if(this.lastEucDir == eucFilePath) {
+          println("skipping building internal euclidean dataset, one was already built!")
+          this.eucDataSet
+        } else {
           println("building internal euclidean dataset!")
           this.lastEucDir = eucFilePath
           DisaParserFacNumeric(eucFilePath, dimensions).toArray
-        } else {
-          println("skipping building internal euclidean dataset, one was already built!")
-          this.eucDataSet
         }
       }
       case _ => {
