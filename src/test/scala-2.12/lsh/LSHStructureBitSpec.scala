@@ -51,7 +51,7 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
       println("making q")
       val qp = f.dataSetBit(f.rnd.nextInt(f.dataSetBit.length))
       val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qpe,30).map(_._2)
+      val res = f.lsh.query(qp,qpe,30, 200).map(_._2)
 
       var isAsc = true
       var oldDist = 0.0
@@ -78,7 +78,7 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
     for (i <- 0 until 50) {
       val qp = f.dataSetBit(f.rnd.nextInt(f.dataSet.length))
       val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qpe, 30)
+      val res = f.lsh.query(qp,qpe, 30, 2000)
 
       results(i) = res.size <= 30
     }
@@ -94,7 +94,7 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
 
     val qp = f.dataSetBit(f.rnd.nextInt(f.dataSetBit.length))
     val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-    val res = f.lsh.query(qp,qpe, 30)
+    val res = f.lsh.query(qp,qpe, 30, 2000)
     // Cleaning up
     Await.result(f.system.terminate(), timeout.duration)
 
@@ -114,7 +114,7 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
     for(i <- 0 until 50) {
       val qp = f.dataSetBit(f.rnd.nextInt(f.dataSet.length))
       val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp, qpe, 30)
+      val res = f.lsh.query(qp, qpe, 30, 2000)
       results(i) = res.size == res.distinct.size
     }
 

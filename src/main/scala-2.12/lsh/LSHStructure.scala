@@ -45,7 +45,7 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
   implicit val timeout = Timeout(20.hours)
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def query(qp:(Int, A), qpe:(Int, Array[Float]), k:Int) : ArrayBuffer[(Int, Double, Int)] = {
+  def query(qp:(Int, A), qpe:(Int, Array[Float]), k:Int, maxknn:Int) : ArrayBuffer[(Int, Double, Int)] = {
     //                                id, dist(qp), index
     val candidates = new ArrayBuffer[(Int,Double,Int)]()
 
@@ -53,7 +53,7 @@ case class LSHStructure[A](repetitions:Array[ActorRef]) {
     var i = 0
     while(i < repetitions.length) {
       futureResults(i) = repetitions(i) ? Query(qp._2, {
-        if(bit) k*4
+        if(bit) maxknn / repetitions.length
         else k
       })
       i += 1

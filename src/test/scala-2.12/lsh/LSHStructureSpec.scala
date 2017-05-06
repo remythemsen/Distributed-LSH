@@ -49,7 +49,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     val results: Array[Boolean] = new Array(50)
     for (i <- 0 until 50) {
       val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qp,30).map(_._2)
+      val res = f.lsh.query(qp,qp,30,2000).map(_._2)
 
       var isAsc = true
       var oldDist = 0.0
@@ -75,7 +75,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     // Preparing tests
     for (i <- 0 until 50) {
       val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qp, 30)
+      val res = f.lsh.query(qp,qp, 30, 2000)
 
       results(i) = res.size <= 30
     }
@@ -90,7 +90,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     val f = fixture
 
     val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-    val res = f.lsh.query(qp,qp, 30)
+    val res = f.lsh.query(qp,qp, 30, 2000)
     // Cleaning up
     Await.result(f.system.terminate(), timeout.duration)
 
@@ -109,7 +109,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
 
     for(i <- 0 until 50) {
       val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp, qp, 30)
+      val res = f.lsh.query(qp, qp, 30, 2000)
       results(i) = res.size == res.distinct.size
     }
 

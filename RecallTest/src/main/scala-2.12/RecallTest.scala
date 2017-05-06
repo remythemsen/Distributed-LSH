@@ -14,7 +14,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
 
-case class TestCase(queriesDir:String, eucQueriesDir:String, repsPrNode:Int, functions:Int, probeScheme:String, queryMaxCands:Int, measure:String, knn:Int, knnSetsPath:String)
+case class TestCase(queriesDir:String, eucQueriesDir:String, repsPrNode:Int, functions:Int, probeScheme:String, queryMaxCands:Int, knnMax:Int, measure:String, knn:Int, knnSetsPath:String)
 case class Config(
                    data:String = " ",
                    dataeuc:String = " ",
@@ -72,6 +72,7 @@ object RecallTest extends App {
         sb.append("probingScheme ")
         sb.append("#knn ")
         sb.append("#queryMaxCands ")
+        sb.append("#knnMax ")
         sb.append("warmUpIts ")
         sb.append("avgRecall ")
         sb.append("stdDevRecall ")
@@ -106,9 +107,10 @@ object RecallTest extends App {
               tc(3).toInt,  // number of functions ( k )
               tc(4),        // probescheme
               tc(5).toInt,  // max cands considered in query before returning
-              tc(6),        // similarity measure
-              tc(7).toInt, // k nearest neighbors to be tested
-              tc(8)        // knnSetsDir dir
+              tc(6).toInt,  // knn max (just for bithashing)
+              tc(7),        // similarity measure
+              tc(8).toInt, // k nearest neighbors to be tested
+              tc(9)        // knnSetsDir dir
             )
 
             println("Loading knnsets...")
@@ -142,7 +144,7 @@ object RecallTest extends App {
               var i = 0
               while(i < config.warmUpIterations) {
                 val index = rnd.nextInt(this.queries.length)
-                val qRes = lsh.query(this.queries(index), this.eucqueries(index), testCase.knn)
+                val qRes = lsh.query(this.queries(index), this.eucqueries(index), testCase.knn, testCase.knnMax)
                 if(qRes.nonEmpty) {
                   qRes.head
                 }
@@ -164,7 +166,7 @@ object RecallTest extends App {
                 var l = 0
                 while(l < INVOCATION_COUNT) {
                   invocationTimes(l) = timer {
-                    qRes = lsh.query(qp,qpeuc, testCase.knn)
+                    qRes = lsh.query(qp,qpeuc, testCase.knn, testCase.knnMax)
                   }
                   l+=1
                 }
@@ -236,6 +238,7 @@ object RecallTest extends App {
                 sb.append(testCase.probeScheme+" ")
                 sb.append(testCase.knn+" ")
                 sb.append(testCase.queryMaxCands+" ")
+                sb.append(testCase.knnMax+" ")
                 sb.append(config.warmUpIterations+" ")
                 sb.append(avgRecall+" ")
                 sb.append(stdDevRecall+" ")
@@ -276,9 +279,10 @@ object RecallTest extends App {
               tc(3).toInt,  // number of functions ( k )
               tc(4),        // probescheme
               tc(5).toInt,  // max cands considered in query before returning
-              tc(6),        // similarity measure
-              tc(7).toInt, // k nearest neighbors to be tested
-              tc(8)        // knnSetsDir dir
+              tc(6).toInt,  // max knn considered (only bit)
+              tc(7),        // similarity measure
+              tc(8).toInt, // k nearest neighbors to be tested
+              tc(9)        // knnSetsDir dir
             )
 
             println("Loading knnsets...")
@@ -311,7 +315,7 @@ object RecallTest extends App {
               var i = 0
               while(i < config.warmUpIterations) {
                 val index = rnd.nextInt(this.bitQueries.length)
-                val qRes = lsh.query(this.bitQueries(index), this.eucqueries(index), testCase.knn)
+                val qRes = lsh.query(this.bitQueries(index), this.eucqueries(index), testCase.knn, testCase.knnMax)
                 if(qRes.nonEmpty) {
                   qRes.head
                 }
@@ -333,7 +337,7 @@ object RecallTest extends App {
                 var l = 0
                 while(l < INVOCATION_COUNT) {
                   invocationTimes(l) = timer {
-                    qRes = lsh.query(qp,qpeuc, testCase.knn)
+                    qRes = lsh.query(qp,qpeuc, testCase.knn, testCase.knnMax)
                   }
                   l+=1
                 }
@@ -406,6 +410,7 @@ object RecallTest extends App {
                 sb.append(testCase.probeScheme+" ")
                 sb.append(testCase.knn+" ")
                 sb.append(testCase.queryMaxCands+" ")
+                sb.append(testCase.knnMax+" ")
                 sb.append(config.warmUpIterations+" ")
                 sb.append(avgRecall+" ")
                 sb.append(stdDevRecall+" ")
