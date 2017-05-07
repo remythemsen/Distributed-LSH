@@ -5,9 +5,9 @@ import java.io.File
 import actors._
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
-import hashfunctions.{BitHash, Hyperplane}
+import hashfunctions.BitHash
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
-import measures.{Euclidean, Hamming}
+import measures.Hamming
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.mutable
@@ -20,27 +20,24 @@ import scala.util.Random
 /**
   * Created by remeeh on 28-03-2017.
   */
-class LSHStructureBitSpec extends FlatSpec with Matchers {
+class LSHBinarySingleSpec extends FlatSpec with Matchers {
   implicit val timeout = Timeout(10.hours)
 
   def fixture = {
     new {
 
       // Preparing tests
-
       val rnd = new Random(System.currentTimeMillis())
       val k = 16
       val dim = 256
-      val hashFunctions = Array(BitHash(k, rnd.nextLong, dim))
+      val hashFunctions = Array(BitHash(k, rnd.nextLong, dim),BitHash(k, rnd.nextLong, dim))
       val bitDataDir = "data/descriptors-1-million-reduced-128-hamming-256bit.data"
       val eucDataDir = "data/descriptors-1-million-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
       val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 128).take(50).toArray
-      val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[RepetitionHandler[mutable.BitSet]])
-      val lsh = new LSHBinaryDistributed(Array(a1))
+      val lsh = new LSHBinarySingle
 
-      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, 1, BitHashFactory, "twostep", 5000, k, dim, new Hamming(dim), rnd.nextLong())
+      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, new Hamming(dim), rnd.nextLong())
     }
   }
 
@@ -57,8 +54,6 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
 
       results(i) = res.size <= 30
     }
-    // Cleaning up
-    Await.result(f.system.terminate(), timeout.duration)
 
     assert(results.forall(_ == true))
   }
@@ -71,8 +66,6 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
     val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
     val qpa = (qp._2, qpe._2, 2000)
     val res = f.lsh.query(qpa, 30)
-    // Cleaning up
-    Await.result(f.system.terminate(), timeout.duration)
 
     val arr = ArrayBuffer[(Int,Double,Int)]()
     val t:(Int,Double,Int) = (1,2.0,2)
@@ -94,10 +87,6 @@ class LSHStructureBitSpec extends FlatSpec with Matchers {
       val res = f.lsh.query(qpa, 30)
       results(i) = res.size == res.distinct.size
     }
-
-    // Cleaning up
-    Await.result(f.system.terminate(), timeout.duration)
-
     assert(results.forall(_ == true))
   }
 }

@@ -19,7 +19,7 @@ import scala.util.Random
 /**
   * Created by remeeh on 28-03-2017.
   */
-class LSHStructureSpec extends FlatSpec with Matchers {
+class LSHNumericDistributedSpec extends FlatSpec with Matchers {
   implicit val timeout = Timeout(10.hours)
 
   def fixture = {
@@ -32,7 +32,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
 
       val rnd = new Random(System.currentTimeMillis())
       val k = 4
-      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128))
+      val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong, 128))
       val eucDataDir = "data/descriptors-40000-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).toArray
       val system = ActorSystem("UnitTestSystem")
@@ -40,7 +40,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
       val lsh = new LSHNumericDistributed(Array(a1))
       val dim = 128
 
-      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, 1, HyperplaneFactory, "pq", 5000, k, dim, Euclidean, rnd.nextLong())
+      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "pq", 5000, k, dim, Euclidean, rnd.nextLong())
     }
   }
 

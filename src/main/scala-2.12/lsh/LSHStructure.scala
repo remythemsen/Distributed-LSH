@@ -1,15 +1,12 @@
 package lsh
-
 import actors.{DisaParserFac, DisaParserFacNumeric, HashFunctionFactory}
 import akka.actor.ActorRef
 import measures.{Distance, Euclidean}
 import messages.{InitRepetition, Query, Stop}
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import akka.util.Timeout
-
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
@@ -24,6 +21,45 @@ import scala.util.Random
 trait LSHStructure[Descriptor, Query, FileSet] {
   def build(fileSet:FileSet, n:Int, parserFac:DisaParserFac[Descriptor], internalReps:Int, hfFac:HashFunctionFactory[Descriptor], pgenerator:String, maxCands:Int, functions:Int, dimensions:Int, simMeasure:Distance[Descriptor], seed:Long):Unit
   def query(qp:Query, k:Int):ArrayBuffer[(Int, Double, Int)]
+}
+
+trait Binary {
+  implicit object Ord extends Ordering[(Int, Double, Int)] {
+    def compare(x: (Int, Double, Int), y: (Int, Double, Int)) = x._2.compare(y._2)
+  }
+
+  var pq:mutable.PriorityQueue[Int] = _
+  var eucDataSet:Array[(Int, Array[Float])] = _
+
+  def knn(cands:ArrayBuffer[(Int, Double, Int)], qp:Array[Float], k:Int) : ArrayBuffer[(Int, Double, Int)] = {
+    var l = 0
+    var dists = new Array[Double](cands.length)
+    while(l < cands.size) {
+      // TODO Verify that euclidean is in fact better than cosineUnit here (97% vs 95% in tests so far)
+      dists(l) = Euclidean.measure(this.eucDataSet(cands(l)._3)._2, qp)
+
+      // fill up the queue with initial data
+      while(this.pq.size < k) this.pq.enqueue(l)
+      // initial head distance
+
+      if(dists(l) < dists(pq.head)) {
+        this.pq.dequeue()
+        this.pq.enqueue(l)
+        // update headDist
+      }
+      l+=1
+    }
+
+    val result:ArrayBuffer[(Int, Double, Int)] = new ArrayBuffer()
+    var m = 0
+    while(m < k) {
+      val id = pq.dequeue()
+      result+=cands(id)
+      m+=1
+    }
+    result
+  }
+
 }
 
 trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descriptor, Query, FileSet] {
@@ -201,6 +237,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
 
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     println("Done building all repetitions!")
+    System.gc()
   }
 
   override def query(qp: Array[Float], k: Int): ArrayBuffer[(Int, Double, Int)] = {
@@ -209,19 +246,13 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
       if (cands.size < k) cands.size - 1
       else k-1
     })
-    val res = cands.filter(_._2 <= kthDist)
-    res
+    cands.filter(_._2 <= kthDist)
   }
 }
 
-class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends LSHStructureDistributed[mutable.BitSet, (mutable.BitSet, Array[Float], Int),  (String, String)] {
-  var eucDataSet:Array[(Int, Array[Float])] = _
+class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[mutable.BitSet, (mutable.BitSet, Array[Float], Int),  (String, String)] {
   var lastEucDataSet = " "
-
-  implicit object Ord extends Ordering[(Int, Double, Int)] {
-    def compare(x: (Int, Double, Int), y: (Int, Double, Int)) = x._2.compare(y._2)
-  }
-  var pq:mutable.PriorityQueue[(Int, Double, Int)] = new mutable.PriorityQueue[(Int, Double, Int)]()
+  this.pq = new mutable.PriorityQueue[Int]
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
     this.futureResults = new Array(nodes.length)
@@ -241,43 +272,22 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends LSHStructureDist
 
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     println("Done building all repetitions!")
+    System.gc()
   }
 
+
   override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): ArrayBuffer[(Int, Double, Int)] = {
-    val distinctCandidates = this.getCands(qp, k).distinct
 
-    var l = 0
-    while(l < distinctCandidates.size) {
-      // TODO Verify that euclidean is in fact better than cosineUnit here (97% vs 95% in tests so far)
-      // distance of candidate l from qp in euclidean space
-      val dist = Euclidean.measure(this.eucDataSet(distinctCandidates(l)._3)._2, qp._2)
-      if(pq.size < k) {
-        this.pq.enqueue((distinctCandidates(l)._1, dist, distinctCandidates(l)._3))
-      } else if (pq.head._2 > dist) {
-        pq.dequeue()
-        pq.enqueue((distinctCandidates(l)._1, dist, distinctCandidates(l)._3))
-      }
-      l+=1
-    }
-    val result:ArrayBuffer[(Int, Double, Int)] = new ArrayBuffer()
-    var m = 0
-    while(m < k) {
-      result+=pq.dequeue()
-      m+=1
-    }
+    // Search euclidean space (this will return k results)
+    // calling getCands with qp,qp._3 will return specified 'knnmax' value for knn to linear scan over
+    this.knn(this.getCands(qp, qp._3).distinct, qp._2, k)
 
-    result
   }
 }
 
-class LSHBinarySingle extends LSHStructureSingle[mutable.BitSet, (mutable.BitSet, Array[Float], Int), (String, String)] {
-  var eucDataSet:Array[(Int,Array[Float])] = _
+class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mutable.BitSet, Array[Float], Int), (String, String)] {
   var lastEucDataSetDir:String = " "
-
-  implicit object Ord extends Ordering[(Int, Double, Int)] {
-    def compare(x: (Int, Double, Int), y: (Int, Double, Int)) = x._2.compare(y._2)
-  }
-  var pq:mutable.PriorityQueue[(Int, Double, Int)] = new mutable.PriorityQueue[(Int, Double, Int)]()
+  this.pq = new mutable.PriorityQueue[Int]
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
     this.rnd = new Random(seed)
@@ -337,37 +347,14 @@ class LSHBinarySingle extends LSHStructureSingle[mutable.BitSet, (mutable.BitSet
     }
     val distinctCandidates = candidates.distinct
 
-    // If the its bithash we need to do some extra work comparing points in euclidean space
     // filter by distinct < kth(max knn'th) dist
     val kthDist = QuickSelect.selectKthDist(distinctCandidates, {
       if (distinctCandidates.size < qp._3) distinctCandidates.size - 1
       else qp._3 - 1
     })
 
-    val knnRes = distinctCandidates.filter(_._2 < kthDist)
-
-    // Find actual nearest neighbors from candidates set in euclidean space
-    var l = 0
-    while(l < knnRes.size) {
-      // TODO Verify that euclidean is in fact better than cosineUnit here (97% vs 95% in tests so far)
-      // distance of candidate l from qp in euclidean space
-      val dist = Euclidean.measure(this.eucDataSet(knnRes(l)._3)._2, qp._2)
-      if(pq.size < k) {
-        this.pq.enqueue((knnRes(l)._1, dist, knnRes(l)._3))
-      } else if (pq.head._2 > dist) {
-        pq.dequeue()
-        pq.enqueue((knnRes(l)._1, dist, knnRes(l)._3))
-      }
-      l+=1
-    }
-    val result:ArrayBuffer[(Int, Double, Int)] = new ArrayBuffer()
-    var m = 0
-    while(m < k && pq.nonEmpty) {
-      result+=pq.dequeue()
-      m+=1
-    }
-    this.pq.clear
-    result.sortBy(x => x._2)
+    // Search euclidean space (with knn size set)
+    this.knn(distinctCandidates.filter(_._2 <= kthDist), qp._2, k)
   }
 }
 
