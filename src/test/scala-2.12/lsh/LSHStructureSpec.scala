@@ -37,37 +37,13 @@ class LSHStructureSpec extends FlatSpec with Matchers {
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).toArray
       val system = ActorSystem("UnitTestSystem")
       val a1 = system.actorOf(Props[RepetitionHandler[Array[Float]]])
-      val lsh = new LSHStructure[Array[Float]](Array(a1))
+      val lsh = new LSHNumericDistributed(Array(a1))
       val dim = 128
 
-      lsh.build(eucDataDir, eucDataDir, "numeric", 39290, DisaParserFacNumeric, 1, HyperplaneFactory, "pq", 5000, k, dim, Euclidean, rnd.nextLong())
+      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, 1, HyperplaneFactory, "pq", 5000, k, dim, Euclidean, rnd.nextLong())
     }
   }
 
-  "Query result (if not empty)" should "be sorted ascending" in {
-    val f = fixture
-    val results: Array[Boolean] = new Array(50)
-    for (i <- 0 until 50) {
-      val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qp,30,2000).map(_._2)
-
-      var isAsc = true
-      var oldDist = 0.0
-      for (x <- res) {
-        if (oldDist > x) {
-          isAsc = false
-        } else {
-          oldDist = x
-        }
-      }
-
-      results(i) = isAsc
-    }
-    // Cleaning up
-    Await.result(f.system.terminate(), timeout.duration)
-
-    assert(results.forall(_ == true))
-  }
 
   "Query result (if not empty)" should "be of size knn or less" in {
     val f = fixture
@@ -75,7 +51,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     // Preparing tests
     for (i <- 0 until 50) {
       val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp,qp, 30, 2000)
+      val res = f.lsh.query(qp._2,30)
 
       results(i) = res.size <= 30
     }
@@ -90,7 +66,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
     val f = fixture
 
     val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-    val res = f.lsh.query(qp,qp, 30, 2000)
+    val res = f.lsh.query(qp._2,30)
     // Cleaning up
     Await.result(f.system.terminate(), timeout.duration)
 
@@ -109,7 +85,7 @@ class LSHStructureSpec extends FlatSpec with Matchers {
 
     for(i <- 0 until 50) {
       val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-      val res = f.lsh.query(qp, qp, 30, 2000)
+      val res = f.lsh.query(qp._2, 30)
       results(i) = res.size == res.distinct.size
     }
 

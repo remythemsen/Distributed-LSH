@@ -1,18 +1,7 @@
 import java.io.File
-
-import actors._
-import akka.actor.{ActorRef, ActorSystem, AddressFromURIString, Deploy, Props}
-import akka.remote.RemoteScope
-import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import io.ResultWriter
 import scopt.OptionParser
-import lsh.LSHStructure
-import measures._
-
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-import scala.util.Random
 
 case class TestCase(queriesDir:String, eucQueriesDir:String, repsPrNode:Int, functions:Int, probeScheme:String, queryMaxCands:Int, knnMax:Int, measure:String, knn:Int, knnSetsPath:String)
 case class Config(
@@ -21,6 +10,7 @@ case class Config(
                    dataSize:Int = 0,
                    dimensions:Int = 128,
                    dataType:String = "numeric",
+                   setup:String = "single",
                    nodes:File = new File("."),
                    testCases:File = new File("."),
                    invocationCount:Int = 0,
@@ -32,34 +22,26 @@ case class Config(
 
 object RecallTest extends App {
 
-  var bitQueries:Array[(Int, mutable.BitSet)] = _
-  var queries:Array[(Int, Array[Float])] = _
-  var lastQueriesDir = ""
-  var eucqueries:Array[(Int, Array[Float])] = _
-  var lastEucQueriesDir = ""
-  var repetitions:Array[ActorRef] = _
-
-
   getArgsParser.parse(args, Config()) match {
     case Some(config) => {
 
-      // Remote Repetition references:
-      val nodesAddresses = Source.fromFile(config.nodes).getLines.map(x => {
-        val y = x.split(":")
-        "akka.tcp://RepetitionSystem@"+y(0)+":"+y(1)+"/user/Repetition"
-      }).toArray
+      val tester = config.dataType.toLowerCase match {
+        case "binary" => {
+          config.setup.toLowerCase match {
+            case "distributed" => new BinaryDistributed(config.data, config.dataeuc, config.dataSize, config.dimensions, config.seed, config.nodes)
+            case "single" => new BinarySingle(config.data, config.dataeuc, config.dataSize, config.dimensions, config.seed)
+          }
+        }
+        case "numeric" => {
+          config.setup.toLowerCase match {
+            case "distributed" => new NumericDistributed(config.data, config.dataSize, config.dimensions, config.seed, config.nodes)
+            case "single" => new NumericSingle(config.data, config.dataSize, config.dimensions, config.seed)
+          }
+        }
+      }
 
-      val system = ActorSystem("RecallTestSystem")
-      println("System started")
 
-      this.repetitions = new Array(nodesAddresses.length)
-
-
-      var rnd:Random = new Random(config.seed)
-      val INVOCATION_COUNT = config.invocationCount
-
-      val testCases = Source.fromFile(config.testCases).getLines().toArray
-
+      // Making header in testresults file:
       val resWriter = new ResultWriter(config.outDir,"recall-LSH", {
         val sb = new StringBuilder
         sb.append("N ")
@@ -81,361 +63,48 @@ object RecallTest extends App {
         sb.toString
       })
 
-      // What datatype ?
-      config.dataType.toLowerCase() match {
-        case "numeric" => {
-          println("Running test as 'Numeric'")
-          // Initialization
+      val testCases = loadTestCases(Source.fromFile(config.testCases).getLines().toArray)
 
-          for(i <- nodesAddresses.indices) {
-            println("init'ing rephandler "+i+"!")
-            repetitions(i) = system.actorOf(Props[RepetitionHandler[Array[Float]]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(nodesAddresses(i))))))
-          }
+      // Run each test
+      var c = 1
+      for(tc <- testCases) {
+        println("Running test "+c+" out of "+testCases.length)
+        System.gc()
+        val res = tester.run(tc, config.warmUpIterations, config.invocationCount)
 
-          val lsh = new LSHStructure[Array[Float]](repetitions)
-
-          // TEST SECTION
-
-          var tcc = 0
-          while(tcc < testCases.length) {
-            println("Testcase "+(tcc+1)+" out of "+testCases.length+"...")
-            val tc = testCases(tcc).split(" ")
-            val testCase = TestCase (
-              tc(0),        // queriesdir
-              tc(1),        // eucqueriesDir (only used when bithash)
-              tc(2).toInt,  // repetitions per node
-              tc(3).toInt,  // number of functions ( k )
-              tc(4),        // probescheme
-              tc(5).toInt,  // max cands considered in query before returning
-              tc(6).toInt,  // knn max (just for bithashing)
-              tc(7),        // similarity measure
-              tc(8).toInt, // k nearest neighbors to be tested
-              tc(9)        // knnSetsDir dir
-            )
-
-            println("Loading knnsets...")
-            val knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
-
-            println("Initializing repetitions...")
-            val simMeasure = testCase.measure.toLowerCase match {
-              case "euclidean" => Euclidean
-              case "cosine" => Cosine
-              case "cosineunit" => CosineUnit
-            }
-
-            if(lsh.build(config.data, config.dataeuc, config.dataType, config.dataSize, DisaParserFacNumeric, testCase.repsPrNode, HyperplaneFactory, testCase.probeScheme, testCase.queryMaxCands, testCase.functions, config.dimensions, simMeasure, rnd.nextLong)) {
-              println("LSH repetitions has been initialized..")
-
-              // Get queries, keep last set if fileDir is the same
-              if(!testCase.queriesDir.equals(lastQueriesDir)) {
-                println("queries has not been loaded. Loading queries...")
-                this.queries = DisaParserNumeric(Source.fromFile(new File(testCase.queriesDir)).getLines(), config.dimensions).toArray
-                this.lastQueriesDir = testCase.queriesDir
-              }
-
-              // Get euclidean queries, keep last set if fileDir is the same // Only used for bit hashing
-              if(!testCase.eucQueriesDir.equals(lastEucQueriesDir)) {
-                println("euc queries has not been loaded. Loading queries...")
-                this.eucqueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), config.dimensions).toArray
-                this.lastEucQueriesDir = testCase.eucQueriesDir
-              }
-
-              println("Warmup...")
-              var i = 0
-              while(i < config.warmUpIterations) {
-                val index = rnd.nextInt(this.queries.length)
-                val qRes = lsh.query(this.queries(index), this.eucqueries(index), testCase.knn, testCase.knnMax)
-                if(qRes.nonEmpty) {
-                  qRes.head
-                }
-                i+=1
-              }
-
-              println("Running queries...")
-              val queryTimes:ArrayBuffer[Double] = ArrayBuffer()
-              val queryRecalls:ArrayBuffer[Double] = ArrayBuffer()
-              var j = 0
-              while(j < this.queries.length) {
-                val index = rnd.nextInt(this.queries.length)
-                val qp:(Int, Array[Float]) = this.queries(index)
-                val qpeuc:(Int, Array[Float]) = this.queries(index)
-                var qRes: ArrayBuffer[(Int,Double,Int)] = ArrayBuffer()
-                var invocationTimes:Array[Double] = new Array(INVOCATION_COUNT)
-
-                // Time Test, every query is made 5 times
-                var l = 0
-                while(l < INVOCATION_COUNT) {
-                  invocationTimes(l) = timer {
-                    qRes = lsh.query(qp,qpeuc, testCase.knn, testCase.knnMax)
-                  }
-                  l+=1
-                }
-
-                queryTimes += invocationTimes.sum / INVOCATION_COUNT
-
-                // Recall Test
-                val optimalRes = knnStructure(qp._1).take(testCase.knn)
-
-                // Here the recall is the ratio of the sum of distances to qp returned by a query
-                queryRecalls += {
-                  val optSum:Double = optimalRes.map(_._2).sum
-                  var qResSum = qRes.map(x => x._2).sum
-                  if(qRes.size < testCase.knn) {
-                    // Punishment
-                    println("optimal sum: " + optSum)
-                    println("punished " + qResSum +" + 10*("+optSum+")*" + (testCase.knn - qRes.size))
-                    qResSum += 10*(optSum)*(testCase.knn - qRes.size)
-                  }
-                  if(optSum > qResSum){
-                    println(" ")
-                    println("opt sum was lt app sum by " + (optSum - qResSum))
-                    println("for qp: "+ qp._1)
-                    println("opt result ("+optimalRes.length+") : ")
-                    for(y <- optimalRes) {
-                      print("("+y._1+","+y._2 + ") ")
-                    }
-                    println(" ")
-                    println("app result ("+qRes.size+") : ")
-                    for(y <- qRes) {
-                      print("("+y._1+","+y._2+ ") ")
-                    }
-                    println(" ")
-                  }
-
-                  optSum / qResSum
-                }
-                j += 1
-              }
-
-              // Queries has been run. Its time to write out results
-              val avgTime = queryTimes.sum / this.queries.length
-              val stdDevTime:Double = {
-                val variance = queryTimes.map(a => math.pow(a - avgTime, 2)).sum / queryTimes.size
-                Math.sqrt(variance)
-              }
-
-              val avgRecall = queryRecalls.sum / this.queries.length
-              val stdDevRecall:Double = {
-                val variance = queryRecalls.map(a => math.pow(a - avgRecall, 2)).sum / queryRecalls.size
-                Math.sqrt(variance)
-              }
-
-              val hashFunction = config.dataType.toLowerCase match {
-                case "numeric" => "hyperplane"
-                case "binary" => "bithash"
-              }
-              println("Writing results...")
-              // Write result as line to file
-              resWriter.writeResult({
-                val sb = new StringBuilder
-                sb.append(config.dataSize+" ")
-                sb.append(config.dimensions+" ")
-                sb.append(hashFunction+" ")
-                sb.append(nodesAddresses.length+" ")
-                sb.append(testCase.repsPrNode+" ")
-                sb.append(testCase.measure+" ")
-                sb.append(testCase.functions+" ")
-                sb.append(testCase.probeScheme+" ")
-                sb.append(testCase.knn+" ")
-                sb.append(testCase.queryMaxCands+" ")
-                sb.append(testCase.knnMax+" ")
-                sb.append(config.warmUpIterations+" ")
-                sb.append(avgRecall+" ")
-                sb.append(stdDevRecall+" ")
-                sb.append((avgTime / 1E6)+"ms ")
-                sb.append((stdDevTime / 1E6)+"ms")
-                sb.toString
-              })
-
-            }
-            tcc += 1
-          }
-          println("Testing has finished")
-          lsh.destroy
-
+        val hashFunction = config.dataType.toLowerCase match {
+          case "numeric" => "hyperplane"
+          case "binary" => "bithash"
         }
-        case "binary" => {
-          println("Running test as 'Binary'")
-          // Initialization
 
-          for(i <- nodesAddresses.indices) {
-            println("init'ing rephandler "+i+"!")
-            repetitions(i) = system.actorOf(Props[RepetitionHandler[Array[Float]]].withDeploy(Deploy(scope = RemoteScope(AddressFromURIString(nodesAddresses(i))))))
-          }
+        println("Writing results...")
+        // Write result as line to file
+        resWriter.writeResult({
+          val sb = new StringBuilder
+          sb.append(config.dataSize+" ")
+          sb.append(config.dimensions+" ")
+          sb.append(hashFunction+" ")
+          sb.append(Source.fromFile(config.nodes).getLines().length+" ")
+          sb.append(tc.repsPrNode+" ")
+          sb.append(tc.measure+" ")
+          sb.append(tc.functions+" ")
+          sb.append(tc.probeScheme+" ")
+          sb.append(tc.knn+" ")
+          sb.append(tc.queryMaxCands+" ")
+          sb.append(tc.knnMax+" ")
+          sb.append(config.warmUpIterations+" ")
+          sb.append(res._1+" ")
+          sb.append(res._2+" ")
+          sb.append((res._3 / 1E6)+"ms ")
+          sb.append((res._4 / 1E6)+"ms")
+          sb.toString
+        })
 
-
-          val lsh = new LSHStructure[mutable.BitSet](repetitions)
-
-          // TEST SECTION
-
-          var tcc = 0
-          while(tcc < testCases.length) {
-            println("Testcase "+(tcc+1)+" out of "+testCases.length+"...")
-            val tc = testCases(tcc).split(" ")
-            val testCase = TestCase (
-              tc(0),        // queriesdir
-              tc(1),        // eucqueriesDir (only used when bithash)
-              tc(2).toInt,  // repetitions per node
-              tc(3).toInt,  // number of functions ( k )
-              tc(4),        // probescheme
-              tc(5).toInt,  // max cands considered in query before returning
-              tc(6).toInt,  // max knn considered (only bit)
-              tc(7),        // similarity measure
-              tc(8).toInt, // k nearest neighbors to be tested
-              tc(9)        // knnSetsDir dir
-            )
-
-            println("Loading knnsets...")
-            val knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
-
-            println("Initializing repetitions...")
-            val simMeasure = testCase.measure.toLowerCase match {
-              case "hamming" => new Hamming(config.dimensions)
-              case _ => throw new Exception("Unknown Measure!")
-            }
-
-            if(lsh.build(config.data, config.dataeuc, config.dataType, config.dataSize, DisaParserFacBitSet, testCase.repsPrNode, BitHashFactory, testCase.probeScheme, testCase.queryMaxCands, testCase.functions, config.dimensions, simMeasure, rnd.nextLong)) {
-              println("LSH repetitions has been initialized..")
-
-              // Get queries, keep last set if fileDir is the same
-              if(!testCase.queriesDir.equals(lastQueriesDir)) {
-                println("queries has not been loaded. Loading queries...")
-                this.bitQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), config.dimensions).toArray
-                this.lastQueriesDir = testCase.queriesDir
-              }
-
-              // Get euclidean queries, keep last set if fileDir is the same // Only used for bit hashing
-              if(!testCase.eucQueriesDir.equals(lastEucQueriesDir)) {
-                println("euc queries has not been loaded. Loading queries...")
-                this.eucqueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), config.dimensions).toArray
-                this.lastEucQueriesDir = testCase.eucQueriesDir
-              }
-
-              println("Warmup...")
-              var i = 0
-              while(i < config.warmUpIterations) {
-                val index = rnd.nextInt(this.bitQueries.length)
-                val qRes = lsh.query(this.bitQueries(index), this.eucqueries(index), testCase.knn, testCase.knnMax)
-                if(qRes.nonEmpty) {
-                  qRes.head
-                }
-                i+=1
-              }
-
-              println("Running queries...")
-              val queryTimes:ArrayBuffer[Double] = ArrayBuffer()
-              val queryRecalls:ArrayBuffer[Double] = ArrayBuffer()
-              var j = 0
-              while(j < this.bitQueries.length) {
-                val index = rnd.nextInt(this.bitQueries.length)
-                val qp:(Int,mutable.BitSet) = this.bitQueries(index)
-                val qpeuc:(Int, Array[Float]) = this.eucqueries(index)
-                var qRes: ArrayBuffer[(Int,Double,Int)] = ArrayBuffer()
-                var invocationTimes:Array[Double] = new Array(INVOCATION_COUNT)
-
-                // Time Test, every query is made 5 times
-                var l = 0
-                while(l < INVOCATION_COUNT) {
-                  invocationTimes(l) = timer {
-                    qRes = lsh.query(qp,qpeuc, testCase.knn, testCase.knnMax)
-                  }
-                  l+=1
-                }
-
-                queryTimes += invocationTimes.sum / INVOCATION_COUNT
-
-                // Recall Test
-                val optimalRes = knnStructure(qp._1).take(testCase.knn)
-
-                // Here the recall is the ratio of the sum of distances to qp returned by a query
-                queryRecalls += {
-                  val optSum:Double = optimalRes.map(_._2).sum
-                  var qResSum = qRes.map(x => x._2).sum
-                  if(qRes.size < testCase.knn) {
-                    // Punishment
-                    println("optimal sum: " + optSum)
-                    println("punished " + qResSum +" + 10*"+ (testCase.knn - qRes.size))
-                    qResSum += 10*(optSum)*(testCase.knn - qRes.size)
-                  }
-                  if(optSum > qResSum){
-                    println(" ")
-                    println("opt sum was lt app sum by " + (optSum - qResSum))
-                    println("for qp: "+ qp._1)
-                    println("opt result ("+optimalRes.length+") : ")
-                    for(y <- optimalRes) {
-                      print("("+y._1+","+y._2 + ") ")
-                    }
-                    println(" ")
-                    println("app result ("+qRes.size+") : ")
-                    for(y <- qRes) {
-                      print("("+y._1+","+y._2+ ") ")
-                    }
-                    println(" ")
-                  }
-
-                  optSum / qResSum
-                }
-
-                j += 1
-              }
-
-              // Queries has been run. Its time to write out results
-              val avgTime = queryTimes.sum / this.bitQueries.length
-              val stdDevTime:Double = {
-                val variance = queryTimes.map(a => math.pow(a - avgTime, 2)).sum / queryTimes.size
-                Math.sqrt(variance)
-              }
-
-              val avgRecall = queryRecalls.sum / this.bitQueries.length
-              val stdDevRecall:Double = {
-                val variance = queryRecalls.map(a => math.pow(a - avgRecall, 2)).sum / queryRecalls.size
-                Math.sqrt(variance)
-              }
-
-              val hashFunction = config.dataType.toLowerCase match {
-                case "numeric" => "hyperplane"
-                case "binary" => "bithash"
-              }
-              println("Writing results...")
-              // Write result as line to file
-              resWriter.writeResult({
-                val sb = new StringBuilder
-                sb.append(config.dataSize+" ")
-                sb.append(config.dimensions+" ")
-                sb.append(hashFunction+" ")
-                sb.append(nodesAddresses.length+" ")
-                sb.append(testCase.repsPrNode+" ")
-                sb.append(testCase.measure+" ")
-                sb.append(testCase.functions+" ")
-                sb.append(testCase.probeScheme+" ")
-                sb.append(testCase.knn+" ")
-                sb.append(testCase.queryMaxCands+" ")
-                sb.append(testCase.knnMax+" ")
-                sb.append(config.warmUpIterations+" ")
-                sb.append(avgRecall+" ")
-                sb.append(stdDevRecall+" ")
-                sb.append((avgTime / 1E6)+"ms ")
-                sb.append((stdDevTime / 1E6)+"ms")
-                sb.toString
-              })
-
-            }
-            tcc += 1
-            System.gc()
-          }
-          println("Testing has finished")
-          lsh.destroy
-        }
-        case _ => throw new Exception("Unknown datatype")
+        c += 1
       }
-
-      println("Shutting down lsh...")
-      system.terminate()
-
-
     }
     case None => {
-     // Do nothing
+      // Do nothing
     }
   }
 
@@ -446,7 +115,7 @@ object RecallTest extends App {
       opt[String]('d', "data").required().valueName("<string>").action((x, c) =>
         c.copy(data = x)).text("input data path!")
 
-      opt[String]('u', "dataeuc").required().valueName("<string>").action((x, c) =>
+      opt[String]('u', "dataeuc").valueName("<string>").action((x, c) =>
         c.copy(dataeuc = x)).text("input data euclidean path! (not necessary if it's numeric test)")
 
       opt[Int]('n', "size").required().valueName("<int>").action((x, c) =>
@@ -458,7 +127,10 @@ object RecallTest extends App {
       opt[String]('t', "dataType").required().valueName("<string>").action((x, c) =>
         c.copy(dataType = x)).text("type of data in each tuple (Int, ???) e.g. (Int, Array[Float]) is 'numeric', (Int, BitSet) is 'binary' ")
 
-      opt[File]('i', "nodesAddresses").required().valueName("<file>").action((x, c) =>
+      opt[String]('u', "setup").required().valueName("<string>").action((x, c) =>
+        c.copy(setup = x)).text("'distributed' or 'single'")
+
+      opt[File]('i', "nodesAddresses").valueName("<file>").action((x, c) =>
         c.copy(nodes = x)).text("file containing addresses for nodes")
 
       opt[File]('t', "testCases").required().valueName("<file>").action((x, c) =>
@@ -479,28 +151,24 @@ object RecallTest extends App {
       help("help").text("prints this usage text")
     }
   }
-  def loadKNNSets(file:File): mutable.HashMap[Int, Array[(Int, Double)]] = {
-    val map = new mutable.HashMap[Int, Array[(Int, Double)]]
-    val fileLines = Source.fromFile(file).getLines()
-    // format is: key,id dist,id dist, ....  for each line
-    while(fileLines.hasNext) {
-      val pair = fileLines.next.split(",")
-      val key:String = pair.head
-      val nearestNeighbors:Array[(Int, Double)] = pair.tail.map(x => {
-        val set = x.split(" ")
-        (set(0).toInt, set(1).toDouble)
-      })
-      map.put(key.toInt, nearestNeighbors)
+  def loadTestCases(lines:Array[String]) : Array[TestCase] = {
+    println("Loading testcases...")
+    val testCases = new Array[TestCase](lines.length)
+    for(tcl <- lines.indices) {
+      val tc = lines(tcl).split(" ")
+      testCases(tcl) = TestCase(
+        tc(0), // queriesdir
+        tc(1), // eucqueriesDir (only used when bithash)
+        tc(2).toInt, // repetitions per node
+        tc(3).toInt, // number of functions ( k )
+        tc(4), // probescheme
+        tc(5).toInt, // max cands considered in query before returning
+        tc(6).toInt, // knn max (just for bithashing)
+        tc(7), // similarity measure
+        tc(8).toInt, // k nearest neighbors to be tested
+        tc(9) // knnSetsDir dir
+      )
     }
-    map
+    testCases
   }
-
-
-  def timer[R](r: => R): Double = {
-    val now = System.nanoTime
-    r
-    val time = System.nanoTime - now
-    time
-  }
-
 }
