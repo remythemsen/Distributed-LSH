@@ -15,15 +15,15 @@ class Table[A](hashFunction: HashFunction[A]) {
     * Insert vector
     * @param v vector reference to be inserted into internal hashmap
     */
-  def +=(v:((Int, A), Int)) : Unit = {
+  def +=(v:(Int, A)) : Unit = {
     // add address of vector to the buffer in map
-    val key:Long = hf(v._1._2)
+    val key:Long = hf(v._2)
     // TODO remove this branch if possible
     if(!this.table.contains(key)) {
       this.table(key) = new ArrayBuffer()
     }
 
-    this.table(key) += v._2
+    this.table(key) += v._1
   }
 
   /**

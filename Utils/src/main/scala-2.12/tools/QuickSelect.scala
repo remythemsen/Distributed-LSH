@@ -9,7 +9,7 @@ import scala.util.Random
   *
   */
 object QuickSelect {
-  def selectKthDist(data:ArrayBuffer[(Int, Double, Int)], k:Int, rnd:Random = new Random(System.currentTimeMillis())):Double = {
+  def selectKthDist(data:ArrayBuffer[(Int, Double)], k:Int, rnd:Random = new Random(System.currentTimeMillis())):Double = {
     var from = 0
     var to = data.size - 1
 

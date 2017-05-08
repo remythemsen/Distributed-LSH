@@ -28,16 +28,16 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
 
       // Preparing tests
       val rnd = new Random(System.currentTimeMillis())
-      val k = 16
+      val k = 1
       val dim = 256
       val hashFunctions = Array(BitHash(k, rnd.nextLong, dim),BitHash(k, rnd.nextLong, dim))
-      val bitDataDir = "data/descriptors-1-million-reduced-128-hamming-256bit.data"
-      val eucDataDir = "data/descriptors-1-million-reduced-128-normalized.data"
+      val bitDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-hamming-256bit.data"
+      val eucDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
-      val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 128).take(50).toArray
+      val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 256).take(50).toArray
       val lsh = new LSHBinarySingle
 
-      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, new Hamming(dim), rnd.nextLong())
+      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 2000, k, dim, new Hamming(dim), rnd.nextLong())
     }
   }
 
@@ -47,8 +47,10 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
     val results: Array[Boolean] = new Array(50)
     // Preparing tests
     for (i <- 0 until 50) {
-      val qp = f.dataSetBit(f.rnd.nextInt(f.dataSet.length))
-      val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val index = f.rnd.nextInt(f.dataSetBit.length)
+
+      val qp = f.dataSetBit(index)
+      val qpe = f.dataSet(index)
       val qpa = (qp._2, qpe._2, 2000)
       val res = f.lsh.query(qpa, 30)
 
@@ -62,13 +64,15 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
   "Query result (if not empty)" should "be of type Arraybuffer[(Int,double,Int)]" in {
     val f = fixture
 
-    val qp = f.dataSetBit(f.rnd.nextInt(f.dataSetBit.length))
-    val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
-    val qpa = (qp._2, qpe._2, 2000)
-    val res = f.lsh.query(qpa, 30)
+      val index = f.rnd.nextInt(f.dataSetBit.length)
+
+      val qp = f.dataSetBit(index)
+      val qpe = f.dataSet(index)
+      val qpa = (qp._2, qpe._2, 2000)
+      val res = f.lsh.query(qpa, 30)
 
     val arr = ArrayBuffer[(Int,Double,Int)]()
-    val t:(Int,Double,Int) = (1,2.0,2)
+    val t:(Int,Double) = (1,2.0)
     if(res.nonEmpty) {
       assert(res(0).getClass == t.getClass)
     }
@@ -81,11 +85,26 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
     val results:Array[Boolean] = new Array(50)
 
     for(i <- 0 until 50) {
-      val qp = f.dataSetBit(f.rnd.nextInt(f.dataSet.length))
-      val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val index = f.rnd.nextInt(f.dataSetBit.length)
+      val qp = f.dataSetBit(index)
+      val qpe = f.dataSet(index)
       val qpa = (qp._2, qpe._2, 2000)
       val res = f.lsh.query(qpa, 30)
       results(i) = res.size == res.distinct.size
+    }
+    assert(results.forall(_ == true))
+  }
+  "Query result (if not empty)" should "contain (known to be in structure) qp itself" in {
+    val f = fixture
+    val results:Array[Boolean] = new Array(50)
+
+    for(i <- 0 until 50) {
+      val index = f.rnd.nextInt(f.dataSetBit.length)
+      val qp = f.dataSetBit(index)
+      val qpe = f.dataSet(index)
+      val qpa = (qp._2, qpe._2, 1000)
+      val res = f.lsh.query(qpa, 50)
+      results(i) = res.map(_._1).contains(qp._1)
     }
     assert(results.forall(_ == true))
   }

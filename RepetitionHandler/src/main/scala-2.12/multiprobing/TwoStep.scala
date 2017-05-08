@@ -8,7 +8,7 @@ import hashfunctions.HashFunction
 class TwoStep[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
   // Set of resulting probes for all keys
   var probes:Array[(Int, Long)] = new Array(hfs.length*(1+(k*(k+1)/2)))
-  var probesLeft:Int = 0
+  var probesSpent:Int = _
   var hashFunctions:Array[HashFunction[A]] = hfs
   var keys:Array[(Int, Long)] = new Array(hfs.length)
 
@@ -48,7 +48,7 @@ class TwoStep[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
       kIndex += 1
     }
 
-    this.probesLeft = probes.length
+    this.probesSpent = 0
 
   }
 
@@ -62,10 +62,11 @@ class TwoStep[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
     res
   }
 
-  override def hasNext():Boolean = probesLeft > 0
+  override def hasNext():Boolean = probesSpent < probes.length
 
   override def next(): (Int, Long) = {
-    this.probesLeft -= 1
-    probes(probesLeft)
+    val r = probes(probesSpent)
+    this.probesSpent += 1
+    r
   }
 }

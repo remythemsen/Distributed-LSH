@@ -29,12 +29,12 @@ class LSHNumericSingleSpec extends FlatSpec with Matchers {
       val rnd = new Random(System.currentTimeMillis())
       val k = 4
       val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128))
-      val eucDataDir = "data/descriptors-40000-reduced-128-normalized.data"
+      val eucDataDir = "data/descriptors-40000-reduced-128.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).toArray
       val lsh = new LSHNumericSingle
       val dim = 128
 
-      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, 2, HyperplaneFactory, "pq", 5000, k, dim, Euclidean, rnd.nextLong())
+      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, 2, HyperplaneFactory, "twostep", 49000, k, dim, Euclidean, rnd.nextLong())
     }
   }
 
@@ -55,14 +55,14 @@ class LSHNumericSingleSpec extends FlatSpec with Matchers {
   }
 
 
-  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double,Int)]" in {
+  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double)]" in {
     val f = fixture
 
     val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
     val res = f.lsh.query(qp._2,30)
 
-    val arr = ArrayBuffer[(Int,Double,Int)]()
-    val t:(Int,Double,Int) = (1,2.0,2)
+    val arr = ArrayBuffer[(Int,Double)]()
+    val t:(Int,Double) = (1,2.0)
     if(res.nonEmpty) {
       assert(res(0).getClass == t.getClass)
     }

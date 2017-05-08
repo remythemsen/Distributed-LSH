@@ -105,7 +105,7 @@ class RepetitionHandler[A] extends Actor {
     case Query(qp, k) => // Returns Array[(Int,Double)]
       // Generate probes
       this.probeGenerator.generate(qp.asInstanceOf[A])
-      val candidates: ArrayBuffer[(Int, Double, Int)] = new ArrayBuffer()
+      val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
       //this.resultSet = new Array(k)
 
       var nextBucket: (Int, Long) = null
@@ -118,34 +118,27 @@ class RepetitionHandler[A] extends Actor {
 
       while (this.probeGenerator.hasNext() && c <= this.maxCands) {
         nextBucket = this.probeGenerator.next()
-        candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
+        candSet = this.repetitions(nextBucket._1).query(nextBucket._2) // TODO Int and longs are boxed here
         j = 0
         while (j < candSet.size) {
           // TODO c < maxcands are checked twice
           index = candSet(j)
           // Insert candidate with id, and distance from qp
-          candidates += Tuple3(this.dataSet(index)._1, this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A]), index)
+          candidates += Tuple2(index, this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A]))
           c += 1
           j += 1
         }
       }
 
-      // Find kth Distance
-      // TODO Check correctness of k
-      // TODO Find different version of quickselect
-      if (candidates.nonEmpty) {
-        val distinctCands = candidates.distinct
-        val kthDist = QuickSelect.selectKthDist(distinctCands, {
-          if (distinctCands.size < k) distinctCands.size - 1
-          else k-1
-        })
-        sender ! {
-          // filter for distances smaller than the kth
+      val distinctCands = candidates.distinct
+      sender ! {
+        if(distinctCands.size > k) {
+          val kthDist = QuickSelect.selectKthDist(distinctCands, k-1)
           distinctCands.filter(_._2 <= kthDist)
+        } else {
+          distinctCands
         }
-      } else {
-        sender ! ArrayBuffer[(Int,Double,Int)]()
-      } // send empty set back
+      }
 
 
     case Stop =>
@@ -163,7 +156,7 @@ class RepetitionHandler[A] extends Actor {
     while (j < this.dataSet.length) {
       // Insert key value pair of key generated from vector, and value: Index in dataSet
       if (j % percentile == 0) println(j * 100 / dataSize)
-      this.repetitions(mapRef) += (this.dataSet(j), j)
+      this.repetitions(mapRef) += (j, this.dataSet(j)._2)
       j += 1
     }
 

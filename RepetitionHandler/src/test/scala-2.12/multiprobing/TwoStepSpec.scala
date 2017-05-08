@@ -3,6 +3,7 @@ package multiprobing
 import hashfunctions.Hyperplane
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -56,5 +57,34 @@ class TwoStepSpec extends FlatSpec with Matchers {
     f.gen.generate(v)
 
     assert(f.gen.toArray.size == 8)
+  }
+
+  "generate" should "generate the input key itself" in {
+    val f = fixture
+
+
+    val hf = Hyperplane(12, f.rnd.nextLong,128)
+    val gen = new TwoStep[Array[Float]](12, Array(hf)) // k=2 L=1
+    val v = Array.fill[Float](128)(f.rnd.nextFloat())
+    val r = hf(v)
+    gen.generate(v)
+    val res = gen.toArray.map(_._2)
+    assert(res.contains(r))
+  }
+
+  "generate" should "out put input key itself first" in {
+    val f = fixture
+    val hf = Hyperplane(12, f.rnd.nextLong,128)
+    val gen = new TwoStep[Array[Float]](12, Array(hf)) // k=2 L=1
+    val v = Array.fill[Float](128)(f.rnd.nextFloat())
+    val r = hf(v)
+    gen.generate(v)
+
+    val ab = new ArrayBuffer[(Int, Long)]()
+    while(gen.hasNext()) {
+      ab += gen.next()
+    }
+    val res = ab.head._2
+    assert(res == r)
   }
 }

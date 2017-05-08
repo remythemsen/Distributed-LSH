@@ -44,7 +44,7 @@ trait Tester[Descriptor, Query, FileSet] {
       val index = rnd.nextInt(this.queries.length)
       val qp:(Int, Query) = this.queries(index)
 
-      var annSet: ArrayBuffer[(Int,Double,Int)] = ArrayBuffer()
+      var annSet: ArrayBuffer[(Int,Double)] = ArrayBuffer()
 
       // Recall Test
       val optSet = knnStructure(qp._1).take(this.testCase.knn)
@@ -72,7 +72,7 @@ trait Tester[Descriptor, Query, FileSet] {
     (average(queryRecalls), stdDeviation(queryRecalls), average(queryTimes), stdDeviation(queryTimes))
   }
 
-  def recall(optSet:Seq[(Int, Double)], annSet:Seq[(Int, Double, Int)], k:Int) : Double = {
+  def recall(optSet:Seq[(Int, Double)], annSet:Seq[(Int, Double)], k:Int) : Double = {
     val optSum:Double = optSet.map(_._2).sum
     var annSum:Double = annSet.map(_._2).sum
     // Adding some punishment if less than k results have been retrieved

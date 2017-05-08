@@ -32,8 +32,8 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
       val k = 16
       val dim = 256
       val hashFunctions = Array(BitHash(k, rnd.nextLong, dim),BitHash(k, rnd.nextLong, dim))
-      val bitDataDir = "data/descriptors-1-million-reduced-128-hamming-256bit.data"
-      val eucDataDir = "data/descriptors-1-million-reduced-128-normalized.data"
+      val bitDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-hamming-256bit.data"
+      val eucDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
       val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 128).take(50).toArray
       val system = ActorSystem("UnitTestSystem")
