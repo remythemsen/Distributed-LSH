@@ -3,10 +3,12 @@ import actors.{DisaParserFac, DisaParserFacNumeric, HashFunctionFactory}
 import akka.actor.ActorRef
 import measures.{Distance, Euclidean}
 import messages.{InitRepetition, Query, Stop}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import akka.util.Timeout
+
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
@@ -128,9 +130,10 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
   var nodes:Array[ActorRef] = _
   var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another method.
   implicit val timeout = Timeout(20.hours)
+  var candidates:ArrayBuffer[(Int,Double,Int)] = new ArrayBuffer[(Int, Double, Int)]()
 
-  def getCands(qp:Query, k:Int) : ArrayBuffer[(Int,Double,Int)] = {
-    val candidates = new ArrayBuffer[(Int,Double,Int)]()
+  def getCands(qp:Query, k:Int) : ArrayBuffer[(Int, Double, Int)] = {
+    val filterMap = new mutable.HashMap[Int, Boolean]
 
     // for each rep, send query, wait for result from all. return set
     var i = 0
@@ -147,6 +150,25 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
     }
 
     candidates
+
+/*    // Wait for all results to return
+    var j, g, c = 0
+    while(j < futureResults.length) {
+      val candSet = Await.result(futureResults(j), timeout.duration).asInstanceOf[ArrayBuffer[(Int, Double, Int)]]
+      while(g < candSet.length) {
+        if(!filterMap(candSet(g)._3)) {
+          filterMap(candSet(g)._3) = true
+          if(c >= candidates.size) candidates += candSet(g)
+          else candidates(c) = candSet(g)
+          c+=1
+        }
+        g+=1
+      }
+      j+=1
+    }
+
+    // Get distinct set
+    (c, candidates)*/
   }
 
   def destroy : Unit = {
@@ -241,7 +263,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
   }
 
   override def query(qp: Array[Float], k: Int): ArrayBuffer[(Int, Double, Int)] = {
-    val cands = getCands(qp, k).distinct
+    val cands:ArrayBuffer[(Int, Double, Int)] = getCands(qp, k)
     val kthDist = QuickSelect.selectKthDist(cands, {
       if (cands.size < k) cands.size - 1
       else k-1
