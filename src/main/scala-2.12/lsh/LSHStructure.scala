@@ -38,13 +38,14 @@ trait Binary {
 
   def knn(cands:ArrayBuffer[(Int, Double)], qp:Array[Float], k:Int) : ArrayBuffer[(Int, Double)] = {
     var l = 0
-    while(l < cands.size) {
 
-      // fill up the queue with initial data
-      while(this.pq.size < k) {
-        this.pq.enqueue((this.eucDataSet(cands(l)._1)._1,Euclidean.measure(this.eucDataSet(cands(l)._1)._2, qp)))
-        l+=1
-      }
+    // fill up the queue with initial data
+    while(this.pq.size < k) {
+      this.pq.enqueue((this.eucDataSet(cands(l)._1)._1,Euclidean.measure(this.eucDataSet(cands(l)._1)._2, qp)))
+      l+=1
+    }
+
+    while(l < cands.size) {
 
       // TODO Verify that euclidean is in fact better than cosineUnit here (97% vs 95% in tests so far)
       val dist = Euclidean.measure(this.eucDataSet(cands(l)._1)._2, qp)
@@ -58,10 +59,8 @@ trait Binary {
     }
 
     val result:ArrayBuffer[(Int, Double)] = new ArrayBuffer()
-    var m = 0
-    while(m < k) {
+    while(pq.nonEmpty) {
       result += pq.dequeue()
-      m+=1
     }
     result
   }
@@ -134,10 +133,11 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
   var nodes:Array[ActorRef] = _
   var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another approach.
   implicit val timeout = Timeout(20.hours)
-  var candidates:ArrayBuffer[(Int,Double)] = new ArrayBuffer[(Int, Double)]()
+  var candidates:ArrayBuffer[(Int,Double)] = _
 
-  def getCands(qp:Query, k:Int) : ArrayBuffer[(Int, Double)] = {
+  def getCands(qp:Descriptor, k:Int) : ArrayBuffer[(Int, Double)] = {
     //val filterMap = new mutable.HashMap[Int, Boolean]
+    this.candidates = new ArrayBuffer[(Int, Double)]()
 
     // for each rep, send query, wait for result from all. return set
     var i = 0
@@ -253,6 +253,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
 class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDistributed[Array[Float], Array[Float], String] {
   this.nodes = repetitions
   var idLookupMap:Array[Int] = _
+  var lastLookupMap = " "
   override def build(fileSet: String, n: Int, parserFac: DisaParserFac[Array[Float]], internalReps: Int, hfFac: HashFunctionFactory[Array[Float]], pGenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[Array[Float]], seed: Long): Unit = {
 
     this.futureResults = new Array(nodes.length)
@@ -262,16 +263,18 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
       statuses += nodes(i) ? InitRepetition(fileSet, n, parserFac, internalReps, hfFac, pGenerator, maxCands/nodes.length, functions, dimensions, simMeasure, seed)
       i += 1
     }
-    println("building lookupMap")
-    this.idLookupMap = new Array(n)
-    val parser = Source.fromFile(new File(fileSet)).getLines()
-    var j = 0
-    while(j < n) {
-      // TODO this can be done much faster (dont do split on whole line)
-      this.idLookupMap(j) = parser.next().split(" ").head.toInt
-      j+=1
+    if(this.lastLookupMap != fileSet) {
+      println("building lookupMap")
+      this.idLookupMap = new Array(n)
+      val parser = Source.fromFile(new File(fileSet)).getLines()
+      var j = 0
+      while(j < n) {
+        // TODO this can be done much faster (dont do split on whole line)
+        this.idLookupMap(j) = parser.next().split(" ").head.toInt
+        j+=1
+      }
+      println("done building lookupmap")
     }
-    println("done building lookupmap")
 
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     println("Done building all repetitions!")
@@ -289,8 +292,9 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     }
   }
 }
-
 class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[mutable.BitSet, (mutable.BitSet, Array[Float], Int),  (String, String)] {
+
+  this.nodes = repetitions
   var lastEucDataSet = " "
   this.pq = new mutable.PriorityQueue[(Int, Double)]
 
@@ -320,9 +324,11 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
 
     // Search euclidean space (this will return k results)
     // calling getCands with qp,qp._3 will return specified 'knnmax' value for knn to linear scan over
-    val cands = this.getCands(qp, qp._3).distinct
-    this.knn(cands, qp._2, {
-      if(cands.size < k) cands.size
+    val distinctCandidates = this.getCands(qp._1, qp._3).distinct
+
+    // Search euclidean space (with knn size set)
+    this.knn(distinctCandidates, qp._2, {
+      if (distinctCandidates.size < k) distinctCandidates.size
       else k
     })
   }

@@ -1,9 +1,12 @@
 import java.io.File
+
 import actors._
 import akka.actor.{ActorRef, ActorSystem, AddressFromURIString, Deploy, Props}
 import akka.remote.RemoteScope
+import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import lsh._
 import measures.{Cosine, CosineUnit, Euclidean, Hamming}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -33,6 +36,7 @@ trait Tester[Descriptor, Query, FileSet] {
   }
 
   def runQueries(invocationCount:Int):(Double, Double, Double, Double) = {
+    println("Running queries...")
     // Test result containers
     val queryTimes:ArrayBuffer[Double] = ArrayBuffer()
     val queryRecalls:ArrayBuffer[Double] = ArrayBuffer()
@@ -146,9 +150,18 @@ class NumericDistributed(data:String, dataSize:Int, dimensions:Int, seed:Long, n
 
   this.rnd = new Random(seed)
   this.lsh = new LSHNumericDistributed(this.getNodes(nodes))
+  var lastQueriesDir = " "
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
+    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+
+    // Get queries, keep last set if fileDir is the same
+    if(!testCase.queriesDir.equals(lastQueriesDir)) {
+      println("queries has not been loaded. Loading queries...")
+      this.queries = DisaParserNumeric(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray
+      this.lastQueriesDir = testCase.queriesDir
+    }
 
     // Call lsh build
     val distance = testCase.measure.toLowerCase match {
@@ -174,9 +187,18 @@ class NumericSingle(data:String, dataSize:Int, dimensions:Int, seed:Long) extend
 
   this.rnd = new Random(seed)
   this.lsh = new LSHNumericSingle
+  var lastQueriesDir = " "
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
+    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+
+    // Get queries, keep last set if fileDir is the same
+    if(!testCase.queriesDir.equals(lastQueriesDir)) {
+      println("queries has not been loaded. Loading queries...")
+      this.queries = DisaParserNumeric(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray
+      this.lastQueriesDir = testCase.queriesDir
+    }
 
     // Call lsh build
     val distance = testCase.measure.toLowerCase match {
@@ -202,9 +224,28 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinaryDistributed(this.getNodes(nodes))
+  var lastQueriesDir = " "
+
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
+    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+
+    // Get queries, keep last set if fileDir is the same
+    if(!testCase.queriesDir.equals(lastQueriesDir)) {
+      println("queries has not been loaded. Loading queries...")
+      val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray
+      val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), dimensions).toArray
+      this.queries = new Array(binQueries.length)
+      var i = 0
+      while(i < binQueries.length) {
+        this.queries(i) = (binQueries(i)._1, (binQueries(i)._2, eucQueries(i)._2, testCase.knnMax))
+        i+=1
+      }
+
+      this.lastQueriesDir = testCase.queriesDir
+    }
+
 
     // Call lsh build
     val distance = testCase.measure.toLowerCase match {
@@ -234,9 +275,26 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinarySingle
+  var lastQueriesDir = " "
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
+    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+
+    // Get queries, keep last set if fileDir is the same
+    if(!testCase.queriesDir.equals(lastQueriesDir)) {
+      println("queries has not been loaded. Loading queries...")
+      val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray
+      val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), dimensions).toArray
+      this.queries = new Array(binQueries.length)
+      var i = 0
+      while(i < binQueries.length) {
+        this.queries(i) = (binQueries(i)._1, (binQueries(i)._2, eucQueries(i)._2, testCase.knnMax))
+        i+=1
+      }
+
+      this.lastQueriesDir = testCase.queriesDir
+    }
 
     // Call lsh build
     val distance = testCase.measure.toLowerCase match {

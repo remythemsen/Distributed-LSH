@@ -28,16 +28,16 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
 
       // Preparing tests
       val rnd = new Random(System.currentTimeMillis())
-      val k = 1
+      val k = 12
       val dim = 256
       val hashFunctions = Array(BitHash(k, rnd.nextLong, dim),BitHash(k, rnd.nextLong, dim))
-      val bitDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-hamming-256bit.data"
-      val eucDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-normalized.data"
+      val bitDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-hamming-256bit.data"
+      val eucDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
       val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 256).take(50).toArray
       val lsh = new LSHBinarySingle
 
-      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 2000, k, dim, new Hamming(dim), rnd.nextLong())
+      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, new Hamming(dim), rnd.nextLong())
     }
   }
 
@@ -61,7 +61,7 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
   }
 
 
-  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double,Int)]" in {
+  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double)]" in {
     val f = fixture
 
       val index = f.rnd.nextInt(f.dataSetBit.length)
@@ -71,7 +71,7 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
       val qpa = (qp._2, qpe._2, 2000)
       val res = f.lsh.query(qpa, 30)
 
-    val arr = ArrayBuffer[(Int,Double,Int)]()
+    val arr = ArrayBuffer[(Int,Double)]()
     val t:(Int,Double) = (1,2.0)
     if(res.nonEmpty) {
       assert(res(0).getClass == t.getClass)

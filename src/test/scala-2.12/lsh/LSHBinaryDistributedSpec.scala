@@ -29,13 +29,14 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
       // Preparing tests
 
       val rnd = new Random(System.currentTimeMillis())
-      val k = 16
+      val k = 12
       val dim = 256
       val hashFunctions = Array(BitHash(k, rnd.nextLong, dim),BitHash(k, rnd.nextLong, dim))
-      val bitDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-hamming-256bit.data"
-      val eucDataDir = "C:/datasets/disa/0/descriptors-1-million-reduced-128-normalized.data"
+      val bitDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-hamming-256bit.data"
+      val eucDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
-      val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 128).take(50).toArray
+      val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 256).take(50).toArray
+
       val system = ActorSystem("UnitTestSystem")
       val a1 = system.actorOf(Props[RepetitionHandler[mutable.BitSet]])
       val lsh = new LSHBinaryDistributed(Array(a1))
@@ -44,7 +45,7 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
     }
   }
 
-
+/*
   "Query result (if not empty)" should "be of size knn or less" in {
     val f = fixture
     val results: Array[Boolean] = new Array(50)
@@ -64,7 +65,7 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
   }
 
 
-  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double,Int)]" in {
+  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double)]" in {
     val f = fixture
 
     val qp = f.dataSetBit(f.rnd.nextInt(f.dataSetBit.length))
@@ -74,24 +75,28 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
     // Cleaning up
     Await.result(f.system.terminate(), timeout.duration)
 
-    val arr = ArrayBuffer[(Int,Double,Int)]()
-    val t:(Int,Double,Int) = (1,2.0,2)
+    val arr = ArrayBuffer[(Int,Double)]()
+    val t:(Int,Double) = (1,2.0)
     if(res.nonEmpty) {
       assert(res(0).getClass == t.getClass)
     }
 
     assert(arr.getClass == res.getClass)
   }
-
+*/
   "Query result (if not empty)" should "only contain distinct ids" in {
     val f = fixture
     val results:Array[Boolean] = new Array(50)
 
     for(i <- 0 until 50) {
-      val qp = f.dataSetBit(f.rnd.nextInt(f.dataSet.length))
-      val qpe = f.dataSet(f.rnd.nextInt(f.dataSet.length))
+      val index = f.rnd.nextInt(f.dataSetBit.length)
+      val qp = f.dataSetBit(index)
+      val qpe = f.dataSet(index)
       val qpa = (qp._2, qpe._2, 2000)
       val res = f.lsh.query(qpa, 30)
+      if(res.size != res.distinct.size) {
+        println(res.size - res.distinct.size)
+      }
       results(i) = res.size == res.distinct.size
     }
 

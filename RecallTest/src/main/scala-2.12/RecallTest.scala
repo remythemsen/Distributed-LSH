@@ -44,6 +44,10 @@ object RecallTest extends App {
       // Making header in testresults file:
       val resWriter = new ResultWriter(config.outDir,"recall-LSH", {
         val sb = new StringBuilder
+        sb.append("Test type: " + config.setup + ", " + config.dataType+"\n")
+        sb.append("Data file: " + config.data+"\n")
+        sb.append("\n")
+        sb.append("\n")
         sb.append("N ")
         sb.append("dim ")
         sb.append("hf ")
@@ -102,6 +106,7 @@ object RecallTest extends App {
 
         c += 1
       }
+      println("Testing has finished...")
     }
     case None => {
       // Do nothing

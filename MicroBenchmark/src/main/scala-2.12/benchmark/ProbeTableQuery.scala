@@ -40,7 +40,7 @@ class ProbeTableQuery {
     var i = 0
     while(i < vectors.length) {
       vectors(i) = (rnd.nextInt, Array.fill[Float](dimensions)(rnd.nextFloat))
-      newTable += (vectors(i), 1)
+      newTable += (vectors(i))
       i += 1
     }
   }

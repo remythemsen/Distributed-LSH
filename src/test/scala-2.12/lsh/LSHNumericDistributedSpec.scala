@@ -31,16 +31,16 @@ class LSHNumericDistributedSpec extends FlatSpec with Matchers {
 
 
       val rnd = new Random(System.currentTimeMillis())
-      val k = 4
+      val k = 12
+      val dim = 128
       val hashFunctions = Array(Hyperplane(k, rnd.nextLong, 128), Hyperplane(k, rnd.nextLong, 128))
       val eucDataDir = "data/descriptors-40000-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).toArray
       val system = ActorSystem("UnitTestSystem")
       val a1 = system.actorOf(Props[RepetitionHandler[Array[Float]]])
       val lsh = new LSHNumericDistributed(Array(a1))
-      val dim = 128
 
-      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "pq", 5000, k, dim, Euclidean, rnd.nextLong())
+      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 40000, k, dim, Euclidean, rnd.nextLong())
     }
   }
 
@@ -62,7 +62,7 @@ class LSHNumericDistributedSpec extends FlatSpec with Matchers {
   }
 
 
-  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double,Int)]" in {
+  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double)]" in {
     val f = fixture
 
     val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
@@ -70,8 +70,8 @@ class LSHNumericDistributedSpec extends FlatSpec with Matchers {
     // Cleaning up
     Await.result(f.system.terminate(), timeout.duration)
 
-    val arr = ArrayBuffer[(Int,Double,Int)]()
-    val t:(Int,Double,Int) = (1,2.0,2)
+    val arr = ArrayBuffer[(Int,Double)]()
+    val t:(Int,Double) = (1,2.0)
     if(res.nonEmpty) {
       assert(res(0).getClass == t.getClass)
     }
