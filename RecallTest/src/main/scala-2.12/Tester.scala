@@ -23,7 +23,7 @@ trait Tester[Descriptor, Query, FileSet] {
   def run(testCase:TestCase, warmUpIterations:Int, invocationCount:Int) : Result
 
   def warmUp(warmUpiterations:Int) : Unit = {
-    println("Running warmup")
+    println("Running warmup...")
     var i = 0
     while(i < warmUpiterations) {
       val index = rnd.nextInt(this.queries.length)
