@@ -151,10 +151,14 @@ class NumericDistributed(data:String, dataSize:Int, dimensions:Int, seed:Long, n
   this.rnd = new Random(seed)
   this.lsh = new LSHNumericDistributed(this.getNodes(nodes))
   var lastQueriesDir = " "
+  var lastKnnDir = " "
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
-    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+    if(lastKnnDir != testCase.knnSetsPath) {
+      this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+      lastKnnDir = testCase.knnSetsPath
+    }
 
     // Get queries, keep last set if fileDir is the same
     if(!testCase.queriesDir.equals(lastQueriesDir)) {
@@ -188,10 +192,15 @@ class NumericSingle(data:String, dataSize:Int, dimensions:Int, seed:Long) extend
   this.rnd = new Random(seed)
   this.lsh = new LSHNumericSingle
   var lastQueriesDir = " "
+  var lastKnnDir = " "
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
-    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+
+    if(lastKnnDir != testCase.knnSetsPath) {
+      this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+      lastKnnDir = testCase.knnSetsPath
+    }
 
     // Get queries, keep last set if fileDir is the same
     if(!testCase.queriesDir.equals(lastQueriesDir)) {
@@ -225,11 +234,15 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
   this.rnd = new Random(seed)
   this.lsh = new LSHBinaryDistributed(this.getNodes(nodes))
   var lastQueriesDir = " "
+  var lastKnnDir = " "
 
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
-    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+    if(lastKnnDir != testCase.knnSetsPath) {
+      this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+      lastKnnDir = testCase.knnSetsPath
+    }
 
     // Get queries, keep last set if fileDir is the same
     if(!testCase.queriesDir.equals(lastQueriesDir)) {
@@ -276,10 +289,14 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
   this.rnd = new Random(seed)
   this.lsh = new LSHBinarySingle
   var lastQueriesDir = " "
+  var lastKnnDir = " "
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
-    this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+    if(lastKnnDir != testCase.knnSetsPath) {
+      this.knnStructure = loadKNNSets(new File(testCase.knnSetsPath))
+      lastKnnDir = testCase.knnSetsPath
+    }
 
     // Get queries, keep last set if fileDir is the same
     if(!testCase.queriesDir.equals(lastQueriesDir)) {

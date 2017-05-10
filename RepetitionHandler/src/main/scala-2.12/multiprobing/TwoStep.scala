@@ -12,34 +12,41 @@ class TwoStep[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
   var hashFunctions:Array[HashFunction[A]] = hfs
   var keys:Array[(Int, Long)] = new Array(hfs.length)
 
+  // When having multiple hashfunctions the ordering should be keys first, then keys with 1 bit changed, then 2 bits
+  // We are using three counters to achieve inserting in probes array with this ordering
+  // Note: All 1step of hf(1) will preceed all 1step of hf(2) TODO: Make different index system that addresses this
   override def generate(qp:A): Unit = {
 
+    var keysC = 0
+    var oneStepC = hfs.length
+    var twoStepC = oneStepC+(k*hfs.length)
+
     // Get keys of qp
-    var i = 0
-    while(i < this.hfs.length) {
-      this.keys(i) = (i,this.hashFunctions(i)(qp))
-      i += 1
+    var g = 0
+    while(g < this.hfs.length) {
+      this.keys(g) = (g,this.hashFunctions(g)(qp))
+      g += 1
     }
 
-    var kIndex, c = 0
+    var kIndex = 0
     while (kIndex < hfs.length) {
       var i, j = 0
       var oneStepProbe: Long = 0
 
       // Adding the key itself
-      val key = (kIndex, keys(i)._2)
-      probes(c) = key
-      c += 1
+      val key = (kIndex, keys(kIndex)._2)
+      probes(keysC) = key
+      keysC += 1
 
       while (i < k) {
-        probes(c) = (kIndex, checkAndFlip(key._2, i))
-        oneStepProbe = probes(c)._2
+        probes(oneStepC) = (kIndex, checkAndFlip(key._2, i))
+        oneStepProbe = probes(oneStepC)._2
 
-        c = c + 1
+        oneStepC += 1
         j = i + 1
         while (j < k) {
-          probes(c) = (kIndex, checkAndFlip(oneStepProbe, j))
-          c = c + 1
+          probes(twoStepC) = (kIndex, checkAndFlip(oneStepProbe, j))
+          twoStepC+=1
           j = j + 1
         }
         i += 1

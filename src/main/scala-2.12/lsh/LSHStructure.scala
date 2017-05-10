@@ -273,6 +273,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
         this.idLookupMap(j) = parser.next().split(" ").head.toInt
         j+=1
       }
+      this.lastLookupMap = fileSet
       println("done building lookupmap")
     }
 

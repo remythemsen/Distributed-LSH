@@ -20,6 +20,22 @@ class TwoStepSpec extends FlatSpec with Matchers {
     }
   }
 
+  "first two probes to come out" should " be the keys of hf and hf2" in {
+    val f = fixture
+    for(i <- 0 until 500) {
+      val v = Array.fill[Float](128)(f.rnd.nextFloat())
+      f.gen.generate(v)
+      val one = f.gen.next
+      val two = f.gen.next
+      assert(f.hf(v) == one._2)
+      assert(f.hf2(v) == two._2)
+    }
+
+
+
+
+  }
+
   "generate" should "make correct probeset on simple input" in {
     val f = fixture
     f.gen.generate(Array.fill[Float](128)(f.rnd.nextFloat()))
