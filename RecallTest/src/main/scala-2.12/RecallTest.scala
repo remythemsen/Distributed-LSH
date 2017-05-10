@@ -88,7 +88,10 @@ object RecallTest extends App {
           sb.append(config.dataSize+" ")
           sb.append(config.dimensions+" ")
           sb.append(hashFunction+" ")
-          sb.append(Source.fromFile(config.nodes).getLines().length+" ")
+          sb.append({
+            if(config.setup.toLowerCase == "single") "1 "
+            else Source.fromFile(config.nodes).getLines().length+" "
+          })
           sb.append(tc.repsPrNode+" ")
           sb.append(tc.measure+" ")
           sb.append(tc.functions+" ")
