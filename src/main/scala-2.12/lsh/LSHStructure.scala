@@ -1,24 +1,21 @@
 package lsh
-import java.io.File
 
+import java.io.File
 import actors.{DisaParserFac, DisaParserFacNumeric, HashFunctionFactory}
 import akka.actor.ActorRef
 import measures.{Distance, Euclidean}
 import messages.{InitRepetition, Query, Stop}
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import akka.util.Timeout
-
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
 import datastructures.Table
-import hashfunctions.{HashFunction, Hyperplane}
+import hashfunctions.HashFunction
 import multiprobing.{PQ, ProbeScheme, TwoStep}
 import tools.QuickSelect
-
 import scala.io.Source
 import scala.util.Random
 
