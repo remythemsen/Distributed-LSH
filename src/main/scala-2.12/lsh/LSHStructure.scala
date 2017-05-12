@@ -255,6 +255,9 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     this.maxCands = maxCands
     this.distance = simMeasure
 
+    if(fileSet != this.lastDataSetDir) {
+      this.buildDataSet(fileSet, n, dimensions, parserFac)
+    }
 
     this.initRepetitions(hfFac,n,functions,dimensions)
 

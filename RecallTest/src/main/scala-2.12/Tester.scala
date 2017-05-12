@@ -95,7 +95,7 @@ trait Tester[Descriptor, Query, FileSet] {
     require(optSet.size >= k)
     require(annSet.size <= k)
 
-    val kthFarthestDistOpt = optSet(k)._2
+    val kthFarthestDistOpt = optSet(k-1)._2
 
     var r = 0.0
     var c = 0
