@@ -15,7 +15,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 object KNN {
 
   def search(data:DisaParserNumeric, queries:DisaParserNumeric, K:Int, distance:Distance[Array[Float]], dataSetSize:Int) = {
-    implicit val ec = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(8))
+    implicit val ec = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(12))
 
     implicit object Ord extends Ordering[((Int, Array[Float]), Double)] {
       def compare(x: ((Int, Array[Float]), Double), y: ((Int, Array[Float]), Double)) = x._2.compare(y._2)

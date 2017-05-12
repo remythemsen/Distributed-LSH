@@ -78,6 +78,24 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
   var maxCands:Int = _
   var distance:Distance[Descriptor] = _
 
+  def clear():Unit = {
+    if(this.repetitions != null) {
+      for(i <- this.repetitions.indices) {
+        this.repetitions(i).clear
+        this.repetitions(i) = null
+      }
+      this.repetitions = null
+    }
+    if(this.hashFunctions != null) {
+      for(i <- this.hashFunctions.indices) {
+        this.hashFunctions(i) = null
+      }
+      this.hashFunctions = null
+    }
+    this.probeGenerator = null
+    this.futures = null
+    System.gc()
+  }
 
   def buildRepetition(mapRef:Int, dataSize:Int):Boolean = {
     var j = 0
@@ -226,7 +244,10 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     }
   }
 
+
   override def build(fileSet: String, n: Int, parserFac: DisaParserFac[Array[Float]], internalReps: Int, hfFac: HashFunctionFactory[Array[Float]], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[Array[Float]], seed: Long): Unit = {
+    clear()
+
     this.rnd = new Random(seed)
     this.hashFunctions = new Array(internalReps)
     this.repetitions = new Array(internalReps)
@@ -234,9 +255,6 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     this.maxCands = maxCands
     this.distance = simMeasure
 
-    if(fileSet != this.lastDataSetDir) {
-      this.buildDataSet(fileSet, n, dimensions, parserFac)
-    }
 
     this.initRepetitions(hfFac,n,functions,dimensions)
 
@@ -338,10 +356,13 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
 
 class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mutable.BitSet, Array[Float], Int), (String, String)] {
   var lastEucDataSetDir:String = " "
-  this.pq = new mutable.PriorityQueue[(Int,Double)]
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
+    this.clear()
+    this.pq = null
     this.rnd = new Random(seed)
+    this.pq = new mutable.PriorityQueue[(Int,Double)]
+
     this.hashFunctions = new Array(internalReps)
     this.repetitions = new Array(internalReps)
     this.futures = new Array(internalReps)

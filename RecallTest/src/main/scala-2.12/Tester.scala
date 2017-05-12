@@ -67,7 +67,8 @@ trait Tester[Descriptor, Query, FileSet] {
       queryTimes += invocationTimes.sum / invocationCount
 
       // Adding the current q's recall to the set of recalls
-      queryRecalls += recall(optSet, annSet, this.testCase.knn)
+      // eps = 0 means no approx
+      queryRecalls += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0)
 
       j += 1
     }
@@ -76,7 +77,7 @@ trait Tester[Descriptor, Query, FileSet] {
     (average(queryRecalls), stdDeviation(queryRecalls), average(queryTimes), stdDeviation(queryTimes))
   }
 
-  def recall(optSet:Seq[(Int, Double)], annSet:Seq[(Int, Double)], k:Int) : Double = {
+  def recall(optSet:Array[(Int, Double)], annSet:ArrayBuffer[(Int, Double)], k:Int) : Double = {
     val optSum:Double = optSet.map(_._2).sum
     var annSum:Double = annSet.map(_._2).sum
     // Adding some punishment if less than k results have been retrieved
@@ -86,6 +87,25 @@ trait Tester[Descriptor, Query, FileSet] {
       annSum += 10*(optSum)*(k - annSet.size)
     }
     optSum / annSum
+  }
+
+  def recallFarthestPointApprox(optSet:Array[(Int, Double)], annSet:ArrayBuffer[(Int, Double)], k:Int, eps:Double = 0.0) : Double = {
+    // We assume here that the optSet is sorted, and have equalto or more points than specified k
+    // We also assume that annSet.size <= k
+    require(optSet.size >= k)
+    require(annSet.size <= k)
+
+    val kthFarthestDistOpt = optSet(k)._2
+
+    var r = 0.0
+    var c = 0
+
+    while(c < annSet.size) {
+      if(annSet(c)._2 <= (1 + eps) * kthFarthestDistOpt ) r+=1
+      c+=1
+    }
+
+    r / k
   }
 
   def average(sum:Double, length:Int) : Double = {
