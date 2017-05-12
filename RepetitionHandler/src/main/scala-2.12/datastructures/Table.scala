@@ -33,6 +33,7 @@ class Table[A](hashFunction: HashFunction[A]) {
   def query(key:Long) : ArrayBuffer[Int] = {
     this.table.getOrElse(key, ArrayBuffer())
   }
+
   def clear:Unit = {
     this.table.clear
   }

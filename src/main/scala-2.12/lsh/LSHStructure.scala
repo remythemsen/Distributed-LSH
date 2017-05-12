@@ -188,14 +188,14 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
 
 class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], String] {
 
+
   override def query(qp: Array[Float], k:Int): ArrayBuffer[(Int, Double)] = {
     // Generate probes
     this.probeGenerator.generate(qp)
-    val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
+    val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer(this.maxCands)
     var nextBucket: (Int, Long) = null
 
     // Contains pointers to the dataset
-    var candSet: ArrayBuffer[Int] = null
 
     var j, c = 0
     var index = 0
@@ -203,7 +203,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     // Collect cands
     while (this.probeGenerator.hasNext() && c <= this.maxCands) {
       nextBucket = this.probeGenerator.next()
-      candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
+      val candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
       j = 0
       while (j < candSet.size) {
         // TODO c < maxcands are checked twice
@@ -214,6 +214,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
         j += 1
       }
     }
+
 
     val distinctCandidates = candidates.distinct
 
