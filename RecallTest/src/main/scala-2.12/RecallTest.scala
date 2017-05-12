@@ -1,6 +1,9 @@
 import java.io.File
+import java.text.DecimalFormat
+
 import io.ResultWriter
 import scopt.OptionParser
+
 import scala.io.Source
 
 case class TestCase(queriesDir:String, eucQueriesDir:String, repsPrNode:Int, functions:Int, probeScheme:String, queryMaxCands:Int, knnMax:Int, measure:String, knn:Int, knnSetsPath:String)
@@ -45,25 +48,29 @@ object RecallTest extends App {
       val resWriter = new ResultWriter(config.outDir,"recall-LSH", {
         val sb = new StringBuilder
         sb.append("Test type: " + config.setup + ", " + config.dataType+"\n")
-        sb.append("Data file: " + config.data+"\n")
+        sb.append("Data file: " + config.data+ " " + config.dataSize + " " + config.dimensions+ "\n")
+        sb.append("Warmup Iterations: " + config.warmUpIterations+"\n")
+        sb.append("Invocations/Query: " + config.invocationCount+"\n")
         sb.append("\n")
         sb.append("\n")
-        sb.append("N ")
-        sb.append("dim ")
         sb.append("hf ")
-        sb.append("#nodes ")
-        sb.append("#totalReps ")
-        sb.append("measure ")
-        sb.append("#functions ")
-        sb.append("probingScheme ")
-        sb.append("#knn ")
-        sb.append("#queryMaxCands ")
-        sb.append("#knnMax ")
-        sb.append("warmUpIts ")
-        sb.append("avgRecall ")
-        sb.append("stdDevRecall ")
-        sb.append("avgTime ")
-        sb.append("stdDevTime ")
+        sb.append("nodes ")
+        sb.append("reps/Node ")
+        sb.append("meas. ")
+        sb.append("k ")
+        sb.append("PS ")
+        sb.append("knn ")
+        sb.append("maxCands ")
+        sb.append("knnMax ")
+        sb.append("recalls: ")
+        sb.append("0.0 ")
+        sb.append("± ")
+        sb.append("0.001 ")
+        sb.append("± ")
+        sb.append("0.01 ")
+        sb.append("± ")
+        sb.append("time ")
+        sb.append("± ")
         sb.toString
       })
 
@@ -82,28 +89,27 @@ object RecallTest extends App {
         }
 
         println("Writing results...")
+        val df = new DecimalFormat("#.###")
         // Write result as line to file
         resWriter.writeResult({
           val sb = new StringBuilder
-          sb.append(config.dataSize+" ")
-          sb.append(config.dimensions+" ")
           sb.append(hashFunction+" ")
           sb.append({
             if(config.setup.toLowerCase == "single") "1 "
             else Source.fromFile(config.nodes).getLines().length+" "
           })
           sb.append(tc.repsPrNode+" ")
-          sb.append(tc.measure+" ")
+          sb.append(tc.measure.substring(0,3)+" ")
           sb.append(tc.functions+" ")
           sb.append(tc.probeScheme+" ")
           sb.append(tc.knn+" ")
           sb.append(tc.queryMaxCands+" ")
           sb.append(tc.knnMax+" ")
-          sb.append(config.warmUpIterations+" ")
-          sb.append(res._1+" ")
-          sb.append(res._2+" ")
-          sb.append((res._3 / 1E6)+"ms ")
-          sb.append((res._4 / 1E6)+"ms")
+          sb.append(df.format(res._1._1)+" "+df.format(res._2._1)+" ")
+          sb.append(df.format(res._1._2)+" "+df.format(res._2._2)+" ")
+          sb.append(df.format(res._1._3)+" "+df.format(res._2._3)+" ")
+          sb.append(df.format(res._3 / 1E6)+"ms ") // Avg Time
+          sb.append(df.format(res._4 / 1E6)+"ms") // Std dev Time
           sb.toString
         })
 

@@ -305,13 +305,13 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
   }
 
   override def query(qp: Array[Float], k: Int): ArrayBuffer[(Int, Double)] = {
-    val cands:ArrayBuffer[(Int, Double)] = getCands(qp, k).map(x => (this.idLookupMap(x._1), x._2))
+    val cands:ArrayBuffer[(Int, Double)] = getCands(qp, k).distinct
 
     if(cands.size > k) {
       val kthDist = QuickSelect.selectKthDist(cands, k-1)
-      cands.filter(_._2 <= kthDist).take(k)
+      cands.filter(_._2 <= kthDist).take(k).map(x => (this.idLookupMap(x._1), x._2))
     } else {
-      cands
+      cands.map(x => (this.idLookupMap(x._1), x._2))
     }
   }
 }

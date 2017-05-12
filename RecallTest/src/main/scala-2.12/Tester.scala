@@ -13,7 +13,7 @@ import scala.io.Source
 import scala.util.Random
 
 trait Tester[Descriptor, Query, FileSet] {
-  type Result = (Double, Double, Double, Double)
+  type Result = ((Double, Double, Double), (Double,Double,Double), Double, Double)
   var lsh:LSHStructure[Descriptor, Query, FileSet] = _
   var queries:Array[(Int, Query)] = _
   var knnStructure:mutable.HashMap[Int, Array[(Int, Double)]] = _
@@ -35,11 +35,11 @@ trait Tester[Descriptor, Query, FileSet] {
     }
   }
 
-  def runQueries(invocationCount:Int):(Double, Double, Double, Double) = {
+  def runQueries(invocationCount:Int):((Double,Double,Double),(Double,Double,Double), Double, Double) = {
     println("Running queries...")
     // Test result containers
     val queryTimes:ArrayBuffer[Double] = ArrayBuffer()
-    val queryRecalls:ArrayBuffer[Double] = ArrayBuffer()
+    val queryRecalls:(ArrayBuffer[Double], ArrayBuffer[Double], ArrayBuffer[Double]) = (new ArrayBuffer, new ArrayBuffer, new ArrayBuffer)
 
     // Run queries
     var j = 0
@@ -68,13 +68,17 @@ trait Tester[Descriptor, Query, FileSet] {
 
       // Adding the current q's recall to the set of recalls
       // eps = 0 means no approx
-      queryRecalls += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0)
+      queryRecalls._1 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.0)
+      queryRecalls._2 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.001)
+      queryRecalls._3 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.01)
 
       j += 1
     }
 
     // Accumulate
-    (average(queryRecalls), stdDeviation(queryRecalls), average(queryTimes), stdDeviation(queryTimes))
+    ((average(queryRecalls._1), average(queryRecalls._2), average(queryRecalls._3)),
+     (stdDeviation(queryRecalls._1),stdDeviation(queryRecalls._2),stdDeviation(queryRecalls._3)),
+      average(queryTimes), stdDeviation(queryTimes))
   }
 
   def recall(optSet:Array[(Int, Double)], annSet:ArrayBuffer[(Int, Double)], k:Int) : Double = {
@@ -89,7 +93,7 @@ trait Tester[Descriptor, Query, FileSet] {
     optSum / annSum
   }
 
-  def recallFarthestPointApprox(optSet:Array[(Int, Double)], annSet:ArrayBuffer[(Int, Double)], k:Int, eps:Double = 0.0) : Double = {
+  def recallFarthestPointApprox(optSet:Array[(Int, Double)], annSet:ArrayBuffer[(Int, Double)], k:Int, eps:Double) : Double = {
     // We assume here that the optSet is sorted, and have equalto or more points than specified k
     // We also assume that annSet.size <= k
     require(optSet.size >= k)
