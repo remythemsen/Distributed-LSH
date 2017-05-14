@@ -102,7 +102,7 @@ class RepetitionHandler[A] extends Actor {
       sender ! true
 
 
-    case Query(qp, k) => // Returns Array[(Int,Double)]
+    case Query(qp, k) => // Returns CandSet of indexes and dists' from q
       // Generate probes
       this.probeGenerator.generate(qp.asInstanceOf[A])
       val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
