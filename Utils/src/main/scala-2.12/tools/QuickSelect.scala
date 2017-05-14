@@ -1,7 +1,6 @@
 package tools
 
 import scala.collection.mutable.ArrayBuffer
-import scala.util.Random
 
 /**
   * Heavily inspired from
@@ -9,9 +8,9 @@ import scala.util.Random
   *
   */
 object QuickSelect {
-  def selectKthDist(data:ArrayBuffer[(Int, Double)], k:Int, rnd:Random = new Random(System.currentTimeMillis())):Double = {
+  def selectKthDist(data:ArrayBuffer[Double], k:Int, until:Int):Double = {
     var from = 0
-    var to = data.size - 1
+    var to = until
 
     // if from and to is equal, it's the kth element
     while (from < to) {
@@ -21,7 +20,7 @@ object QuickSelect {
 
       // stop run if r and w meets
       while (r < w) {
-        if (data(r)._2 >= pivot._2) {
+        if (data(r) >= pivot) {
           var tmp = data(w)
           data(w) = data(r)
           data(r) = tmp
@@ -32,7 +31,7 @@ object QuickSelect {
       }
 
       // if r is incremented then we need to decrement one
-      if (data(r)._2 > pivot._2) {
+      if (data(r) > pivot) {
         r -= 1
       }
 
@@ -42,6 +41,6 @@ object QuickSelect {
         from = r + 1
       }
     }
-    data(k)._2
+    data(k)
   }
 }

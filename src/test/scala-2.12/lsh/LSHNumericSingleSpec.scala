@@ -9,6 +9,7 @@ import hashfunctions.Hyperplane
 import io.Parser.DisaParserNumeric
 import measures.Euclidean
 import org.scalatest.{FlatSpec, Matchers}
+import tools.CandSet
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
@@ -62,12 +63,9 @@ class LSHNumericSingleSpec extends FlatSpec with Matchers {
     val res = f.lsh.query(qp._2,30)
 
     val arr = ArrayBuffer[(Int,Double)]()
-    val t:(Int,Double) = (1,2.0)
-    if(res.nonEmpty) {
-      assert(res(0).getClass == t.getClass)
-    }
+    val t:CandSet = new CandSet(100)
+    assert(res.getClass == t.getClass)
 
-    assert(arr.getClass == res.getClass)
   }
 
   "Query result (if not empty)" should "only contain distinct ids" in {

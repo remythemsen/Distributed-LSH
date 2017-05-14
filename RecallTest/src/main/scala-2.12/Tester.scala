@@ -6,6 +6,7 @@ import akka.remote.RemoteScope
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import lsh._
 import measures.{Cosine, CosineUnit, Euclidean, Hamming}
+import tools.CandSet
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -19,6 +20,7 @@ trait Tester[Descriptor, Query, FileSet] {
   var knnStructure:mutable.HashMap[Int, Array[(Int, Double)]] = _
   var rnd:Random = _
   var testCase:TestCase = _
+  var annSet:CandSet = _
 
   def run(testCase:TestCase, warmUpIterations:Int, invocationCount:Int) : Result
 
@@ -28,9 +30,7 @@ trait Tester[Descriptor, Query, FileSet] {
     while(i < warmUpiterations) {
       val index = rnd.nextInt(this.queries.length)
       val qRes = this.lsh.query(this.queries(index)._2, this.testCase.knn)
-      if(qRes.nonEmpty) {
-        qRes.head
-      }
+      val p = qRes.ids
       i+=1
     }
   }
@@ -48,7 +48,6 @@ trait Tester[Descriptor, Query, FileSet] {
       val index = rnd.nextInt(this.queries.length)
       val qp:(Int, Query) = this.queries(index)
 
-      var annSet: ArrayBuffer[(Int,Double)] = ArrayBuffer()
 
       // Recall Test
       val optSet = knnStructure(qp._1).take(this.testCase.knn)
@@ -81,19 +80,7 @@ trait Tester[Descriptor, Query, FileSet] {
       average(queryTimes), stdDeviation(queryTimes))
   }
 
-  def recall(optSet:Array[(Int, Double)], annSet:ArrayBuffer[(Int, Double)], k:Int) : Double = {
-    val optSum:Double = optSet.map(_._2).sum
-    var annSum:Double = annSet.map(_._2).sum
-    // Adding some punishment if less than k results have been retrieved
-    if(annSet.size < k) {
-      println("optimal sum: " + optSum)
-      println("punished " + annSum +" + 10*("+optSum+") * " + (k - annSet.size))
-      annSum += 10*(optSum)*(k - annSet.size)
-    }
-    optSum / annSum
-  }
-
-  def recallFarthestPointApprox(optSet:Array[(Int, Double)], annSet:ArrayBuffer[(Int, Double)], k:Int, eps:Double) : Double = {
+  def recallFarthestPointApprox(optSet:Array[(Int, Double)], annSet:CandSet, k:Int, eps:Double) : Double = {
     // We assume here that the optSet is sorted, and have equalto or more points than specified k
     // We also assume that annSet.size <= k
     require(optSet.size >= k)
@@ -105,7 +92,7 @@ trait Tester[Descriptor, Query, FileSet] {
     var c = 0
 
     while(c < annSet.size) {
-      if(annSet(c)._2 <= (1 + eps) * kthFarthestDistOpt ) r+=1
+      if(annSet.dists(c) <= (1 + eps) * kthFarthestDistOpt ) r+=1
       c+=1
     }
 

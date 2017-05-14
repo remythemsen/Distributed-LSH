@@ -8,25 +8,19 @@ import scala.collection.mutable.ArrayBuffer
   * Created by remeeh on 30-04-2017.
   */
 class QuickSelectSpec extends FlatSpec with Matchers {
-  "quick select" should "return results even on set with duplicates " in {
-    val v = ArrayBuffer((0,1.0),(0,1.0),(0,1.0),(0,1.0))
-    //val res:Double = SAQuickSelect.quickSelect(v,2)
-    val res:Double = QuickSelect.selectKthDist(v, 2)
-    assert(res == 1.0)
-  }
 
   "quick select" should "return correct result " in {
-    val v = ArrayBuffer((131, 3.0),(432, 3.1),(421, 4.2),(543, 0.001))
-    assert(QuickSelect.selectKthDist(v, 0) == 0.001)
-    assert(QuickSelect.selectKthDist(v, 1) == 3.0)
-    assert(QuickSelect.selectKthDist(v, 2) == 3.1)
-    assert(QuickSelect.selectKthDist(v, 3) == 4.2)
+    val v = ArrayBuffer(3.0, 3.1, 4.2, 0.001)
+    assert(QuickSelect.selectKthDist(v, 0, v.size) == 0.001)
+    assert(QuickSelect.selectKthDist(v, 1, v.size) == 3.0)
+    assert(QuickSelect.selectKthDist(v, 2, v.size) == 3.1)
+    assert(QuickSelect.selectKthDist(v, 3, v.size) == 4.2)
   }
 
   "quick select" should "never on random inputs crash" in {
     val rnd = new Random
     for(i <- 0 until 100000) {
-      QuickSelect.selectKthDist(ArrayBuffer.fill[(Int,Double)](250)(Tuple2(rnd.nextInt, rnd.nextDouble)), rnd.nextInt(250))
+      QuickSelect.selectKthDist(ArrayBuffer.fill[Double](250)(rnd.nextDouble), rnd.nextInt(250), 250)
       assert(1 == 1)
     }
   }
@@ -40,7 +34,7 @@ class QuickSelectSpec extends FlatSpec with Matchers {
       v+=Tuple2(rnd.nextInt, j.toDouble)
     }
 
-    val r = QuickSelect.selectKthDist(v, 123)
+    val r = QuickSelect.selectKthDist(v.map(_._2), 123, v.size)
     assert(r == 123.0)
   }
 
@@ -53,7 +47,7 @@ class QuickSelectSpec extends FlatSpec with Matchers {
     }
     for(i <- 0 until 100000) {
       val vs = rnd.shuffle(v)
-      val r = QuickSelect.selectKthDist(vs, 123)
+      val r = QuickSelect.selectKthDist(vs.map(_._2), 123, vs.size)
       assert(r == 123.0)
     }
   }

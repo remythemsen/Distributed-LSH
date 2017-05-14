@@ -9,6 +9,7 @@ import hashfunctions.Hyperplane
 import io.Parser.{DisaParser, DisaParserNumeric}
 import measures.Euclidean
 import org.scalatest.{FlatSpec, Matchers}
+import tools.CandSet
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
@@ -62,7 +63,7 @@ class LSHNumericDistributedSpec extends FlatSpec with Matchers {
   }
 
 
-  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double)]" in {
+  "Query result (if not empty)" should "be of type CandSet" in {
     val f = fixture
 
     val qp = f.dataSet(f.rnd.nextInt(f.dataSet.length))
@@ -71,12 +72,10 @@ class LSHNumericDistributedSpec extends FlatSpec with Matchers {
     Await.result(f.system.terminate(), timeout.duration)
 
     val arr = ArrayBuffer[(Int,Double)]()
-    val t:(Int,Double) = (1,2.0)
-    if(res.nonEmpty) {
-      assert(res(0).getClass == t.getClass)
-    }
+    val t:CandSet = new CandSet(100)
 
-    assert(arr.getClass == res.getClass)
+    assert(res.getClass == t.getClass)
+
   }
 
   "Query result (if not empty)" should "only contain distinct ids" in {

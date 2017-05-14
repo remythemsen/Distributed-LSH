@@ -9,6 +9,7 @@ import hashfunctions.BitHash
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import measures.Hamming
 import org.scalatest.{FlatSpec, Matchers}
+import tools.CandSet
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -61,24 +62,21 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
   }
 
 
-  "Query result (if not empty)" should "be of type Arraybuffer[(Int,double)]" in {
+  "Query result (if not empty)" should "be of type CandSet" in {
     val f = fixture
 
-      val index = f.rnd.nextInt(f.dataSetBit.length)
+    val index = f.rnd.nextInt(f.dataSetBit.length)
 
-      val qp = f.dataSetBit(index)
-      val qpe = f.dataSet(index)
-      val qpa = (qp._2, qpe._2, 2000)
-      val res = f.lsh.query(qpa, 30)
+    val qp = f.dataSetBit(index)
+    val qpe = f.dataSet(index)
+    val qpa = (qp._2, qpe._2, 2000)
+    val res = f.lsh.query(qpa, 30)
 
     val arr = ArrayBuffer[(Int,Double)]()
-    val t:(Int,Double) = (1,2.0)
-    if(res.nonEmpty) {
-      assert(res(0).getClass == t.getClass)
-    }
-
-    assert(arr.getClass == res.getClass)
+    val t:CandSet = new CandSet(100)
+    assert(res.getClass == t.getClass)
   }
+
 
   "Query result (if not empty)" should "only contain distinct ids" in {
     val f = fixture
@@ -104,7 +102,7 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
       val qpe = f.dataSet(index)
       val qpa = (qp._2, qpe._2, 1000)
       val res = f.lsh.query(qpa, 50)
-      results(i) = res.map(_._1).contains(qp._1)
+      results(i) = res.ids.contains(qp._1)
     }
     assert(results.forall(_ == true))
   }

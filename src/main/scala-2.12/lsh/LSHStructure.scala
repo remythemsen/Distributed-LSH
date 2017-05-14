@@ -1,67 +1,74 @@
 package lsh
 
 import java.io.File
+
 import actors.{DisaParserFac, DisaParserFacNumeric, HashFunctionFactory}
 import akka.actor.ActorRef
 import measures.{Distance, Euclidean}
 import messages.{InitRepetition, Query, Stop}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import akka.util.Timeout
+
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
 import datastructures.Table
 import hashfunctions.HashFunction
 import multiprobing.{PQ, ProbeScheme, TwoStep}
-import tools.QuickSelect
+import tools.{CandSet, QuickSelect}
+
 import scala.io.Source
 import scala.util.Random
 
 
 trait LSHStructure[Descriptor, Query, FileSet] {
   def build(fileSet:FileSet, n:Int, parserFac:DisaParserFac[Descriptor], internalReps:Int, hfFac:HashFunctionFactory[Descriptor], pgenerator:String, maxCands:Int, functions:Int, dimensions:Int, simMeasure:Distance[Descriptor], seed:Long):Unit
-  def query(qp:Query, k:Int):ArrayBuffer[(Int, Double)]
+  def query(qp:Query, k:Int) : CandSet
+  var cands:CandSet = _
 }
 
 trait Binary {
-  implicit object Ord extends Ordering[(Int, Double)] {
-    def compare(x: (Int, Double), y: (Int, Double)) = x._2.compare(y._2)
+  implicit object PQOrd extends Ordering[Int] {
+    var dists:ArrayBuffer[Double] = _
+    def compare(x: Int, y: Int) = dists(x).compare(dists(y))
   }
 
-  var pq:mutable.PriorityQueue[(Int,Double)] = _
+  var pq:mutable.PriorityQueue[Int] = _
   var eucDataSet:Array[(Int, Array[Float])] = _
 
-  def knn(cands:ArrayBuffer[(Int, Double)], qp:Array[Float], k:Int) : ArrayBuffer[(Int, Double)] = {
-    var l = 0
+  def knn(cands:CandSet, qp:Array[Float], k:Int) : Unit = {
+    // Assuming that cands has size >= k
 
+    PQOrd.dists = cands.dists
+
+    var l = 0
     // fill up the queue with initial data
     while(this.pq.size < k) {
-      this.pq.enqueue((this.eucDataSet(cands(l)._1)._1,Euclidean.measure(this.eucDataSet(cands(l)._1)._2, qp)))
+      cands.dists(l) = Euclidean.measure(this.eucDataSet(cands.ids(l))._2, qp)
+      this.pq.enqueue(l)
       l+=1
     }
 
     while(l < cands.size) {
+      cands.dists(l) = Euclidean.measure(this.eucDataSet(cands.ids(l))._2, qp)
 
-      // TODO Verify that euclidean is in fact better than cosineUnit here (97% vs 95% in tests so far)
-      val dist = Euclidean.measure(this.eucDataSet(cands(l)._1)._2, qp)
-
-      if(dist < pq.head._2) {
+      if(cands.dists(l) < cands.dists(pq.head)) {
         this.pq.dequeue()
-        this.pq.enqueue((this.eucDataSet(cands(l)._1)._1, dist))
-        // update headDist
+        this.pq.enqueue(l)
       }
       l+=1
     }
 
-    val result:ArrayBuffer[(Int, Double)] = new ArrayBuffer()
+    // resetting counter of cands to make sure we only consider k from this point
+    cands.softReset
     while(pq.nonEmpty) {
-      result += pq.dequeue()
+      val candsIndex = pq.dequeue()
+      cands.nonDistinctAdd(this.eucDataSet(cands.ids(candsIndex))._1, cands.dists(candsIndex))
     }
-    result
   }
-
 }
 
 trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descriptor, Query, FileSet] {
@@ -148,11 +155,11 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
   var nodes:Array[ActorRef] = _
   var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another approach.
   implicit val timeout = Timeout(20.hours)
-  var candidates:ArrayBuffer[(Int,Double)] = _
 
-  def getCands(qp:Descriptor, k:Int) : ArrayBuffer[(Int, Double)] = {
-    //val filterMap = new mutable.HashMap[Int, Boolean]
-    this.candidates = new ArrayBuffer[(Int, Double)]()
+  def getCands(qp:Descriptor, k:Int) = {
+
+    // Reset cands set
+    this.cands.reset
 
     // for each rep, send query, wait for result from all. return set
     var i = 0
@@ -164,30 +171,15 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
     // Wait for all results to return
     var j = 0
     while(j < futureResults.length) {
-      candidates ++= Await.result(futureResults(j), timeout.duration).asInstanceOf[ArrayBuffer[(Int, Double)]]
-      j+=1
-    }
+      var bucket = Await.result(futureResults(j), timeout.duration).asInstanceOf[ArrayBuffer[(Int, Double)]]
 
-    candidates
-
-/*    // Wait for all results to return
-    var j, g, c = 0
-    while(j < futureResults.length) {
-      val candSet = Await.result(futureResults(j), timeout.duration).asInstanceOf[ArrayBuffer[(Int, Double, Int)]]
-      while(g < candSet.length) {
-        if(!filterMap(candSet(g)._3)) {
-          filterMap(candSet(g)._3) = true
-          if(c >= candidates.size) candidates += candSet(g)
-          else candidates(c) = candSet(g)
-          c+=1
-        }
-        g+=1
+      var l = 0
+      while (l < bucket.size) {
+        this.cands+=(bucket(l)._1, bucket(l)._2)
+        l += 1
       }
-      j+=1
+      j += 1
     }
-
-    // Get distinct set
-    (c, candidates)*/
   }
 
   def destroy : Unit = {
@@ -203,12 +195,11 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
 
 class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], String] {
 
-
-  override def query(qp: Array[Float], k:Int): ArrayBuffer[(Int, Double)] = {
+  override def query(qp: Array[Float], k:Int): CandSet = {
     // Generate probes
     this.probeGenerator.generate(qp)
-    val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer(this.maxCands)
     var nextBucket: (Int, Long) = null
+    this.cands.reset
 
     // Contains pointers to the dataset
 
@@ -218,26 +209,21 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     // Collect cands
     while (this.probeGenerator.hasNext() && c <= this.maxCands) {
       nextBucket = this.probeGenerator.next()
-      val candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
+      var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
       j = 0
-      while (j < candSet.size) {
-        // TODO c < maxcands are checked twice
-        index = candSet(j)
-        // Insert candidate with id, and distance from qp
-        candidates += Tuple2(this.dataSet(index)._1, this.distance.measure(this.dataSet(index)._2, qp))
+      while (j < bucket.size) {
+        this.cands+=(this.dataSet(bucket(j))._1, this.distance.measure(this.dataSet(bucket(j))._2, qp))
         c += 1
         j += 1
       }
     }
 
-
-    val distinctCandidates = candidates.distinct
-
-    if(distinctCandidates.size > k) {
-      val kthDist = QuickSelect.selectKthDist(distinctCandidates, k-1)
-      distinctCandidates.filter(_._2 <= kthDist).take(k)
+    if(cands.size > k) {
+      cands<=QuickSelect.selectKthDist(this.cands.dists, k-1, cands.size-1)
+      cands.take(k)
+      cands
     } else {
-      distinctCandidates
+      cands
     }
   }
 
@@ -251,6 +237,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     this.futures = new Array(internalReps)
     this.maxCands = maxCands
     this.distance = simMeasure
+    this.cands = new CandSet(maxCands)
 
     if(fileSet != this.lastDataSetDir) {
       this.buildDataSet(fileSet, n, dimensions, parserFac)
@@ -275,6 +262,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
   var lastLookupMap = " "
   override def build(fileSet: String, n: Int, parserFac: DisaParserFac[Array[Float]], internalReps: Int, hfFac: HashFunctionFactory[Array[Float]], pGenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[Array[Float]], seed: Long): Unit = {
 
+    this.cands = new CandSet(maxCands)
     this.futureResults = new Array(nodes.length)
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(nodes.length)
     var i = 0
@@ -301,25 +289,36 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     System.gc()
   }
 
-  override def query(qp: Array[Float], k: Int): ArrayBuffer[(Int, Double)] = {
-    val cands:ArrayBuffer[(Int, Double)] = getCands(qp, k).distinct
+  override def query(qp: Array[Float], k: Int): CandSet = {
+    getCands(qp, k)
 
-    if(cands.size > k) {
-      val kthDist = QuickSelect.selectKthDist(cands, k-1)
-      cands.filter(_._2 <= kthDist).take(k).map(x => (this.idLookupMap(x._1), x._2))
+    if(this.cands.size > k) {
+      cands<=QuickSelect.selectKthDist(cands.dists, k-1, cands.size)
+      var i = 0
+      while(i < cands.size) {
+        cands.ids.update(i, this.idLookupMap(cands.ids(i)))
+        i+=1
+      }
+      cands.take(k)
     } else {
-      cands.map(x => (this.idLookupMap(x._1), x._2))
+      var j = 0
+      while(j < cands.size) {
+        cands.ids.update(j, this.idLookupMap(cands.ids(j)))
+        j+=1
+      }
     }
+    this.cands
   }
 }
 class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[mutable.BitSet, (mutable.BitSet, Array[Float], Int),  (String, String)] {
 
   this.nodes = repetitions
   var lastEucDataSet = " "
-  this.pq = new mutable.PriorityQueue[(Int, Double)]
+  this.pq = new mutable.PriorityQueue[Int]
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
     this.futureResults = new Array(nodes.length)
+    this.cands = new CandSet(maxCands)
 
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(nodes.length)
     var i = 0
@@ -329,7 +328,7 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
     }
 
     if(this.lastEucDataSet != fileSet._2) {
-      println("loading internal euclidean dataset")
+      println("loading internal euclidean dataset...")
       this.eucDataSet = DisaParserFacNumeric(fileSet._2,dimensions).toArray
       this.lastEucDataSet = fileSet._2
     }
@@ -340,17 +339,18 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
   }
 
 
-  override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): ArrayBuffer[(Int, Double)] = {
+  override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): CandSet = {
 
     // Search euclidean space (this will return k results)
     // calling getCands with qp,qp._3 will return specified 'knnmax' value for knn to linear scan over
-    val distinctCandidates = this.getCands(qp._1, qp._3).distinct
+    this.getCands(qp._1, qp._3)
 
     // Search euclidean space (with knn size set)
-    this.knn(distinctCandidates, qp._2, {
-      if (distinctCandidates.size < k) distinctCandidates.size
+    this.knn(this.cands, qp._2, {
+      if (cands.size < k) cands.size
       else k
     })
+    this.cands
   }
 }
 
@@ -361,7 +361,8 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
     this.clear()
     this.pq = null
     this.rnd = new Random(seed)
-    this.pq = new mutable.PriorityQueue[(Int,Double)]
+    this.pq = new mutable.PriorityQueue[Int]
+    this.cands = new CandSet(maxCands)
 
     this.hashFunctions = new Array(internalReps)
     this.repetitions = new Array(internalReps)
@@ -390,11 +391,10 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
     System.gc()
   }
 
-  override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): ArrayBuffer[(Int, Double)] = {
+  override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): CandSet = {
 
     // Generate probes
     this.probeGenerator.generate(qp._1)
-    val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
     var nextBucket: (Int, Long) = null
 
     // Contains pointers to the dataset
@@ -403,30 +403,28 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
     var j, c = 0
     var index = 0
 
-    // Collect cands
     while (this.probeGenerator.hasNext() && c <= this.maxCands) {
       nextBucket = this.probeGenerator.next()
-      candSet = this.repetitions(nextBucket._1).query(nextBucket._2)
+      var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
       j = 0
-      while (j < candSet.size) {
-        index = candSet(j)
-        // Insert candidate with id, and distance from qp
-        candidates += Tuple2(index, this.distance.measure(this.dataSet(index)._2, qp._1))
+      while (j < bucket.size) {
+        this.cands+=(bucket(j), this.distance.measure(this.dataSet(bucket(j))._2, qp._1))
         c += 1
         j += 1
       }
     }
-    val distinctCandidates = candidates.distinct
 
     // Search euclidean space (with knn size set)
-    if(distinctCandidates.size > qp._3) {
-      val kth = QuickSelect.selectKthDist(distinctCandidates, qp._3-1)
-      this.knn(distinctCandidates.filter(_._2 <= kth), qp._2, k)
+    if(cands.size > qp._3) {
+      cands<=QuickSelect.selectKthDist(cands.dists, qp._3-1, cands.size-1)
+      this.knn(cands, qp._2, k)
+      this.cands
     } else {
-      this.knn(distinctCandidates, qp._2, {
-        if(distinctCandidates.size < k) distinctCandidates.size
+      this.knn(cands, qp._2, {
+        if(cands.size < k) cands.size
         else k
       })
+      this.cands
     }
   }
 }

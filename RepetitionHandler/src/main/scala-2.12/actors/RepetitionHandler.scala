@@ -130,11 +130,11 @@ class RepetitionHandler[A] extends Actor {
         }
       }
 
-      val distinctCands = candidates.distinct
+      val distinctCands = candidates.distinct.map(_._2)
       sender ! {
         if(distinctCands.size > k) {
-          val kthDist = QuickSelect.selectKthDist(distinctCands, k-1)
-          distinctCands.filter(_._2 <= kthDist)
+          val kthDist = QuickSelect.selectKthDist(distinctCands, k-1, distinctCands.size)
+          distinctCands.filter(x => x <= kthDist)
         } else {
           distinctCands
         }
