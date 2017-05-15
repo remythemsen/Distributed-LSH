@@ -31,7 +31,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
       val a1 = system.actorOf(Props[actors.RepetitionHandler[Array[Float]]], name = "rep1")
       val queries = DisaParserNumeric(Source.fromFile(new File(data)).getLines(), 128).take(50).toArray
       // Populating repetition
-      val ready = a1 ? InitRepetition(data, 1008263, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 100000, k, 128, Euclidean, rnd.nextLong)
+      val ready = a1 ? InitRepetition(data, 1008263, DisaParserFacNumeric, DataSetFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 100000, k, 128, Euclidean, rnd.nextLong)
       Await.result(ready, timeout.duration)
     }
   }

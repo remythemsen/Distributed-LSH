@@ -5,8 +5,9 @@ import hashfunctions.HashFunction
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class Table[A](hashFunction: HashFunction[A]) {
+class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
   private val table = new mutable.LongMap[ArrayBuffer[Int]]()
+  private val dataSetRef = dSetRef
 
   // internal Hash function
   private val hf = hashFunction
@@ -15,15 +16,15 @@ class Table[A](hashFunction: HashFunction[A]) {
     * Insert vector
     * @param v vector reference to be inserted into internal hashmap
     */
-  def +=(v:(Int, A)) : Unit = {
+  def +=(v:Int) : Unit = {
     // add address of vector to the buffer in map
-    val key:Long = hf(v._2)
+    val key:Long = hf(dataSetRef(v))
     // TODO remove this branch if possible
     if(!this.table.contains(key)) {
       this.table(key) = new ArrayBuffer()
     }
 
-    this.table(key) += v._1
+    this.table(key) += v
   }
 
   /**

@@ -10,7 +10,7 @@ import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import measures.Distance
 import messages._
 import multiprobing.{PQ, ProbeScheme, TwoStep}
-import tools.QuickSelect
+import tools.{CandSet, QuickSelect}
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -28,39 +28,55 @@ class RepetitionHandler[A] extends Actor {
   private var hfFac:HashFunctionFactory[A] = _
 
   // Internal lookup map for vectors in datastructure
-  private var dataSet:Array[(Int, A)] = _
+  private var dataSet:Array[A] = _
   private var probeGenerator:ProbeScheme[A] = _
   private var hashFunctions:Array[HashFunction[A]] = _
   private var maxCands:Int = _
   private var lastDataSet:String = ""
+  private var parser:DisaParser[A] = _
+  private var parserFact:DisaParserFac[A] = _
+  private var dsf:DataSetFac[A] = _
+  private var cands:CandSet = _
 
   // Reusable array for hashed keys (query)
   private var keys:Array[(Int,Long)] = _
 
   override def receive: Receive = {
     // Setting or resetting a repetition
-    case InitRepetition(buildFromFile, n, parserFac, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
+    case InitRepetition(buildFromFile, n, parserFac, dataSetFac, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
       println("recieved an init message")
+
+      this.repetitions = null
+      this.simMeasure = null
+      this.hfFac = null
+      this.probeGenerator = null
+      this.hashFunctions = null
+      this.keys = null
+      this.parser = null
+      this.parserFact = null
+      this.dsf = null
+      this.cands = null
 
       this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.hfFac = hashFunctionFac.asInstanceOf[HashFunctionFactory[A]]
       this.maxCands = qMaxCands
       this.hashFunctions = new Array(internalReps)
       this.keys = new Array(internalReps)
-      val rnd = new Random(seed)
-      val parserFact:DisaParserFac[A] = parserFac.asInstanceOf[DisaParserFac[A]]
-      val parser:DisaParser[A] = parserFact(buildFromFile,dimensions)
-
+      var rnd = new Random(seed)
+      this.parserFact = parserFac.asInstanceOf[DisaParserFac[A]]
+      this.parser = parserFact(buildFromFile,dimensions)
+      this.dsf = dataSetFac.asInstanceOf[DataSetFac[A]]
+      this.cands = new CandSet(qMaxCands)
 
       if(buildFromFile != this.lastDataSet) {
-        this.dataSet = new Array(n)
+        this.dataSet = dsf(n)
         // Loading in dataset
         println("Loading dataset...")
         val percentile = n / 100
         var c = 0
         while (parser.hasNext) {
           if (c % percentile == 0) println(c * 100 / n)
-          this.dataSet(c) = parser.next
+          this.dataSet(c) = parser.next._2
           c += 1
         }
         this.lastDataSet = buildFromFile
@@ -78,7 +94,7 @@ class RepetitionHandler[A] extends Actor {
         this.repetitions(i) = new Table({
               this.hashFunctions(i) = this.hfFac(functions, rnd.nextLong(), dimensions)
               this.hashFunctions(i)
-        })
+        }, this.dataSet)
 
         futures(i) = Future {
           buildRepetition(i, n)
@@ -103,40 +119,48 @@ class RepetitionHandler[A] extends Actor {
 
 
     case Query(qp, k) => // Returns CandSet of indexes and dists' from q
+      this.cands.reset
       // Generate probes
       this.probeGenerator.generate(qp.asInstanceOf[A])
-      val candidates: ArrayBuffer[(Int, Double)] = new ArrayBuffer()
-      //this.resultSet = new Array(k)
-
       var nextBucket: (Int, Long) = null
-
-      // Contains pointers to the dataset
-      var candSet: ArrayBuffer[Int] = null
 
       var j, c = 0
       var index = 0
 
+      // Collect cands
       while (this.probeGenerator.hasNext() && c <= this.maxCands) {
         nextBucket = this.probeGenerator.next()
-        candSet = this.repetitions(nextBucket._1).query(nextBucket._2) // TODO Int and longs are boxed here
+        var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
         j = 0
-        while (j < candSet.size) {
-          // TODO c < maxcands are checked twice
-          index = candSet(j)
-          // Insert candidate with id, and distance from qp
-          candidates += Tuple2(index, this.simMeasure.measure(this.dataSet(index)._2, qp.asInstanceOf[A]))
+        while (j < bucket.size) {
+          // Storing index of descriptor and dist from qp
+          this.cands+=(bucket(j), this.simMeasure.measure(this.dataSet(bucket(j)), qp.asInstanceOf[A]))
           c += 1
           j += 1
         }
       }
 
-      val distinctCands = candidates.distinct.map(_._2)
+      val result = Tuple2(new Array[Int](k), new Array[Double](k))
+
       sender ! {
-        if(distinctCands.size > k) {
-          val kthDist = QuickSelect.selectKthDist(distinctCands, k-1, distinctCands.size)
-          distinctCands.filter(x => x <= kthDist)
+        if(cands.size > k) {
+          cands<=QuickSelect.selectKthDist(cands.dists, k-1, cands.size-1)
+          cands.take(k)
+          var l = 0
+          while(l < cands.size) {
+            result._1(l) = cands.ids(l)
+            result._2(l) = cands.dists(l)
+            l+=1
+          }
+          result
         } else {
-          distinctCands
+          var l = 0
+          while(l < cands.size) {
+            result._1(l) = cands.ids(l)
+            result._2(l) = cands.dists(l)
+            l+=1
+          }
+          result
         }
       }
 
@@ -156,7 +180,7 @@ class RepetitionHandler[A] extends Actor {
     while (j < this.dataSet.length) {
       // Insert key value pair of key generated from vector, and value: Index in dataSet
       if (j % percentile == 0) println(j * 100 / dataSize)
-      this.repetitions(mapRef) += (j, this.dataSet(j)._2)
+      this.repetitions(mapRef) += j
       j += 1
     }
 
@@ -176,10 +200,19 @@ case object DisaParserFacBitSet extends DisaParserFac[mutable.BitSet] {
     DisaParserBinary(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
 }
-
+abstract class DataSetFac[A] {
+  def apply(size: Int) : Array[A]
+}
+object DataSetFacNumeric extends DataSetFac[Array[Float]] {
+  override def apply(size: Int): Array[Array[Float]] = new Array(size)
+}
+object DataSetBitSet extends DataSetFac[mutable.BitSet] {
+  override def apply(size: Int): Array[mutable.BitSet] = new Array(size)
+}
 abstract class HashFunctionFactory[A] {
   def apply(k:Int, seed:Long, numOfDim:Int):HashFunction[A]
 }
+
 case object HyperplaneFactory extends HashFunctionFactory[Array[Float]] {
   override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[Array[Float]] = {
     Hyperplane(k, seed, numOfDim)

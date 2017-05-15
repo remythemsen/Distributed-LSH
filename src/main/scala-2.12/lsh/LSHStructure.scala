@@ -2,7 +2,7 @@ package lsh
 
 import java.io.File
 
-import actors.{DisaParserFac, DisaParserFacNumeric, HashFunctionFactory}
+import actors._
 import akka.actor.ActorRef
 import measures.{Distance, Euclidean}
 import messages.{InitRepetition, Query, Stop}
@@ -72,7 +72,7 @@ trait Binary {
 }
 
 trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descriptor, Query, FileSet] {
-  var dataSet:Array[(Int, Descriptor)] = _
+  var dataSet:Array[Descriptor] = _
   var lastDataSetDir:String = " "
   var repetitions:Array[Table[Descriptor]] = _
   var probeGenerator:ProbeScheme[Descriptor] = _
@@ -107,7 +107,7 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
     while (j < this.dataSet.length) {
       // Insert key value pair of key generated from vector, and value: Index in dataSet
       if (j % percentile == 0) println(j * 100 / dataSize)
-      this.repetitions(mapRef) += (j, this.dataSet(j)._2)
+      this.repetitions(mapRef) += j
       j += 1
     }
 
@@ -118,10 +118,10 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
 
     //var i = 0
     for (i <- this.repetitions.indices) {
-      this.repetitions(i) = new Table({
+      this.repetitions(i) = new Table[Descriptor]({
         this.hashFunctions(i) = hfFac(functions, this.rnd.nextLong(), dimensions)
         this.hashFunctions(i)
-      })
+      }, this.dataSet)
 
       this.futures(i) = Future {
         buildRepetition(i, n)
@@ -133,8 +133,8 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
     Await.result(Future.sequence(futures.toIndexedSeq), timeout.duration)
   }
 
-  def buildDataSet(filePath:String, n:Int, dim:Int, parserFac: DisaParserFac[Descriptor]):Unit = {
-    this.dataSet = new Array(n)
+  def buildDataSet(filePath:String, n:Int, dim:Int, parserFac: DisaParserFac[Descriptor], dataSetFac:DataSetFac[Descriptor]):Unit = {
+    this.dataSet = dataSetFac(n)
     val parser = parserFac(filePath, dim)
     // Loading in dataset
     println("Loading dataset...")
@@ -142,7 +142,7 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
     var c = 0
     while (parser.hasNext) {
       if (c % percentile == 0) println(c * 100 / n)
-      this.dataSet(c) = parser.next
+      this.dataSet(c) = parser.next._2
       c += 1
     }
 
@@ -171,11 +171,11 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
     // Wait for all results to return
     var j = 0
     while(j < futureResults.length) {
-      var bucket = Await.result(futureResults(j), timeout.duration).asInstanceOf[ArrayBuffer[(Int, Double)]]
+      var bucket = Await.result(futureResults(j), timeout.duration).asInstanceOf[(Array[Int], Array[Double])]
 
       var l = 0
-      while (l < bucket.size) {
-        this.cands+=(bucket(l)._1, bucket(l)._2)
+      while (l < bucket._1.size) {
+        this.cands+=(bucket._1(l), bucket._2(l))
         l += 1
       }
       j += 1
@@ -196,6 +196,7 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
 class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], String] {
 
   override def query(qp: Array[Float], k:Int): CandSet = {
+    /*
     // Generate probes
     this.probeGenerator.generate(qp)
     var nextBucket: (Int, Long) = null
@@ -225,11 +226,13 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     } else {
       cands
     }
+*/
+    ???
   }
 
 
   override def build(fileSet: String, n: Int, parserFac: DisaParserFac[Array[Float]], internalReps: Int, hfFac: HashFunctionFactory[Array[Float]], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[Array[Float]], seed: Long): Unit = {
-    clear()
+/*    clear()
 
     this.rnd = new Random(seed)
     this.hashFunctions = new Array(internalReps)
@@ -252,7 +255,8 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
       case _ => throw new Exception("unknown probescheme")
     }
 
-    System.gc()
+    System.gc()*/
+    ???
   }
 }
 
@@ -267,7 +271,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(nodes.length)
     var i = 0
     while(i < nodes.length) {
-      statuses += nodes(i) ? InitRepetition(fileSet, n, parserFac, internalReps, hfFac, pGenerator, maxCands/nodes.length, functions, dimensions, simMeasure, seed)
+      statuses += nodes(i) ? InitRepetition(fileSet, n, parserFac, DataSetFacNumeric, internalReps, hfFac, pGenerator, maxCands/nodes.length, functions, dimensions, simMeasure, seed)
       i += 1
     }
     if(this.lastLookupMap != fileSet) {
@@ -323,7 +327,7 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(nodes.length)
     var i = 0
     while(i < nodes.length) {
-      statuses += nodes(i) ? InitRepetition(fileSet._1, n, parserFac, internalReps, hfFac, pgenerator, maxCands/nodes.length, functions, dimensions, simMeasure, seed)
+      statuses += nodes(i) ? InitRepetition(fileSet._1, n, parserFac, DataSetBitSet, internalReps, hfFac, pgenerator, maxCands/nodes.length, functions, dimensions, simMeasure, seed)
       i += 1
     }
 
@@ -358,7 +362,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
   var lastEucDataSetDir:String = " "
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
-    this.clear()
+/*    this.clear()
     this.pq = null
     this.rnd = new Random(seed)
     this.pq = new mutable.PriorityQueue[Int]
@@ -388,11 +392,12 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
       case _ => throw new Exception("unknown probescheme")
     }
 
-    System.gc()
+    System.gc()*/
+    ???
   }
 
   override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): CandSet = {
-
+/*
     // Generate probes
     this.probeGenerator.generate(qp._1)
     var nextBucket: (Int, Long) = null
@@ -425,7 +430,8 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
         else k
       })
       this.cands
-    }
+    }*/
+    ???
   }
 }
 

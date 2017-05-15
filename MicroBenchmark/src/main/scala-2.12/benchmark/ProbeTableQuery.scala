@@ -13,7 +13,7 @@ import scala.util.Random
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Thread)
 class ProbeTableQuery {
-  @Param(Array("128"))
+/*  @Param(Array("128"))
   var dimensions:Int = 0
 
   @Param(Array("16", "32"))
@@ -48,6 +48,6 @@ class ProbeTableQuery {
   @Setup(Level.Invocation)
   def pickRndVectorKey(): Unit = {
     rndVector = vectors(rnd.nextInt(vectors.length))._2
-  }
+  }*/
 
 }

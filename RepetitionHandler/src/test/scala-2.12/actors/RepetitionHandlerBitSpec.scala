@@ -51,7 +51,7 @@ class RepetitionHandlerBitSpec extends FlatSpec with Matchers {
       //val dataSet = DisaParserBinary(Source.fromFile(new File(data)).getLines(), dimensions)
 
       // Populating repetition
-      val ready = a1 ? InitRepetition(data, n, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", maxCands, k, dimensions, new Hamming(dimensions), rnd.nextLong)
+      val ready = a1 ? InitRepetition(data, n, DisaParserFacBitSet, DataSetBitSet, hashFunctions.length, BitHashFactory, "twostep", maxCands, k, dimensions, new Hamming(dimensions), rnd.nextLong)
       Await.result(ready, timeout.duration)
     }
   }
