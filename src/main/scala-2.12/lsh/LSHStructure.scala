@@ -195,8 +195,10 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
 
 class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], String] {
 
+  var idLookupMap:Array[Int] = _
+  var lastLookupMap = " "
   override def query(qp: Array[Float], k:Int): CandSet = {
-    /*
+
     // Generate probes
     this.probeGenerator.generate(qp)
     var nextBucket: (Int, Long) = null
@@ -213,7 +215,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
       var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
       j = 0
       while (j < bucket.size) {
-        this.cands+=(this.dataSet(bucket(j))._1, this.distance.measure(this.dataSet(bucket(j))._2, qp))
+        this.cands+=(this.idLookupMap(bucket(j)), this.distance.measure(this.dataSet(bucket(j)), qp))
         c += 1
         j += 1
       }
@@ -226,13 +228,13 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     } else {
       cands
     }
-*/
-    ???
+
+
   }
 
 
   override def build(fileSet: String, n: Int, parserFac: DisaParserFac[Array[Float]], internalReps: Int, hfFac: HashFunctionFactory[Array[Float]], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[Array[Float]], seed: Long): Unit = {
-/*    clear()
+    clear()
 
     this.rnd = new Random(seed)
     this.hashFunctions = new Array(internalReps)
@@ -243,10 +245,24 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     this.cands = new CandSet(maxCands)
 
     if(fileSet != this.lastDataSetDir) {
-      this.buildDataSet(fileSet, n, dimensions, parserFac)
+      this.buildDataSet(fileSet, n, dimensions, parserFac, DataSetFacNumeric)
     }
 
     this.initRepetitions(hfFac,n,functions,dimensions)
+
+    if(this.lastLookupMap != fileSet) {
+      println("building lookupMap")
+      this.idLookupMap = new Array(n)
+      val parser = Source.fromFile(new File(fileSet)).getLines()
+      var j = 0
+      while(j < n) {
+        // TODO this can be done much faster (dont do split on whole line)
+        this.idLookupMap(j) = parser.next().split(" ").head.toInt
+        j+=1
+      }
+      this.lastLookupMap = fileSet
+      println("done building lookupmap")
+    }
 
     // Initializing the pgenerator
     this.probeGenerator = pgenerator.toLowerCase match {
@@ -255,8 +271,8 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
       case _ => throw new Exception("unknown probescheme")
     }
 
-    System.gc()*/
-    ???
+    System.gc()
+
   }
 }
 
@@ -362,7 +378,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
   var lastEucDataSetDir:String = " "
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
-/*    this.clear()
+    this.clear()
     this.pq = null
     this.rnd = new Random(seed)
     this.pq = new mutable.PriorityQueue[Int]
@@ -375,7 +391,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
     this.distance = simMeasure
 
     if(fileSet._1 != this.lastDataSetDir) {
-      this.buildDataSet(fileSet._1, n, dimensions, parserFac)
+      this.buildDataSet(fileSet._1, n, dimensions, parserFac, DataSetBitSet)
     }
 
     if(fileSet._2 != this.lastEucDataSetDir) {
@@ -392,12 +408,11 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
       case _ => throw new Exception("unknown probescheme")
     }
 
-    System.gc()*/
-    ???
+    System.gc()
   }
 
   override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): CandSet = {
-/*
+
     // Generate probes
     this.probeGenerator.generate(qp._1)
     var nextBucket: (Int, Long) = null
@@ -413,7 +428,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
       var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
       j = 0
       while (j < bucket.size) {
-        this.cands+=(bucket(j), this.distance.measure(this.dataSet(bucket(j))._2, qp._1))
+        this.cands+=(bucket(j), this.distance.measure(this.dataSet(bucket(j)), qp._1))
         c += 1
         j += 1
       }
@@ -430,8 +445,8 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
         else k
       })
       this.cands
-    }*/
-    ???
+    }
+
   }
 }
 
