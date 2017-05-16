@@ -2,10 +2,11 @@ package datastructures
 
 import hashfunctions.HashFunction
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+
+import scala.collection.mutable
 
 class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
-  private val table = new Long2ObjectOpenHashMap[IntArrayList]()// new mutable.LongMap[ArrayBuffer[Int]]()
+  private val table = new mutable.LongMap[IntArrayList]()// new mutable.LongMap[ArrayBuffer[Int]]()
   private val dataSetRef = dSetRef
 
   // internal Hash function
@@ -19,11 +20,10 @@ class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
     // add address of vector to the buffer in map
     val key = hf(dataSetRef(v))
     // TODO remove this branch if possible
-    if(!this.table.containsKey(key)) {
+    if(!this.table.contains(key)) {
       this.table.put(key, new IntArrayList())
     }
-
-    this.table.get(key).add(v)
+    this.table(key).add(v)
   }
 
   /**
@@ -31,7 +31,7 @@ class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
     * @return a list of vectors with same key as v
     */
   def query(key:Long) : IntArrayList = {
-    this.table.get(key)
+    this.table(key)
   }
 
   def clear:Unit = {
