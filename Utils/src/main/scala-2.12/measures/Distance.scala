@@ -9,6 +9,19 @@ trait Distance[A] {
   def measure(x:A, y:A) : Double
 }
 
+object EuclideanFast extends Distance[Array[Float]] {
+  // Note this is without sqrt!
+  override def measure(x: Array[Float], y: Array[Float]): Double = {
+    var res = 0.0
+    var i = 0
+    while(i < x.length) {
+      res += Math.pow(y(i) - x(i), 2)
+      i += 1
+    }
+    res
+  }
+}
+
 object Euclidean extends Distance[Array[Float]] {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
     var res = 0.0
@@ -17,7 +30,6 @@ object Euclidean extends Distance[Array[Float]] {
       res += Math.pow(y(i) - x(i), 2)
       i += 1
     }
-    // Remove the sqrt, only apply when it is needed (when comparing to distances obtained from somewhere else.)
     Math.sqrt(res)
   }
 }

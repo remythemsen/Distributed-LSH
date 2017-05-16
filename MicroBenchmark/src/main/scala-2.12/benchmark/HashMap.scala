@@ -45,6 +45,7 @@ class HashMap {
         al.add(anInt)
         al
       })
+      i+=1
     }
   }
 

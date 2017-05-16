@@ -7,7 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import hashfunctions.Hyperplane
 import io.Parser.{DisaParser, DisaParserNumeric}
-import measures.{Cosine, CosineUnit, Euclidean}
+import measures.{Cosine, CosineUnit, EuclideanFast}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.mutable.ArrayBuffer
@@ -31,7 +31,7 @@ class RepetitionHandlerSpec extends FlatSpec with Matchers {
       val a1 = system.actorOf(Props[actors.RepetitionHandler[Array[Float]]], name = "rep1")
       val queries = DisaParserNumeric(Source.fromFile(new File(data)).getLines(), 128).take(50).toArray
       // Populating repetition
-      val ready = a1 ? InitRepetition(data, 1008263, DisaParserFacNumeric, DataSetFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 100000, k, 128, Euclidean, rnd.nextLong)
+      val ready = a1 ? InitRepetition(data, 1008263, DisaParserFacNumeric, DataSetFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 100000, k, 128, EuclideanFast, rnd.nextLong)
       Await.result(ready, timeout.duration)
     }
   }

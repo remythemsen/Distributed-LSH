@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, ActorSystem, AddressFromURIString, Deploy, Props}
 import akka.remote.RemoteScope
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import lsh._
-import measures.{Cosine, CosineUnit, Euclidean, Hamming}
+import measures._
 import tools.CandSet
 
 import scala.collection.mutable
@@ -90,6 +90,15 @@ trait Tester[Descriptor, Query, FileSet] {
 
     var r = 0.0
     var c = 0
+
+    // Sqrt here since it's not in euclidean measure
+    if(this.testCase.measure.toLowerCase == "euclidean") {
+      var j = 0
+      while(j < annSet.size) {
+        this.annSet.dists.update(j, Math.sqrt(annSet.dists(j)))
+        j+=1
+      }
+    }
 
     while(c < annSet.size) {
       if(annSet.dists(c) <= (1 + eps) * kthFarthestDistOpt ) r+=1
@@ -182,7 +191,7 @@ class NumericDistributed(data:String, dataSize:Int, dimensions:Int, seed:Long, n
     val distance = testCase.measure.toLowerCase match {
       case "cosineunit" => CosineUnit
       case "cosine" => Cosine
-      case "euclidean" => Euclidean
+      case "euclidean" => EuclideanFast
       case _ => throw new Exception("Unknown distance measure!")
     }
 
@@ -224,7 +233,7 @@ class NumericSingle(data:String, dataSize:Int, dimensions:Int, seed:Long) extend
     val distance = testCase.measure.toLowerCase match {
       case "cosineunit" => CosineUnit
       case "cosine" => Cosine
-      case "euclidean" => Euclidean
+      case "euclidean" => EuclideanFast
       case _ => throw new Exception("Unknown distance measure!")
     }
 

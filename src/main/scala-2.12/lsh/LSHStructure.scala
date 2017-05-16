@@ -4,7 +4,7 @@ import java.io.File
 
 import actors._
 import akka.actor.ActorRef
-import measures.{Distance, Euclidean}
+import measures.{Distance, EuclideanFast}
 import messages.{InitRepetition, Query, Stop}
 
 import scala.collection.mutable
@@ -47,13 +47,13 @@ trait Binary {
     var l = 0
     // fill up the queue with initial data
     while(this.pq.size < k) {
-      cands.dists(l) = Euclidean.measure(this.eucDataSet(cands.ids(l))._2, qp)
+      cands.dists(l) = EuclideanFast.measure(this.eucDataSet(cands.ids(l))._2, qp)
       this.pq.enqueue(l)
       l+=1
     }
 
     while(l < cands.size) {
-      cands.dists(l) = Euclidean.measure(this.eucDataSet(cands.ids(l))._2, qp)
+      cands.dists(l) = EuclideanFast.measure(this.eucDataSet(cands.ids(l))._2, qp)
 
       if(cands.dists(l) < cands.dists(pq.head)) {
         this.pq.dequeue()

@@ -7,7 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import hashfunctions.{BitHash, Hyperplane}
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
-import measures.{Euclidean, Hamming}
+import measures.{EuclideanFast, Hamming}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}
 

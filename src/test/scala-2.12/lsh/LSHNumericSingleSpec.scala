@@ -7,7 +7,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import hashfunctions.Hyperplane
 import io.Parser.DisaParserNumeric
-import measures.Euclidean
+import measures.EuclideanFast
 import org.scalatest.{FlatSpec, Matchers}
 import tools.CandSet
 
@@ -35,7 +35,7 @@ class LSHNumericSingleSpec extends FlatSpec with Matchers {
       val lsh = new LSHNumericSingle
       val dim = 128
 
-      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, 2, HyperplaneFactory, "twostep", 49000, k, dim, Euclidean, rnd.nextLong())
+      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, 2, HyperplaneFactory, "twostep", 49000, k, dim, EuclideanFast, rnd.nextLong())
     }
   }
 

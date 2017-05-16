@@ -34,6 +34,15 @@ class Distance {
   var bitVector:util.BitSet = _
   var bitVector2:util.BitSet = _
   var hamming:measures.Distance[util.BitSet] = _
+  var euclidean:measures.Distance[Array[Float]] = _
+  var euclideanFast:measures.Distance[Array[Float]] = _
+
+  @Setup(Level.Trial)
+  def onTrial():Unit = {
+    hamming = new HammingJava
+    euclidean = Euclidean
+    euclideanFast = EuclideanFast
+  }
 
   @Setup(Level.Invocation)
   def genRandomVec(): Unit = {
@@ -41,12 +50,16 @@ class Distance {
     vector2 = Array.fill[Float](dimensions)(rnd.nextFloat)
     bitVector = getRndVec(dimensions,rnd.nextLong)
     bitVector2 = getRndVec(dimensions,rnd.nextLong)
-    hamming = new HammingJava
   }
 
   @Benchmark
   def euclidean(bh:Blackhole) : Unit = {
     bh.consume(Euclidean.measure(vector, vector2))
+  }
+
+  @Benchmark
+  def euclideanFast(bh:Blackhole) : Unit = {
+    bh.consume(EuclideanFast.measure(vector, vector2))
   }
 
   @Benchmark

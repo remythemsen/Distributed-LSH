@@ -7,7 +7,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import hashfunctions.{BitHash, Hyperplane}
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
-import measures.{Euclidean, Hamming}
+import measures.{EuclideanFast, Hamming}
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.mutable

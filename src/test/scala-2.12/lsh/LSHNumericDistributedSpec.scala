@@ -7,7 +7,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import hashfunctions.Hyperplane
 import io.Parser.{DisaParser, DisaParserNumeric}
-import measures.Euclidean
+import measures.EuclideanFast
 import org.scalatest.{FlatSpec, Matchers}
 import tools.CandSet
 
@@ -41,7 +41,7 @@ class LSHNumericDistributedSpec extends FlatSpec with Matchers {
       val a1 = system.actorOf(Props[RepetitionHandler[Array[Float]]])
       val lsh = new LSHNumericDistributed(Array(a1))
 
-      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 40000, k, dim, Euclidean, rnd.nextLong())
+      lsh.build(eucDataDir, 39290, DisaParserFacNumeric, hashFunctions.length, HyperplaneFactory, "twostep", 40000, k, dim, EuclideanFast, rnd.nextLong())
     }
   }
 
