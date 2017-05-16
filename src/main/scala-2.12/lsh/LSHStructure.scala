@@ -17,6 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
 import datastructures.Table
 import hashfunctions.HashFunction
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 import multiprobing.{PQ, ProbeScheme, TwoStep}
 import tools.{CandSet, QuickSelect}
 
@@ -32,8 +33,8 @@ trait LSHStructure[Descriptor, Query, FileSet] {
 
 trait Binary {
   implicit object PQOrd extends Ordering[Int] {
-    var dists:ArrayBuffer[Double] = _
-    def compare(x: Int, y: Int) = dists(x).compare(dists(y))
+    var dists:DoubleArrayList = _
+    def compare(x: Int, y: Int) = dists.getDouble(x).compare(dists.getDouble(y))
   }
 
   var pq:mutable.PriorityQueue[Int] = _
@@ -47,15 +48,15 @@ trait Binary {
     var l = 0
     // fill up the queue with initial data
     while(this.pq.size < k) {
-      cands.dists(l) = EuclideanFast.measure(this.eucDataSet(cands.ids(l))._2, qp)
+      cands.dists.set(l, EuclideanFast.measure(this.eucDataSet(cands.ids.getInt(l))._2, qp))
       this.pq.enqueue(l)
       l+=1
     }
 
     while(l < cands.size) {
-      cands.dists(l) = EuclideanFast.measure(this.eucDataSet(cands.ids(l))._2, qp)
+      cands.dists.set(l, EuclideanFast.measure(this.eucDataSet(cands.ids.getInt(l))._2, qp))
 
-      if(cands.dists(l) < cands.dists(pq.head)) {
+      if(cands.dists.getDouble(l) < cands.dists.getDouble(pq.head)) {
         this.pq.dequeue()
         this.pq.enqueue(l)
       }
@@ -66,7 +67,7 @@ trait Binary {
     cands.softReset
     while(pq.nonEmpty) {
       val candsIndex = pq.dequeue()
-      cands.nonDistinctAdd(this.eucDataSet(cands.ids(candsIndex))._1, cands.dists(candsIndex))
+      cands.nonDistinctAdd(this.eucDataSet(cands.ids.getInt(candsIndex))._1, cands.dists.getDouble(candsIndex))
     }
   }
 }
@@ -318,14 +319,14 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
       cands<=QuickSelect.selectKthDist(cands.dists, k-1, cands.size)
       var i = 0
       while(i < cands.size) {
-        cands.ids.update(i, this.idLookupMap(cands.ids(i)))
+        cands.ids.set(i, this.idLookupMap(cands.ids.getInt(i)))
         i+=1
       }
       cands.take(k)
     } else {
       var j = 0
       while(j < cands.size) {
-        cands.ids.update(j, this.idLookupMap(cands.ids(j)))
+        cands.ids.set(j, this.idLookupMap(cands.ids.getInt(j)))
         j+=1
       }
     }

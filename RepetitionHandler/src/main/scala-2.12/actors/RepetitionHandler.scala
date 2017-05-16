@@ -150,16 +150,16 @@ class RepetitionHandler[A] extends Actor {
           cands.take(k)
           var l = 0
           while(l < cands.size) {
-            result._1(l) = cands.ids(l)
-            result._2(l) = cands.dists(l)
+            result._1(l) = cands.ids.getInt(l)
+            result._2(l) = cands.dists.getDouble(l)
             l+=1
           }
           result
         } else {
           var l = 0
           while(l < cands.size) {
-            result._1(l) = cands.ids(l)
-            result._2(l) = cands.dists(l)
+            result._1(l) = cands.ids.getInt(l)
+            result._2(l) = cands.dists.getDouble(l)
             l+=1
           }
           result

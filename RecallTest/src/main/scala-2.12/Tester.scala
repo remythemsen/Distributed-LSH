@@ -65,6 +65,15 @@ trait Tester[Descriptor, Query, FileSet] {
       // Adding avg time of that query to set of times
       queryTimes += invocationTimes.sum / invocationCount
 
+      // Sqrt here since it's not in euclidean measure
+      if(this.testCase.measure.toLowerCase == "euclidean") {
+        var j = 0
+        while(j < annSet.size) {
+          this.annSet.dists.set(j, Math.sqrt(annSet.dists.getDouble(j)))
+          j+=1
+        }
+      }
+
       // Adding the current q's recall to the set of recalls
       // eps = 0 means no approx
       queryRecalls._1 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.0)
@@ -91,17 +100,9 @@ trait Tester[Descriptor, Query, FileSet] {
     var r = 0.0
     var c = 0
 
-    // Sqrt here since it's not in euclidean measure
-    if(this.testCase.measure.toLowerCase == "euclidean") {
-      var j = 0
-      while(j < annSet.size) {
-        this.annSet.dists.update(j, Math.sqrt(annSet.dists(j)))
-        j+=1
-      }
-    }
 
     while(c < annSet.size) {
-      if(annSet.dists(c) <= (1 + eps) * kthFarthestDistOpt ) r+=1
+      if(annSet.dists.getDouble(c) <= (1 + eps) * kthFarthestDistOpt ) r+=1
       c+=1
     }
 

@@ -1,29 +1,26 @@
 package tools
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
+import it.unimi.dsi.fastutil.ints.{IntArrayList, IntOpenHashSet}
 
-/**
-  * Created by remeeh on 5/13/17.
-  */
 class CandSet(maxCands:Int) {
 
-  var ids:ArrayBuffer[Int] = new ArrayBuffer[Int](maxCands)
-  var dists:ArrayBuffer[Double] = new ArrayBuffer[Double](maxCands)
-  var distinct:mutable.HashSet[Int] = new mutable.HashSet[Int]()
+  var ids:IntArrayList = new IntArrayList(maxCands)
+  var dists:DoubleArrayList = new DoubleArrayList(maxCands)
+  var distinct:IntOpenHashSet = new IntOpenHashSet(maxCands)
   var pointer:Int = 0
 
   def size:Int = this.pointer
 
   def +=(id:Int, dist:Double) = {
     if(!this.distinct.contains(id)) {
-      this.distinct+=id
+      this.distinct.add(id)
       if(this.ids.size <= this.pointer) {
-        this.ids += id
-        this.dists += dist
+        this.ids.add(id)
+        this.dists.add(dist)
       } else {
-        this.ids.update(this.pointer,id)
-        this.dists.update(this.pointer,dist)
+        this.ids.set(this.pointer,id)
+        this.dists.set(this.pointer,dist)
       }
       this.pointer+=1
     }
@@ -31,11 +28,11 @@ class CandSet(maxCands:Int) {
 
   def nonDistinctAdd(id:Int, dist:Double) : Unit = {
     if(this.pointer == this.ids.size) {
-      this.ids.update(this.pointer, id)
-      this.dists.update(this.pointer, dist)
+      this.ids.set(this.pointer, id)
+      this.dists.set(this.pointer, dist)
     } else {
-      this.ids+=id
-      this.dists+=dist
+      this.ids.add(id)
+      this.dists.add(dist)
     }
     this.pointer+=1
   }
@@ -45,8 +42,8 @@ class CandSet(maxCands:Int) {
     var tmpPointer = this.pointer
     this.softReset
     while(i < tmpPointer) {
-      if(dists(i) <= dist) {
-        this.nonDistinctAdd(this.ids(i), this.dists(i))
+      if(dists.getDouble(i) <= dist) {
+        this.nonDistinctAdd(this.ids.getInt(i), this.dists.getDouble(i))
       }
       i+=1
     }

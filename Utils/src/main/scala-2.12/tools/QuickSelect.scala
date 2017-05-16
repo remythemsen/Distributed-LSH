@@ -1,6 +1,6 @@
 package tools
 
-import scala.collection.mutable.ArrayBuffer
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 
 /**
   * Heavily inspired from
@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
   *
   */
 object QuickSelect {
-  def selectKthDist(data:ArrayBuffer[Double], k:Int, until:Int):Double = {
+  def selectKthDist(data:DoubleArrayList, k:Int, until:Int):Double = {
     var from = 0
     var to = until
 
@@ -16,14 +16,14 @@ object QuickSelect {
     while (from < to) {
       var r = from
       var w = to
-      var pivot = data((r + w) / 2)
+      var pivot = data.getDouble((r + w) / 2)
 
       // stop run if r and w meets
       while (r < w) {
-        if (data(r) >= pivot) {
-          var tmp = data(w)
-          data(w) = data(r)
-          data(r) = tmp
+        if (data.getDouble(r) >= pivot) {
+          var tmp = data.getDouble(w)
+          data.set(w, data.getDouble(r))
+          data.set(r, tmp)
           w -= 1
         } else {
           r += 1
@@ -31,7 +31,7 @@ object QuickSelect {
       }
 
       // if r is incremented then we need to decrement one
-      if (data(r) > pivot) {
+      if (data.getDouble(r) > pivot) {
         r -= 1
       }
 
@@ -41,6 +41,6 @@ object QuickSelect {
         from = r + 1
       }
     }
-    data(k)
+    data.getDouble(k)
   }
 }

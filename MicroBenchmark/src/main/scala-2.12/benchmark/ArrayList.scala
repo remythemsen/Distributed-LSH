@@ -2,11 +2,8 @@ package benchmark
 
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import it.unimi.dsi.fastutil.longs.{Long2IntOpenHashMap, Long2ObjectOpenHashMap}
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
-
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 

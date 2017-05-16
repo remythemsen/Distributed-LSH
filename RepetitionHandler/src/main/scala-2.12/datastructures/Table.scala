@@ -31,7 +31,7 @@ class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
     * @return a list of vectors with same key as v
     */
   def query(key:Long) : IntArrayList = {
-    this.table(key)
+    this.table.getOrNull(key)
   }
 
   def clear:Unit = {
