@@ -30,7 +30,7 @@ class HashMap {
     this.fastUtilMap = new Long2IntOpenHashMap()
     this.fastUtilMapAL = new Long2ObjectOpenHashMap()
     // Make set of keys
-    this.longMapKeys = Array.fill[Long](20000000)(this.rnd.nextLong)
+    this.longMapKeys = Array.fill[Long](10000000)(this.rnd.nextLong)
     // Populate the maps
     var i = 0
     while(i < longMapKeys.length) {
