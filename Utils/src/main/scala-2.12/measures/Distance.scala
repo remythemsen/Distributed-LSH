@@ -16,6 +16,7 @@ object Euclidean extends Distance[Array[Float]] {
       res += Math.pow(y(i) - x(i), 2)
       i += 1
     }
+    // Remove the sqrt, only apply when it is needed (when comparing to distances obtained from somewhere else.)
     Math.sqrt(res)
   }
 }
