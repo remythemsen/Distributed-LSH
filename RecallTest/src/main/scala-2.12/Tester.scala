@@ -12,6 +12,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
+import java.util
 
 trait Tester[Descriptor, Query, FileSet] {
   type Result = ((Double, Double, Double), (Double,Double,Double), Double, Double)
@@ -249,8 +250,8 @@ class NumericSingle(data:String, dataSize:Int, dimensions:Int, seed:Long) extend
   }
 }
 
-class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long, nodes:File) extends DistributedTester[mutable.BitSet, (mutable.BitSet, Array[Float], Int), (String,String)] {
-  type Descriptor = mutable.BitSet
+class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long, nodes:File) extends DistributedTester[util.BitSet, (util.BitSet, Array[Float], Int), (String,String)] {
+  type Descriptor = util.BitSet
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinaryDistributed(this.getNodes(nodes))
@@ -283,7 +284,7 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
 
     // Call lsh build
     val distance = testCase.measure.toLowerCase match {
-      case "hamming" => new Hamming(dimensions)
+      case "hamming" => Hamming
       case _ => throw new Exception("Unkown Distance measure specified...")
     }
 
@@ -304,8 +305,8 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
   }
 }
 
-class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long) extends Tester[mutable.BitSet, (mutable.BitSet, Array[Float], Int), (String,String)] {
-  type Descriptor = mutable.BitSet
+class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long) extends Tester[util.BitSet, (util.BitSet, Array[Float], Int), (String,String)] {
+  type Descriptor = util.BitSet
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinarySingle
@@ -336,7 +337,7 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
 
     // Call lsh build
     val distance = testCase.measure.toLowerCase match {
-      case "hamming" => new Hamming(dimensions)
+      case "hamming" => Hamming
       case _ => throw new Exception("Unkown Distance measure specified...")
     }
 

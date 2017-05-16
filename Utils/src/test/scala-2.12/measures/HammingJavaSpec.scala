@@ -35,7 +35,7 @@ class HammingJavaSpec extends FlatSpec with Matchers {
   "hamming measure " should " return 0 on identical vectors!" in {
     val f = fixture
     val v1 = randomBitSet(f.dimensions, f.rnd.nextLong())
-    assert(new HammingJava().measure(v1, v1) == 0.0)
+    assert(Hamming.measure(v1, v1) == 0.0)
   }
 
   "hamming measure " should " return correct precalculated results " in {
@@ -57,9 +57,9 @@ class HammingJavaSpec extends FlatSpec with Matchers {
     v4.set(5)
     v4.set(6)
 
-    assert(new HammingJava().measure(v1, v2) == 2.0)
-    assert(new HammingJava().measure(v1, v3) == 0.0)
-    assert(new HammingJava().measure(v3, v4) == 6.0)
+    assert(Hamming.measure(v1, v2) == 2.0)
+    assert(Hamming.measure(v1, v3) == 0.0)
+    assert(Hamming.measure(v3, v4) == 6.0)
   }
 
   "hamming measure " should " never be negative " in {
@@ -68,7 +68,7 @@ class HammingJavaSpec extends FlatSpec with Matchers {
 
       val v1 = randomBitSet(f.dimensions, f.rnd.nextLong())
       val v2 = randomBitSet(f.dimensions, f.rnd.nextLong())
-      assert(new HammingJava().measure(v1, v2) >= 0.0)
+      assert(Hamming.measure(v1, v2) >= 0.0)
     }
   }
 

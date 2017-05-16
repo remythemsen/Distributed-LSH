@@ -1,5 +1,6 @@
 package measures
 
+import java.util
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.mutable
@@ -18,13 +19,13 @@ class HammingSpec extends FlatSpec with Matchers {
     }
   }
 
-  def randomBitSet(dim:Int, seed:Long):mutable.BitSet = {
+  def randomBitSet(dim:Int, seed:Long):util.BitSet = {
     val rnd = new Random(seed)
     var i = 0
-    var res = new mutable.BitSet
+    var res = new util.BitSet
     while(i < dim) {
       if(rnd.nextBoolean()) {
-        res.add(i)
+        res.set(i)
       }
       i+=1
     }
@@ -34,19 +35,34 @@ class HammingSpec extends FlatSpec with Matchers {
   "hamming measure " should " return 0 on identical vectors!" in {
     val f = fixture
     val v1 = randomBitSet(f.dimensions, f.rnd.nextLong())
-    assert(new Hamming(f.dimensions).measure(v1, v1) == 0.0)
+    assert(Hamming.measure(v1, v1) == 0.0)
   }
 
   "hamming measure " should " return correct precalculated results " in {
     val f = fixture
-    val v1 = mutable.BitSet(1,4,6,8)
-    val v2 = mutable.BitSet(1,4,6,8)
-    val v3 = mutable.BitSet(1,6,8)
-    val v4 = mutable.BitSet(1,3,6,9)
-    assert(new Hamming(f.dimensions).measure(v1, v2) == 0.0)
-    assert(new Hamming(f.dimensions).measure(v1, v3) == 1.0)
-    assert(new Hamming(f.dimensions).measure(v1, v4) == 4.0)
-    assert(new Hamming(f.dimensions).measure(v3, v4) == 3.0)
+    val v1 = new util.BitSet()
+    v1.set(1)
+    v1.set(4)
+    v1.set(6)
+    v1.set(8)
+    val v2 = new util.BitSet()
+    v2.set(1)
+    v2.set(4)
+    v2.set(6)
+    v2.set(8)
+    val v3 = new util.BitSet()
+    v3.set(1)
+    v3.set(6)
+    v3.set(8)
+    val v4 = new util.BitSet()
+    v4.set(1)
+    v4.set(3)
+    v4.set(6)
+    v4.set(9)
+    assert(Hamming.measure(v1, v2) == 0.0)
+    assert(Hamming.measure(v1, v3) == 1.0)
+    assert(Hamming.measure(v1, v4) == 4.0)
+    assert(Hamming.measure(v3, v4) == 3.0)
   }
 
   "hamming measure " should " never be negative " in {
@@ -55,7 +71,7 @@ class HammingSpec extends FlatSpec with Matchers {
 
       val v1 = randomBitSet(f.dimensions, f.rnd.nextLong())
       val v2 = randomBitSet(f.dimensions, f.rnd.nextLong())
-      assert(new Hamming(f.dimensions).measure(v1, v2) >= 0.0)
+      assert(Hamming.measure(v1, v2) >= 0.0)
     }
   }
 

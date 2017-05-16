@@ -1,6 +1,7 @@
 package actors
 
 import java.io.File
+import java.util
 
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
@@ -22,13 +23,13 @@ class RepetitionHandlerBitSpec extends FlatSpec with Matchers {
 
   implicit val timeout = Timeout(10.hours)
 
-  def randomBitSet(dim:Int, seed:Long):mutable.BitSet = {
+  def randomBitSet(dim:Int, seed:Long):util.BitSet = {
     val rnd = new Random(seed)
     var i = 0
-    var res = new mutable.BitSet
+    var res = new util.BitSet
     while(i < dim) {
       if(rnd.nextBoolean()) {
-        res.add(i)
+        res.set(i)
       }
       i+=1
     }
@@ -46,13 +47,13 @@ class RepetitionHandlerBitSpec extends FlatSpec with Matchers {
       val dimensions = 256
       val hashFunctions = Array(BitHash(k, rnd.nextLong, dimensions), BitHash(k, rnd.nextLong(), dimensions))
       val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[actors.RepetitionHandler[mutable.BitSet]], name = "rep1")
+      val a1 = system.actorOf(Props[actors.RepetitionHandler[util.BitSet]], name = "rep1")
       println("making dataset")
       //val dataSet = DisaParserBinary(Source.fromFile(new File(data)).getLines(), dimensions)
 
       // Populating repetition
-      val ready = a1 ? InitRepetition(data, n, DisaParserFacBitSet, DataSetBitSet, hashFunctions.length, BitHashFactory, "twostep", maxCands, k, dimensions, new Hamming(dimensions), rnd.nextLong)
-      Await.result(ready, timeout.duration)
+/*      val ready = a1 ? InitRepetition(data, n, DisaParserFacBitSet, DataSetBitSet, hashFunctions.length, BitHashFactory, "twostep", maxCands, k, dimensions, new Hamming(dimensions), rnd.nextLong)
+      Await.result(ready, timeout.duration)*/
     }
   }
 

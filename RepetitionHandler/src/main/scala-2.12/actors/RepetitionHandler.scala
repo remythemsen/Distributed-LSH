@@ -1,6 +1,7 @@
 package actors
 
 import java.io.File
+import java.util
 
 import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
 import akka.util.Timeout
@@ -197,7 +198,7 @@ case object DisaParserFacNumeric extends DisaParserFac[Array[Float]] {
     DisaParserNumeric(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
 }
-case object DisaParserFacBitSet extends DisaParserFac[mutable.BitSet] {
+case object DisaParserFacBitSet extends DisaParserFac[util.BitSet] {
   def apply(pathToFile:String, numOfDim:Int) : DisaParserBinary = {
     DisaParserBinary(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
@@ -208,8 +209,8 @@ abstract class DataSetFac[A] {
 object DataSetFacNumeric extends DataSetFac[Array[Float]] {
   override def apply(size: Int): Array[Array[Float]] = new Array(size)
 }
-object DataSetBitSet extends DataSetFac[mutable.BitSet] {
-  override def apply(size: Int): Array[mutable.BitSet] = new Array(size)
+object DataSetBitSet extends DataSetFac[util.BitSet] {
+  override def apply(size: Int): Array[util.BitSet] = new Array(size)
 }
 abstract class HashFunctionFactory[A] {
   def apply(k:Int, seed:Long, numOfDim:Int):HashFunction[A]
@@ -220,8 +221,8 @@ case object HyperplaneFactory extends HashFunctionFactory[Array[Float]] {
     Hyperplane(k, seed, numOfDim)
   }
 }
-case object BitHashFactory extends HashFunctionFactory[mutable.BitSet] {
-  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[mutable.BitSet] = {
+case object BitHashFactory extends HashFunctionFactory[util.BitSet] {
+  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[util.BitSet] = {
     BitHash(k, seed, numOfDim)
   }
 }

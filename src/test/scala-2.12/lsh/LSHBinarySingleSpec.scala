@@ -38,7 +38,7 @@ class LSHBinarySingleSpec extends FlatSpec with Matchers {
       val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 256).take(50).toArray
       val lsh = new LSHBinarySingle
 
-      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, new Hamming(dim), rnd.nextLong())
+      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, Hamming, rnd.nextLong())
     }
   }
 

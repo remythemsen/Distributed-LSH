@@ -1,6 +1,7 @@
 package lsh
 
 import java.io.File
+import java.util
 
 import actors._
 import akka.actor.ActorRef
@@ -333,13 +334,13 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     this.cands
   }
 }
-class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[mutable.BitSet, (mutable.BitSet, Array[Float], Int),  (String, String)] {
+class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[util.BitSet, (util.BitSet, Array[Float], Int),  (String, String)] {
 
   this.nodes = repetitions
   var lastEucDataSet = " "
   this.pq = new mutable.PriorityQueue[Int]
 
-  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
+  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[util.BitSet], internalReps: Int, hfFac: HashFunctionFactory[util.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[util.BitSet], seed: Long): Unit = {
     this.futureResults = new Array(nodes.length)
     this.cands = new CandSet(maxCands)
 
@@ -362,7 +363,7 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
   }
 
 
-  override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): CandSet = {
+  override def query(qp: (util.BitSet, Array[Float], Int), k: Int): CandSet = {
 
     // Search euclidean space (this will return k results)
     // calling getCands with qp,qp._3 will return specified 'knnmax' value for knn to linear scan over
@@ -377,10 +378,10 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
   }
 }
 
-class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mutable.BitSet, Array[Float], Int), (String, String)] {
+class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.BitSet, Array[Float], Int), (String, String)] {
   var lastEucDataSetDir:String = " "
 
-  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[mutable.BitSet], internalReps: Int, hfFac: HashFunctionFactory[mutable.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[mutable.BitSet], seed: Long): Unit = {
+  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[util.BitSet], internalReps: Int, hfFac: HashFunctionFactory[util.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[util.BitSet], seed: Long): Unit = {
     this.clear()
     this.pq = null
     this.rnd = new Random(seed)
@@ -414,7 +415,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
     System.gc()
   }
 
-  override def query(qp: (mutable.BitSet, Array[Float], Int), k: Int): CandSet = {
+  override def query(qp: (util.BitSet, Array[Float], Int), k: Int): CandSet = {
 
     // Generate probes
     this.probeGenerator.generate(qp._1)

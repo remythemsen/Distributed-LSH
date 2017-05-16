@@ -1,6 +1,7 @@
 package lsh
 
 import java.io.File
+import java.util
 
 import actors._
 import akka.actor.{ActorSystem, Props}
@@ -31,17 +32,18 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
       val rnd = new Random(System.currentTimeMillis())
       val k = 12
       val dim = 256
-      val hashFunctions = Array(BitHash(k, rnd.nextLong, dim),BitHash(k, rnd.nextLong, dim))
+      val hashFunctions = Array(BitHash(k, rnd.nextLong, dim), BitHash(k, rnd.nextLong, dim))
       val bitDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-hamming-256bit.data"
       val eucDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-normalized.data"
       val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
       val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 256).take(50).toArray
 
       val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[RepetitionHandler[mutable.BitSet]])
+      val a1 = system.actorOf(Props[RepetitionHandler[util.BitSet]])
       val lsh = new LSHBinaryDistributed(Array(a1))
 
-      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, new Hamming(dim), rnd.nextLong())
+      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, Hamming, rnd.nextLong())
+
     }
   }
 

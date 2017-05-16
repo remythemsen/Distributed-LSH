@@ -4,12 +4,13 @@ import hashfunctions.{BitHash, Hyperplane}
 import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.mutable
 import scala.util.Random
+import java.util
 
 class ProbeTableSpec extends FlatSpec with Matchers {
 
   val data:Array[Array[Float]] = Array.fill[Array[Float]](1)(new Array[Float](128))
   // TODO Fix this test
-  val bitData:Array[mutable.BitSet] = Array.fill[mutable.BitSet](1)(new mutable.BitSet)
+  val bitData:Array[util.BitSet] = Array.fill[util.BitSet](1)(new util.BitSet)
   val arr = new Array[Float](128)
   val rnd = new Random(System.currentTimeMillis())
 

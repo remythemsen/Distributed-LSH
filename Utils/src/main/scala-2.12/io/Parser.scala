@@ -1,5 +1,7 @@
 package io
 
+import java.util
+
 import scala.collection.mutable
 
 object Parser {
@@ -67,21 +69,21 @@ object Parser {
       (id, resultArray)
     }*/
   }
-  case class DisaParserBinary(iterator: Iterator[String], dimensions:Int) extends DisaParser[mutable.BitSet](iterator, dimensions) {
+  case class DisaParserBinary(iterator: Iterator[String], dimensions:Int) extends DisaParser[util.BitSet](iterator, dimensions) {
     /*
     * Expected format for file is:
     * id  binaryString
     * 1234 1010100010010100101
     */
-    override def next: (Int, mutable.BitSet) = {
+    override def next: (Int, util.BitSet) = {
 
       val line:Array[String] = iterator.next.split(" ")
-      val bitSet:mutable.BitSet = new mutable.BitSet()
+      val bitSet:util.BitSet = new util.BitSet()
       val l = line(1).split("")
       var i = 0
       while(i < l.length) {
         if(l(i) == "1") {
-          bitSet.add(i)
+          bitSet.set(i)
         }
         i+=1
       }

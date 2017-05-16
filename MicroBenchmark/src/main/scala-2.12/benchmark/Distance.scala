@@ -39,7 +39,7 @@ class Distance {
 
   @Setup(Level.Trial)
   def onTrial():Unit = {
-    hamming = new HammingJava
+    hamming = Hamming
     euclidean = Euclidean
     euclideanFast = EuclideanFast
   }

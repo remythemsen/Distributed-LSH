@@ -45,26 +45,12 @@ object CosineUnit extends Distance[Array[Float]] {
     (1.0-dotProduct(x, y)) / 2.0 //normalizing the result to [0,1]
   }
 }
-class HammingJava extends Distance[BitSet] {
+object Hamming extends Distance[BitSet] {
 
   override def measure(x: BitSet, y: BitSet):Double = {
     val xb:BitSet = x.clone().asInstanceOf[BitSet]
     xb.xor(y)
     xb.cardinality()
-  }
-}
-
-class Hamming(dimensions:Int) extends Distance[mutable.BitSet] {
-  override def measure(x: mutable.BitSet, y:mutable.BitSet): Double = {
-
-    var i = 0
-    var res:Double = 0.0
-    while(i < dimensions) {
-      if(x(i) != y(i)) res+=1
-      i+=1
-    }
-    res
-
   }
 }
 
