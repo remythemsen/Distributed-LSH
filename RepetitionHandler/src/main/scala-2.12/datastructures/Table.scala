@@ -1,12 +1,11 @@
 package datastructures
 
 import hashfunctions.HashFunction
-
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import it.unimi.dsi.fastutil.ints.IntArrayList
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 
 class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
-  private val table = new mutable.LongMap[ArrayBuffer[Int]]()
+  private val table = new Long2ObjectOpenHashMap[IntArrayList]()// new mutable.LongMap[ArrayBuffer[Int]]()
   private val dataSetRef = dSetRef
 
   // internal Hash function
@@ -18,21 +17,21 @@ class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
     */
   def +=(v:Int) : Unit = {
     // add address of vector to the buffer in map
-    val key:Long = hf(dataSetRef(v))
+    val key = hf(dataSetRef(v))
     // TODO remove this branch if possible
-    if(!this.table.contains(key)) {
-      this.table(key) = new ArrayBuffer()
+    if(!this.table.containsKey(key)) {
+      this.table.put(key, new IntArrayList())
     }
 
-    this.table(key) += v
+    this.table.get(key).add(v)
   }
 
   /**
     * @param key a query point hashed key
     * @return a list of vectors with same key as v
     */
-  def query(key:Long) : ArrayBuffer[Int] = {
-    this.table.getOrElse(key, ArrayBuffer())
+  def query(key:Long) : IntArrayList = {
+    this.table.get(key)
   }
 
   def clear:Unit = {

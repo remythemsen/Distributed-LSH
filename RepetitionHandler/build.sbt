@@ -26,7 +26,8 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.2.0",
   "com.github.romix.akka" %% "akka-kryo-serialization" % "0.5.1",
   "org.scalactic" %% "scalactic" % "3.0.0",
-  "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.0" % "test",
+  "it.unimi.dsi" % "fastutil" % "7.2.0"
 )
 
 maintainer := "Remy Themsen <remt@itu.dk>"

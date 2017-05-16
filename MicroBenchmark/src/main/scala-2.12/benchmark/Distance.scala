@@ -1,25 +1,47 @@
 package benchmark
 
-import measures.{Cosine, CosineUnit, Euclidean}
+import java.util
+
+import measures._
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
+import scala.collection.mutable
 import scala.util.Random
 
 @BenchmarkMode(Array(Mode.Throughput))
 @State(Scope.Thread)
 class Distance {
+
+
+  def getRndVec(dimensions:Int, seed:Long) = {
+    val rnd = new Random(seed)
+    val vec = new util.BitSet()
+    for (i <- 0 until dimensions) {
+      if (rnd.nextBoolean()) {
+        vec.set(i)
+      }
+    }
+    vec
+  }
+
   @Param(Array("128", "256"))
   var dimensions:Int = 0
 
   var rnd:Random = new Random(System.currentTimeMillis())
   var vector:Array[Float] = Array()
   var vector2:Array[Float] = Array()
+  var bitVector:util.BitSet = _
+  var bitVector2:util.BitSet = _
+  var hamming:measures.Distance[util.BitSet] = _
 
   @Setup(Level.Invocation)
   def genRandomVec(): Unit = {
     vector = Array.fill[Float](dimensions)(rnd.nextFloat)
     vector2 = Array.fill[Float](dimensions)(rnd.nextFloat)
+    bitVector = getRndVec(dimensions,rnd.nextLong)
+    bitVector2 = getRndVec(dimensions,rnd.nextLong)
+    hamming = new HammingJava
   }
 
   @Benchmark
@@ -28,12 +50,7 @@ class Distance {
   }
 
   @Benchmark
-  def cosine(bh:Blackhole) : Unit = {
-    bh.consume(Cosine.measure(vector, vector2))
-  }
-
-  @Benchmark
-  def cosineUnit(bh:Blackhole) : Unit = {
-    bh.consume(CosineUnit.measure(vector, vector2))
+  def hamming(bh:Blackhole) : Unit = {
+    bh.consume(hamming.measure(bitVector, bitVector2))
   }
 }

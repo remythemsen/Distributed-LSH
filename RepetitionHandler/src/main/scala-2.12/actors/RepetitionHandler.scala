@@ -131,12 +131,14 @@ class RepetitionHandler[A] extends Actor {
       while (this.probeGenerator.hasNext() && c <= this.maxCands) {
         nextBucket = this.probeGenerator.next()
         var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
-        j = 0
-        while (j < bucket.size) {
-          // Storing index of descriptor and dist from qp
-          this.cands+=(bucket(j), this.simMeasure.measure(this.dataSet(bucket(j)), qp.asInstanceOf[A]))
-          c += 1
-          j += 1
+        if(bucket!=null) {
+          j = 0
+          while (j < bucket.size) {
+            // Storing index of descriptor and dist from qp
+            this.cands += (bucket.getInt(j), this.simMeasure.measure(this.dataSet(bucket.getInt(j)), qp.asInstanceOf[A]))
+            c += 1
+            j += 1
+          }
         }
       }
 

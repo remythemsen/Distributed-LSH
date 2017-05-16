@@ -4,11 +4,13 @@ import hashfunctions.Hyperplane
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
+import scala.collection.mutable
 import scala.util.Random
 
 @BenchmarkMode(Array(Mode.Throughput))
 @State(Scope.Thread)
 class Hash {
+
   @Param(Array("128", "256"))
   var dimensions:Int = 0
 

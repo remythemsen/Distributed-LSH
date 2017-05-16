@@ -213,11 +213,13 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     while (this.probeGenerator.hasNext() && c <= this.maxCands) {
       nextBucket = this.probeGenerator.next()
       var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
-      j = 0
-      while (j < bucket.size) {
-        this.cands+=(this.idLookupMap(bucket(j)), this.distance.measure(this.dataSet(bucket(j)), qp))
-        c += 1
-        j += 1
+      if(bucket!=null) {
+        j = 0
+        while (j < bucket.size) {
+          this.cands+=(this.idLookupMap(bucket.getInt(j)), this.distance.measure(this.dataSet(bucket.getInt(j)), qp))
+          c += 1
+          j += 1
+        }
       }
     }
 
@@ -418,7 +420,6 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
     var nextBucket: (Int, Long) = null
 
     // Contains pointers to the dataset
-    var candSet: ArrayBuffer[Int] = null
 
     var j, c = 0
     var index = 0
@@ -426,11 +427,13 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[mutable.BitSet, (mu
     while (this.probeGenerator.hasNext() && c <= this.maxCands) {
       nextBucket = this.probeGenerator.next()
       var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
-      j = 0
-      while (j < bucket.size) {
-        this.cands+=(bucket(j), this.distance.measure(this.dataSet(bucket(j)), qp._1))
-        c += 1
-        j += 1
+      if(bucket!=null) {
+        j = 0
+        while (j < bucket.size) {
+          this.cands+=(bucket.getInt(j), this.distance.measure(this.dataSet(bucket.getInt(j)), qp._1))
+          c += 1
+          j += 1
+        }
       }
     }
 
