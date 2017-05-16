@@ -13,7 +13,7 @@ class PQ[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
   }
 
   val pq = new mutable.PriorityQueue[((Int, Long), Double)]()(Ord)
-  var dotProducts:Array[Double] = new Array(k)
+  var priorities:Array[Double] = new Array(k)
 
   override def generate(qp:A) : Unit = {
     pq.clear
@@ -26,7 +26,7 @@ class PQ[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
     while (hashIndex < hfs.length) {
       // Get dot products between qp and hyperplane for each k hyperplanes in hashFunction
       while(hyperIndex < hfs(i).state.length) {
-        this.dotProducts(hyperIndex) = dotProduct(qp, hfs(hashIndex).state(hyperIndex))
+        this.priorities(hyperIndex) = Math.exp(-Math.abs(dotProduct(qp, hfs(hashIndex).state(hyperIndex))))
         hyperIndex += 1
       }
 
@@ -37,14 +37,12 @@ class PQ[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
       while(i < k) { // 1-Step Probes
 
         oneStepHash = checkAndFlip(hash, i)
-        pq += Tuple2(Tuple2(hashIndex, oneStepHash), Math.exp(-Math.abs(this.dotProducts(i))))
+        pq += Tuple2(Tuple2(hashIndex, oneStepHash), this.priorities(i))
 
         j = i+1
-        // Remove this and to avoid generating two-probe steps
-        // But make the hash code and the actual index (as a tuple) that was flipped part of the key. 
         while(j < k) { // 2-Step Probes
           twoStepHash = checkAndFlip(oneStepHash, j)
-          pq += Tuple2(Tuple2(hashIndex, twoStepHash), Math.exp(-Math.abs(this.dotProducts(i))-Math.abs(this.dotProducts(j))))
+          pq += Tuple2(Tuple2(hashIndex, twoStepHash), this.priorities(i) * this.priorities(j))
           j += 1
         }
         i += 1
@@ -75,12 +73,6 @@ class PQ[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
     * @return
     */
   override def next(): (Int,Long) = {
-    // Save the (key, (indices)) and priority in an ArrayList A (or something similar).
-    // The first element is the query hash code (disregard or store globally).
-    // After calling dequeue do the following: Let (key, prio) be the element you got from the pq.
-    // For all elements ((other_key, other_indices), other_prio) in A (except the query):
-    // 1) Take other_key, flip all the bits in indices -> new_key. Add indices to "other_indices" -> new_indices
-    // 2) Put ((new_key, new_indices), prio * other_prio) into the PQ.
     this.pq.dequeue()._1
   }
 
