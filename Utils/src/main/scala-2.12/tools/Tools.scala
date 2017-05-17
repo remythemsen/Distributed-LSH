@@ -1,5 +1,8 @@
 package tools
 
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
+import measures.EuclideanFast
+
 import scala.collection.mutable
 
 object Tools {
@@ -44,6 +47,55 @@ object Tools {
     }
 
     Math.sqrt(r)
+  }
+
+  implicit object PQOrd extends Ordering[Int] {
+    var dists:DoubleArrayList = _
+    def compare(x: Int, y: Int) = dists.getDouble(x).compare(dists.getDouble(y))
+  }
+
+  def knn(cands:CandSet, eucDataSet:Array[Array[Float]], lookUpMap:Array[Int], pq:mutable.PriorityQueue[Int], qp:Array[Float], k:Int) : Unit = {
+    // Assuming that cands has size >= k
+
+    PQOrd.dists = cands.dists
+
+    var l = 0
+    // fill up the queue with initial data
+    while(pq.size < k) {
+      cands.dists.set(l, EuclideanFast.measure(eucDataSet(cands.ids.getInt(l)), qp))
+      pq.enqueue(l)
+      l+=1
+    }
+
+    while(l < cands.size) {
+      cands.dists.set(l, EuclideanFast.measure(eucDataSet(cands.ids.getInt(l)), qp))
+
+      if(cands.dists.getDouble(l) < cands.dists.getDouble(pq.head)) {
+        pq.dequeue()
+        pq.enqueue(l)
+      }
+      l+=1
+    }
+
+    // resetting counter of cands to make sure we only consider k from this point
+    cands.softReset
+    val tmpIds = new Array[Int](k)
+    val tmpDists = new Array[Double](k)
+    var v,w,candsIndex = 0
+    while(pq.nonEmpty) {
+      candsIndex = pq.dequeue()
+      tmpIds(v) = lookUpMap(cands.ids.getInt(candsIndex))
+      tmpDists(v) = cands.dists.getDouble(candsIndex)
+      v+=1
+    }
+    // Using system optimized array copy
+    cands.ids.addElements(0, tmpIds, 0, tmpIds.length)
+    cands.dists.addElements(0, tmpDists, 0, tmpDists.length)
+    cands.pointer = k+1
+    /*while(w < k) {
+      cands.nonDistinctAdd(tmpIds(w),tmpDists(w))
+      w+=1
+    }*/
   }
 
 }

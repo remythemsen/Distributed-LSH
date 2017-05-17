@@ -87,11 +87,11 @@ class CandSetSpec extends FlatSpec with Matchers {
     c+=(4,4.0)
     c+=(5,5.0)
     c.softReset
-    c.nonDistinctAdd(1,1.0)
-    c.nonDistinctAdd(2,2.0)
-    c.nonDistinctAdd(3,3.0)
-    c.nonDistinctAdd(4,4.0)
-    c.nonDistinctAdd(5,5.0)
+    c.+=(1,1.0)
+    c.+=(2,2.0)
+    c.+=(3,3.0)
+    c.+=(4,4.0)
+    c.+=(5,5.0)
     assert(c.size == 5)
   }
 

@@ -2,26 +2,22 @@ package lsh
 
 import java.io.File
 import java.util
-
 import actors._
 import akka.actor.ActorRef
-import measures.{Distance, EuclideanFast}
+import measures.Distance
 import messages.{InitRepetition, Query, Stop}
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import akka.util.Timeout
-
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
 import datastructures.Table
 import hashfunctions.HashFunction
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList
+import io.Parser.DisaParserNumeric
 import multiprobing.{PQ, ProbeScheme, TwoStep}
-import tools.{CandSet, QuickSelect}
-
+import tools.{CandSet, QuickSelect, Tools}
 import scala.io.Source
 import scala.util.Random
 
@@ -30,59 +26,30 @@ trait LSHStructure[Descriptor, Query, FileSet] {
   def build(fileSet:FileSet, n:Int, parserFac:DisaParserFac[Descriptor], internalReps:Int, hfFac:HashFunctionFactory[Descriptor], pgenerator:String, maxCands:Int, functions:Int, dimensions:Int, simMeasure:Distance[Descriptor], seed:Long):Unit
   def query(qp:Query, k:Int) : CandSet
   var cands:CandSet = _
+  var idLookupMap:Array[Int] = _
 }
 
 trait Binary {
-  implicit object PQOrd extends Ordering[Int] {
-    var dists:DoubleArrayList = _
-    def compare(x: Int, y: Int) = dists.getDouble(x).compare(dists.getDouble(y))
-  }
 
   var pq:mutable.PriorityQueue[Int] = _
-  var eucDataSet:Array[(Int, Array[Float])] = _
+  var eucDataSet:Array[Array[Float]] = _
+  var lastEucDataSet:String = " "
 
-  def knn(cands:CandSet, qp:Array[Float], k:Int) : Unit = {
-    // Assuming that cands has size >= k
-
-    PQOrd.dists = cands.dists
-
-    var l = 0
-    // fill up the queue with initial data
-    while(this.pq.size < k) {
-      cands.dists.set(l, EuclideanFast.measure(this.eucDataSet(cands.ids.getInt(l))._2, qp))
-      this.pq.enqueue(l)
-      l+=1
-    }
-
-    while(l < cands.size) {
-      cands.dists.set(l, EuclideanFast.measure(this.eucDataSet(cands.ids.getInt(l))._2, qp))
-
-      if(cands.dists.getDouble(l) < cands.dists.getDouble(pq.head)) {
-        this.pq.dequeue()
-        this.pq.enqueue(l)
+  def buildEucDataSet(data:String, n:Int, dimensions:Int) = {
+    if(this.lastEucDataSet != data) {
+      println("Building EUC DataSet...")
+      this.eucDataSet = new Array(n)
+      val parser = DisaParserNumeric(Source.fromFile(data).getLines(), dimensions)
+      val percentile = n / 100
+      var c = 0
+      while (parser.hasNext) {
+        if (c % percentile == 0) println(c * 100 / n)
+        this.eucDataSet(c) = parser.next._2
+        c += 1
       }
-      l+=1
+      this.lastEucDataSet = data
+      println("Done loading EUC Dataset...")
     }
-
-    // resetting counter of cands to make sure we only consider k from this point
-    cands.softReset
-    val tmpIds = new Array[Int](k)
-    val tmpDists = new Array[Double](k)
-    var v,w,candsIndex = 0
-    while(pq.nonEmpty) {
-      candsIndex = pq.dequeue()
-      tmpIds(v) = this.eucDataSet(cands.ids.getInt(candsIndex))._1
-      tmpDists(v) = cands.dists.getDouble(candsIndex)
-      v+=1
-    }
-    // Using system optimized array copy
-    cands.ids.addElements(0, tmpIds, 0, tmpIds.length)
-    cands.dists.addElements(0, tmpDists, 0, tmpDists.length)
-    cands.pointer = k+1
-    /*while(w < k) {
-      cands.nonDistinctAdd(tmpIds(w),tmpDists(w))
-      w+=1
-    }*/
   }
 }
 
@@ -92,8 +59,10 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
   var repetitions:Array[Table[Descriptor]] = _
   var probeGenerator:ProbeScheme[Descriptor] = _
   var hashFunctions:Array[HashFunction[Descriptor]] = _
+
   var rnd:Random = _
   var futures:Array[Future[Any]] = _
+
   var maxCands:Int = _
   var distance:Distance[Descriptor] = _
 
@@ -115,6 +84,8 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
     this.futures = null
     System.gc()
   }
+
+
 
   def buildRepetition(mapRef:Int, dataSize:Int):Boolean = {
     var j = 0
@@ -149,24 +120,30 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
   }
 
   def buildDataSet(filePath:String, n:Int, dim:Int, parserFac: DisaParserFac[Descriptor], dataSetFac:DataSetFac[Descriptor]):Unit = {
-    this.dataSet = dataSetFac(n)
-    val parser = parserFac(filePath, dim)
-    // Loading in dataset
-    println("Loading dataset...")
-    val percentile = n / 100
-    var c = 0
-    while (parser.hasNext) {
-      if (c % percentile == 0) println(c * 100 / n)
-      this.dataSet(c) = parser.next._2
-      c += 1
-    }
+    if(this.lastDataSetDir != filePath) {
+      println("Building Dataset (& Lookupmap)...")
+      this.dataSet = dataSetFac(n)
+      this.idLookupMap = new Array(n)
+      val parser = parserFac(filePath, dim)
+      // Loading in dataset
+      val percentile = n / 100
+      var c = 0
+      while (parser.hasNext) {
+        if (c % percentile == 0) println(c * 100 / n)
+        val next = parser.next
+        this.dataSet(c) = next._2
+        this.idLookupMap(c) = next._1
+        c += 1
+      }
 
-    this.lastDataSetDir = filePath
-    println("done loading dataset...")
+      this.lastDataSetDir = filePath
+      println("Done Building Dataset...")
+    }
   }
 }
 
 trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[Descriptor, Query, FileSet] {
+  var lastLookupMap: String = " "
   var nodes:Array[ActorRef] = _
   var futureResults:Array[Future[Any]] = _  // TODO Cannot use array in .sequence method, ... consider another approach.
   implicit val timeout = Timeout(20.hours)
@@ -188,12 +165,34 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
     while(j < futureResults.length) {
       var bucket = Await.result(futureResults(j), timeout.duration).asInstanceOf[(Array[Int], Array[Double])]
 
-      var l = 0
-      while (l < bucket._1.size) {
-        this.cands+=(bucket._1(l), bucket._2(l))
-        l += 1
+      if(bucket!=null) {
+        j = 0
+        while (j < bucket._1.length) {
+          if(!this.cands.distinct.contains(bucket._1(j))) {
+            this.cands.distinct.add(bucket._1(j))
+            this.cands+=(bucket._1(j), bucket._2(j))
+          }
+          j += 1
+        }
       }
-      j += 1
+    }
+  }
+
+  def buildLookupMap(fileSet:String, n:Int): Unit = {
+    if(this.lastLookupMap != fileSet) {
+      println("Building Lookup Map...")
+      this.idLookupMap = new Array(n)
+      val parser = Source.fromFile(new File(fileSet)).getLines()
+      var j = 0
+      val percentile = n / 100
+      while (parser.hasNext) {
+        if (j % percentile == 0) println(j * 100 / n)
+        // TODO this can be done much faster (dont do split on whole line)
+        this.idLookupMap(j) = parser.next().split(" ").head.toInt
+        j+=1
+      }
+      this.lastLookupMap = fileSet
+      println("Done Building Lookup Map...")
     }
   }
 
@@ -210,8 +209,6 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
 
 class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], String] {
 
-  var idLookupMap:Array[Int] = _
-  var lastLookupMap = " "
   override def query(qp: Array[Float], k:Int): CandSet = {
 
     // Generate probes
@@ -231,7 +228,10 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
       if(bucket!=null) {
         j = 0
         while (j < bucket.size) {
-          this.cands+=(this.idLookupMap(bucket.getInt(j)), this.distance.measure(this.dataSet(bucket.getInt(j)), qp))
+          if(!this.cands.distinct.contains(this.idLookupMap(bucket.getInt(j)))) {
+            this.cands.distinct.add(this.idLookupMap(bucket.getInt(j)))
+            this.cands+=(this.idLookupMap(bucket.getInt(j)), this.distance.measure(this.dataSet(bucket.getInt(j)), qp))
+          }
           c += 1
           j += 1
         }
@@ -261,29 +261,9 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     this.distance = simMeasure
     this.cands = new CandSet(maxCands)
 
-    if(fileSet != this.lastDataSetDir) {
-      this.buildDataSet(fileSet, n, dimensions, parserFac, DataSetFacNumeric)
-    }
+    this.buildDataSet(fileSet, n, dimensions, parserFac, DataSetFacNumeric)
 
-    this.initRepetitions(hfFac,n,functions,dimensions)
-
-    for(i <- 0 until this.repetitions.length)
-      println(this.repetitions(i).count())
-
-
-    if(this.lastLookupMap != fileSet) {
-      println("building lookupMap")
-      this.idLookupMap = new Array(n)
-      val parser = Source.fromFile(new File(fileSet)).getLines()
-      var j = 0
-      while(j < n) {
-        // TODO this can be done much faster (dont do split on whole line)
-        this.idLookupMap(j) = parser.next().split(" ").head.toInt
-        j+=1
-      }
-      this.lastLookupMap = fileSet
-      println("done building lookupmap")
-    }
+    this.initRepetitions(hfFac, n, functions, dimensions)
 
     // Initializing the pgenerator
     this.probeGenerator = pgenerator.toLowerCase match {
@@ -299,8 +279,6 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
 
 class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDistributed[Array[Float], Array[Float], String] {
   this.nodes = repetitions
-  var idLookupMap:Array[Int] = _
-  var lastLookupMap = " "
   override def build(fileSet: String, n: Int, parserFac: DisaParserFac[Array[Float]], internalReps: Int, hfFac: HashFunctionFactory[Array[Float]], pGenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[Array[Float]], seed: Long): Unit = {
 
     this.cands = new CandSet(maxCands)
@@ -311,19 +289,8 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
       statuses += nodes(i) ? InitRepetition(fileSet, n, parserFac, DataSetFacNumeric, internalReps, hfFac, pGenerator, maxCands/nodes.length, functions, dimensions, simMeasure, seed)
       i += 1
     }
-    if(this.lastLookupMap != fileSet) {
-      println("building lookupMap")
-      this.idLookupMap = new Array(n)
-      val parser = Source.fromFile(new File(fileSet)).getLines()
-      var j = 0
-      while(j < n) {
-        // TODO this can be done much faster (dont do split on whole line)
-        this.idLookupMap(j) = parser.next().split(" ").head.toInt
-        j+=1
-      }
-      this.lastLookupMap = fileSet
-      println("done building lookupmap")
-    }
+
+    this.buildLookupMap(fileSet, n)
 
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     println("Done building all repetitions!")
@@ -338,6 +305,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
       cands<=QuickSelect.selectKthDist(cands.dists, k-1, cands.size)
       var i = 0
       while(i < cands.size) {
+        // Adding the correct ids
         cands.ids.set(i, this.idLookupMap(cands.ids.getInt(i)))
         i+=1
       }
@@ -345,6 +313,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     } else {
       var j = 0
       while(j < cands.size) {
+        // Adding the correct ids
         cands.ids.set(j, this.idLookupMap(cands.ids.getInt(j)))
         j+=1
       }
@@ -355,7 +324,6 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
 class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[util.BitSet, (util.BitSet, Array[Float], Int),  (String, String)] {
 
   this.nodes = repetitions
-  var lastEucDataSet = " "
   this.pq = new mutable.PriorityQueue[Int]
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[util.BitSet], internalReps: Int, hfFac: HashFunctionFactory[util.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[util.BitSet], seed: Long): Unit = {
@@ -369,17 +337,14 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
       i += 1
     }
 
-    if(this.lastEucDataSet != fileSet._2) {
-      println("loading internal euclidean dataset...")
-      this.eucDataSet = DisaParserFacNumeric(fileSet._2,dimensions).toArray
-      this.lastEucDataSet = fileSet._2
-    }
+    this.buildEucDataSet(fileSet._2, n, dimensions)
+
+    this.buildLookupMap(fileSet._1, n)
 
     val res = Await.result(Future.sequence(statuses), timeout.duration).asInstanceOf[ArrayBuffer[Boolean]]
     println("Done building all repetitions!")
     System.gc()
   }
-
 
   override def query(qp: (util.BitSet, Array[Float], Int), k: Int): CandSet = {
     this.cands.reset
@@ -388,7 +353,7 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
     this.getCands(qp._1, qp._3)
 
     // Search euclidean space (with knn size set)
-    this.knn(this.cands, qp._2, {
+    Tools.knn(this.cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, {
       if (cands.size < k) cands.size
       else k
     })
@@ -397,8 +362,6 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
 }
 
 class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.BitSet, Array[Float], Int), (String, String)] {
-  var lastEucDataSetDir:String = " "
-
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[util.BitSet], internalReps: Int, hfFac: HashFunctionFactory[util.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[util.BitSet], seed: Long): Unit = {
     this.clear()
     this.pq = null
@@ -412,16 +375,8 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
     this.maxCands = maxCands
     this.distance = simMeasure
 
-    if(fileSet._1 != this.lastDataSetDir) {
-      this.buildDataSet(fileSet._1, n, dimensions, parserFac, DataSetBitSet)
-    }
-
-    if(fileSet._2 != this.lastEucDataSetDir) {
-      println("Loading euc dataset!")
-      this.eucDataSet = DisaParserFacNumeric(fileSet._2, 128).toArray
-      this.lastEucDataSetDir = fileSet._2
-    }
-
+    this.buildDataSet(fileSet._1, n, dimensions, parserFac, DataSetBitSet)
+    this.buildEucDataSet(fileSet._2, n, dimensions)
     this.initRepetitions(hfFac,n,functions,dimensions)
 
     // Initializing the pgenerator
@@ -451,7 +406,10 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
       if(bucket!=null) {
         j = 0
         while (j < bucket.size) {
-          this.cands+=(bucket.getInt(j), this.distance.measure(this.dataSet(bucket.getInt(j)), qp._1))
+          if(!this.cands.distinct.contains(bucket.getInt(j))) {
+            this.cands.distinct.add(bucket.getInt(j))
+            this.cands+=(bucket.getInt(j), this.distance.measure(this.dataSet(bucket.getInt(j)), qp._1))
+          }
           c += 1
           j += 1
         }
@@ -461,10 +419,10 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
     // Search euclidean space (with knn size set)
     if(cands.size > qp._3) {
       cands<=QuickSelect.selectKthDist(cands.dists, qp._3-1, cands.size-1)
-      this.knn(cands, qp._2, k)
+      Tools.knn(cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, k)
       this.cands
     } else {
-      this.knn(cands, qp._2, {
+      Tools.knn(cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, {
         if(cands.size < k) cands.size
         else k
       })

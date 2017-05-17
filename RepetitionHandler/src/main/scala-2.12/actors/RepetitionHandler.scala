@@ -38,6 +38,7 @@ class RepetitionHandler[A] extends Actor {
   private var parserFact:DisaParserFac[A] = _
   private var dsf:DataSetFac[A] = _
   private var cands:CandSet = _
+  private var resultSet:(Array[Int],Array[Double]) = _
 
   // Reusable array for hashed keys (query)
   private var keys:Array[(Int,Long)] = _
@@ -57,6 +58,7 @@ class RepetitionHandler[A] extends Actor {
       this.parserFact = null
       this.dsf = null
       this.cands = null
+      this.resultSet = null
 
       this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.hfFac = hashFunctionFac.asInstanceOf[HashFunctionFactory[A]]
@@ -120,6 +122,7 @@ class RepetitionHandler[A] extends Actor {
 
 
     case Query(qp, k) => // Returns CandSet of indexes and dists' from q
+      if(this.resultSet._1.length != k) this.resultSet = Tuple2(new Array(k), new Array(k))
       this.cands.reset
       // Generate probes
       this.probeGenerator.generate(qp.asInstanceOf[A])
@@ -131,39 +134,30 @@ class RepetitionHandler[A] extends Actor {
       // Collect cands
       while (this.probeGenerator.hasNext() && c <= this.maxCands) {
         nextBucket = this.probeGenerator.next()
-        var bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
+        val bucket = this.repetitions(nextBucket._1).query(nextBucket._2)
         if(bucket!=null) {
           j = 0
           while (j < bucket.size) {
             // Storing index of descriptor and dist from qp
-            this.cands += (bucket.getInt(j), this.simMeasure.measure(this.dataSet(bucket.getInt(j)), qp.asInstanceOf[A]))
-            c += 1
+            if (!this.cands.distinct.contains(bucket.getInt(j))) {
+              this.cands.distinct.add(bucket.getInt(j))
+              this.cands += (bucket.getInt(j), this.simMeasure.measure(this.dataSet(bucket.getInt(j)), qp.asInstanceOf[A]))
+            }
             j += 1
           }
         }
       }
 
-      val result = Tuple2(new Array[Int](k), new Array[Double](k))
-
       sender ! {
         if(cands.size > k) {
           cands<=QuickSelect.selectKthDist(cands.dists, k-1, cands.size-1)
-          cands.take(k)
-          var l = 0
-          while(l < cands.size) {
-            result._1(l) = cands.ids.getInt(l)
-            result._2(l) = cands.dists.getDouble(l)
-            l+=1
-          }
-          result
+          cands.ids.getElements(0, resultSet._1, 0, k)
+          cands.dists.getElements(0, resultSet._2, 0, k)
+          this.resultSet
         } else {
-          var l = 0
-          while(l < cands.size) {
-            result._1(l) = cands.ids.getInt(l)
-            result._2(l) = cands.dists.getDouble(l)
-            l+=1
-          }
-          result
+          cands.ids.getElements(0, resultSet._1, 0, k)
+          cands.dists.getElements(0, resultSet._2, 0, k)
+          this.resultSet
         }
       }
 

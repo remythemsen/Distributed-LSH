@@ -13,26 +13,12 @@ class CandSet(maxCands:Int) {
   def size:Int = this.pointer-1
 
   def +=(id:Int, dist:Double) = {
-    if(!this.distinct.contains(id)) {
-      this.distinct.add(id)
-      if(this.ids.size < this.pointer) {
-        this.ids.add(id)
-        this.dists.add(dist)
-      } else {
-        this.ids.set(this.pointer-1,id)
-        this.dists.set(this.pointer-1,dist)
-      }
-      this.pointer+=1
-    }
-  }
-
-  def nonDistinctAdd(id:Int, dist:Double) : Unit = {
-    if(this.ids.size() < this.pointer) {
+    if(this.ids.size < this.pointer) {
       this.ids.add(id)
       this.dists.add(dist)
     } else {
-      this.ids.set(this.pointer-1, id)
-      this.dists.set(this.pointer-1, dist)
+      this.ids.set(this.pointer-1,id)
+      this.dists.set(this.pointer-1,dist)
     }
     this.pointer+=1
   }
@@ -43,7 +29,7 @@ class CandSet(maxCands:Int) {
     this.softReset
     while(i < tmpPointer) {
       if(dists.getDouble(i) <= dist) {
-        this.nonDistinctAdd(this.ids.getInt(i), this.dists.getDouble(i))
+        this.+=(this.ids.getInt(i), this.dists.getDouble(i))
       }
       i+=1
     }
