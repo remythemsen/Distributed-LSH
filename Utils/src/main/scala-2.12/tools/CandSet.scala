@@ -8,38 +8,38 @@ class CandSet(maxCands:Int) {
   var ids:IntArrayList = new IntArrayList(maxCands)
   var dists:DoubleArrayList = new DoubleArrayList(maxCands)
   var distinct:IntOpenHashSet = new IntOpenHashSet(maxCands)
-  var pointer:Int = 0
+  private var pointer:Int = 1
 
-  def size:Int = this.pointer
+  def size:Int = this.pointer-1
 
   def +=(id:Int, dist:Double) = {
     if(!this.distinct.contains(id)) {
       this.distinct.add(id)
-      if(this.ids.size <= this.pointer) {
+      if(this.ids.size < this.pointer) {
         this.ids.add(id)
         this.dists.add(dist)
       } else {
-        this.ids.set(this.pointer,id)
-        this.dists.set(this.pointer,dist)
+        this.ids.set(this.pointer-1,id)
+        this.dists.set(this.pointer-1,dist)
       }
       this.pointer+=1
     }
   }
 
   def nonDistinctAdd(id:Int, dist:Double) : Unit = {
-    if(this.pointer == this.ids.size) {
-      this.ids.set(this.pointer, id)
-      this.dists.set(this.pointer, dist)
-    } else {
+    if(this.ids.size() < this.pointer) {
       this.ids.add(id)
       this.dists.add(dist)
+    } else {
+      this.ids.set(this.pointer-1, id)
+      this.dists.set(this.pointer-1, dist)
     }
     this.pointer+=1
   }
 
   def <=(dist:Double):Unit = {
     var i = 0
-    var tmpPointer = this.pointer
+    var tmpPointer = this.pointer - 1
     this.softReset
     while(i < tmpPointer) {
       if(dists.getDouble(i) <= dist) {
@@ -50,13 +50,13 @@ class CandSet(maxCands:Int) {
   }
 
   def take(n:Int):Unit = {
-    if(this.size > n) this.pointer = n-1
+    if(this.size > n) this.pointer = n+1
   }
 
-  def softReset:Unit = this.pointer = 0
+  def softReset:Unit = this.pointer = 1
   def reset:Unit = {
     this.distinct.clear()
-    this.pointer = 0
+    this.pointer = 1
   }
 
 

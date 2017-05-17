@@ -66,9 +66,18 @@ trait Binary {
 
     // resetting counter of cands to make sure we only consider k from this point
     cands.softReset
+    val tmpIds = new Array[Int](k)
+    val tmpDists = new Array[Double](k)
+    var v,w,candsIndex = 0
     while(pq.nonEmpty) {
-      val candsIndex = pq.dequeue()
-      cands.nonDistinctAdd(this.eucDataSet(cands.ids.getInt(candsIndex))._1, cands.dists.getDouble(candsIndex))
+      candsIndex = pq.dequeue()
+      tmpIds(v) = this.eucDataSet(cands.ids.getInt(candsIndex))._1
+      tmpDists(v) = cands.dists.getDouble(candsIndex)
+      v+=1
+    }
+    while(w < k) {
+      cands.nonDistinctAdd(tmpIds(w),tmpDists(w))
+      w+=1
     }
   }
 }
@@ -314,6 +323,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
   }
 
   override def query(qp: Array[Float], k: Int): CandSet = {
+    this.cands.reset
     getCands(qp, k)
 
     if(this.cands.size > k) {
@@ -364,7 +374,7 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
 
 
   override def query(qp: (util.BitSet, Array[Float], Int), k: Int): CandSet = {
-
+    this.cands.reset
     // Search euclidean space (this will return k results)
     // calling getCands with qp,qp._3 will return specified 'knnmax' value for knn to linear scan over
     this.getCands(qp._1, qp._3)
@@ -417,6 +427,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
 
   override def query(qp: (util.BitSet, Array[Float], Int), k: Int): CandSet = {
 
+    this.cands.reset
     // Generate probes
     this.probeGenerator.generate(qp._1)
     var nextBucket: (Int, Long) = null
@@ -451,7 +462,6 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
       })
       this.cands
     }
-
   }
 }
 

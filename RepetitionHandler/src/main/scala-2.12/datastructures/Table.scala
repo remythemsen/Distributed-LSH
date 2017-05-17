@@ -21,7 +21,7 @@ class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
     val key = hf(dataSetRef(v))
     // TODO remove this branch if possible
     if(!this.table.contains(key)) {
-      this.table.put(key, new IntArrayList())
+      this.table.put(key, new IntArrayList(0))
     }
     this.table(key).add(v)
   }
