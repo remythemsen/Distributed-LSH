@@ -12,6 +12,10 @@ class Table[A](hashFunction: HashFunction[A], dSetRef:Array[A]) {
   // internal Hash function
   private val hf = hashFunction
 
+  def count():Int = {
+    this.table.size
+  }
+
   /**
     * Insert vector
     * @param v vector reference to be inserted into internal hashmap

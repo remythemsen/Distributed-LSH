@@ -75,10 +75,14 @@ trait Binary {
       tmpDists(v) = cands.dists.getDouble(candsIndex)
       v+=1
     }
-    while(w < k) {
+    // Using system optimized array copy
+    cands.ids.addElements(0, tmpIds, 0, tmpIds.length)
+    cands.dists.addElements(0, tmpDists, 0, tmpDists.length)
+    cands.pointer = k+1
+    /*while(w < k) {
       cands.nonDistinctAdd(tmpIds(w),tmpDists(w))
       w+=1
-    }
+    }*/
   }
 }
 
@@ -262,6 +266,10 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     }
 
     this.initRepetitions(hfFac,n,functions,dimensions)
+
+    for(i <- 0 until this.repetitions.length)
+      println(this.repetitions(i).count())
+
 
     if(this.lastLookupMap != fileSet) {
       println("building lookupMap")

@@ -8,7 +8,7 @@ class CandSet(maxCands:Int) {
   var ids:IntArrayList = new IntArrayList(maxCands)
   var dists:DoubleArrayList = new DoubleArrayList(maxCands)
   var distinct:IntOpenHashSet = new IntOpenHashSet(maxCands)
-  private var pointer:Int = 1
+  var pointer:Int = 1
 
   def size:Int = this.pointer-1
 
