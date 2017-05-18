@@ -1,14 +1,13 @@
 package tools
 
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList
-
 /**
   * Heavily inspired from
   * http://blog.teamleadnet.com/2012/07/quick-select-algorithm-find-kth-element.html
   *
   */
 object QuickSelect {
-  def selectKthDist(data:DoubleArrayList, k:Int, until:Int):Double = {
+  def selectKthDist(data:CandSet, k:Int, until:Int):Double = {
+
     var from = 0
     var to = until
 
@@ -16,14 +15,17 @@ object QuickSelect {
     while (from < to) {
       var r = from
       var w = to
-      var pivot = data.getDouble((r + w) / 2)
+      var pivot = data.dists.getDouble((r + w) / 2)
 
       // stop run if r and w meets
       while (r < w) {
-        if (data.getDouble(r) >= pivot) {
-          var tmp = data.getDouble(w)
-          data.set(w, data.getDouble(r))
-          data.set(r, tmp)
+        if (data.dists.getDouble(r) >= pivot) {
+          var tmpDist = data.dists.getDouble(w)
+          var tmpId = data.ids.getInt(w)
+          data.dists.set(w, data.dists.getDouble(r))
+          data.ids.set(w, data.ids.getInt(r))
+          data.dists.set(r, tmpDist)
+          data.ids.set(r, tmpId)
           w -= 1
         } else {
           r += 1
@@ -31,7 +33,7 @@ object QuickSelect {
       }
 
       // if r is incremented then we need to decrement one
-      if (data.getDouble(r) > pivot) {
+      if (data.dists.getDouble(r) > pivot) {
         r -= 1
       }
 
@@ -41,6 +43,6 @@ object QuickSelect {
         from = r + 1
       }
     }
-    data.getDouble(k)
+    data.dists.getDouble(k)
   }
 }

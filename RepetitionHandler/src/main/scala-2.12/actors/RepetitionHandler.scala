@@ -10,7 +10,7 @@ import hashfunctions.{BitHash, HashFunction, Hyperplane}
 import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import measures.Distance
 import messages._
-import multiprobing.{PQ, ProbeScheme, TwoStep}
+import multiprobing.{PQ, PQ2, ProbeScheme, TwoStep}
 import tools.{CandSet, QuickSelect}
 
 import scala.collection.mutable
@@ -108,6 +108,7 @@ class RepetitionHandler[A] extends Actor {
       // Initializing the pgenerator
       this.probeGenerator = probeScheme.toLowerCase match {
         case "pq" => new PQ(functions, this.hashFunctions)
+        case "pq2" => new PQ2(functions, this.hashFunctions)
         case "twostep" => new TwoStep(functions, this.hashFunctions)
         case _ => throw new Exception("unknown probescheme")
       }
@@ -150,7 +151,7 @@ class RepetitionHandler[A] extends Actor {
 
       sender ! {
         if(cands.size > k) {
-          cands<=QuickSelect.selectKthDist(cands.dists, k-1, cands.size-1)
+          cands<=QuickSelect.selectKthDist(cands, k-1, cands.size-1)
           cands.ids.getElements(0, resultSet._1, 0, k)
           cands.dists.getElements(0, resultSet._2, 0, k)
           this.resultSet

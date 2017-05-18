@@ -2,22 +2,26 @@ package lsh
 
 import java.io.File
 import java.util
+
 import actors._
 import akka.actor.ActorRef
 import measures.Distance
 import messages.{InitRepetition, Query, Stop}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import akka.util.Timeout
+
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
 import datastructures.Table
 import hashfunctions.HashFunction
 import io.Parser.DisaParserNumeric
-import multiprobing.{PQ, ProbeScheme, TwoStep}
+import multiprobing.{PQ, PQ2, ProbeScheme, TwoStep}
 import tools.{CandSet, QuickSelect, Tools}
+
 import scala.io.Source
 import scala.util.Random
 
@@ -219,7 +223,6 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     // Contains pointers to the dataset
 
     var j, c = 0
-    var index = 0
 
     // Collect cands
     while (this.probeGenerator.hasNext() && c <= this.maxCands) {
@@ -239,7 +242,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     }
 
     if(cands.size > k) {
-      cands<=QuickSelect.selectKthDist(this.cands.dists, k-1, cands.size-1)
+      cands<=QuickSelect.selectKthDist(this.cands, k-1, cands.size-1)
       cands.take(k)
       cands
     } else {
@@ -268,6 +271,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     // Initializing the pgenerator
     this.probeGenerator = pgenerator.toLowerCase match {
       case "pq" => new PQ(functions, this.hashFunctions)
+      case "pq2" => new PQ2(functions, this.hashFunctions)
       case "twostep" => new TwoStep(functions, this.hashFunctions)
       case _ => throw new Exception("unknown probescheme")
     }
@@ -302,7 +306,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     getCands(qp, k)
 
     if(this.cands.size > k) {
-      cands<=QuickSelect.selectKthDist(cands.dists, k-1, cands.size)
+      cands<=QuickSelect.selectKthDist(cands, k-1, cands.size)
       var i = 0
       while(i < cands.size) {
         // Adding the correct ids
@@ -418,7 +422,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
 
     // Search euclidean space (with knn size set)
     if(cands.size > qp._3) {
-      cands<=QuickSelect.selectKthDist(cands.dists, qp._3-1, cands.size-1)
+      cands<=QuickSelect.selectKthDist(cands, qp._3-1, cands.size-1)
       Tools.knn(cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, k)
       this.cands
     } else {

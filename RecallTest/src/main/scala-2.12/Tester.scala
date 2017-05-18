@@ -290,6 +290,7 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
 
     val ps = testCase.probeScheme.toLowerCase match {
       case "pq" => throw new Exception("PQ cannot be used with bitsets")
+      case "pq2" => throw new Exception("PQ2 cannot be used with bitsets")
       case "twostep" => "twostep"
       case _ => throw new Exception("Unkown probescheme!")
     }
@@ -342,7 +343,9 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
     }
 
     val ps = testCase.probeScheme.toLowerCase match {
+
       case "pq" => throw new Exception("PQ cannot be used with bitsets")
+      case "pq2" => throw new Exception("PQ2 cannot be used with bitsets")
       case "twostep" => "twostep"
       case _ => throw new Exception("Unkown probescheme!")
     }
