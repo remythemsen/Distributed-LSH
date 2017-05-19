@@ -67,7 +67,7 @@ trait Tester[Descriptor, Query, FileSet] {
       queryTimes += invocationTimes.sum / invocationCount
 
       // Sqrt here since it's not in euclidean measure
-      if(this.testCase.measure.toLowerCase == "euclidean") {
+      if(this.testCase.measure.toLowerCase == "euclidean" || this.testCase.measure.toLowerCase == "hamming") {
         var j = 0
         while(j < annSet.size) {
           this.annSet.dists.set(j, Math.sqrt(annSet.dists.getDouble(j)))
