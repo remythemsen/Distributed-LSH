@@ -38,7 +38,7 @@ class RepetitionHandler[A] extends Actor {
   private var parserFact:DisaParserFac[A] = _
   private var dsf:DataSetFac[A] = _
   private var cands:CandSet = _
-  private var resultSet:(Array[Int],Array[Double]) = (new Array(50), new Array(50))
+  private var resultSet:(Array[Int],Array[Double]) = _
 
   // Reusable array for hashed keys (query)
   private var keys:Array[(Int,Long)] = _
@@ -60,6 +60,7 @@ class RepetitionHandler[A] extends Actor {
       this.cands = null
       this.resultSet = null
 
+      this.resultSet = (new Array(50), new Array(50))
       this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.hfFac = hashFunctionFac.asInstanceOf[HashFunctionFactory[A]]
       this.maxCands = qMaxCands
