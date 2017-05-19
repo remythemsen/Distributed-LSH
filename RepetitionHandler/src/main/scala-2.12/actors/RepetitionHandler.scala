@@ -38,7 +38,7 @@ class RepetitionHandler[A] extends Actor {
   private var parserFact:DisaParserFac[A] = _
   private var dsf:DataSetFac[A] = _
   private var cands:CandSet = _
-  private var resultSet:(Array[Int],Array[Double]) = _
+  private var resultSet:(Array[Int],Array[Double]) = (new Array(50), new Array(50))
 
   // Reusable array for hashed keys (query)
   private var keys:Array[(Int,Long)] = _
