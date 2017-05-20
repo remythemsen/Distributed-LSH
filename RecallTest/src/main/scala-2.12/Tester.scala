@@ -56,6 +56,8 @@ trait Tester[Descriptor, Query, FileSet] {
       // Time Test, every query is made 5 times
       var invocationTimes:Array[Double] = new Array(invocationCount)
       var l = 0
+
+
       while(l < invocationCount) {
         invocationTimes(l) = timer {
           annSet = lsh.query(qp._2,this.testCase.knn)

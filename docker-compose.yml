@@ -18,11 +18,11 @@ services:
 
   recalltest:
     image: remeeh/recalltest:latest
-    command: --data data/ps-256-tiny.data --dataeuc data/profiset-128-float-tiny.data --size 500000 --setup distributed --dimensions 256 --dataType binary --nodesAddresses data/ips --testCases data/testcases-bin --invocationCount 10 --warmUpIterations 1000 --out data/out --seed 1283798324
+    #command: --data data/ps-256-tiny.data --dataeuc data/profiset-128-float-tiny.data --size 500000 --setup distributed --dimensions 256 --dataType binary --nodesAddresses data/ips --testCases data/testcases-bin --invocationCount 1 --warmUpIterations 1 --out data/out --seed 1283798324
     #command: --data data/0/descriptors-1-million-reduced-128-hamming-256bit.data --dataeuc data/0/descriptors-1-million-reduced-128-normalized.data --size 1008263 --setup single --dimensions 256 --dataType binary --nodesAddresses data/0/ips --testCases data/0/testcases-norm-bin-single --invocationCount 10 --warmUpIterations 1000 --out data/0/out --seed 1283798324
     #command: --data data/0/descriptors-1-million-reduced-128-normalized.data --dataeuc data/0/descriptors-1-million-reduced-128-normalized.data --size 1008263 --setup distributed --dimensions 128 --dataType numeric --nodesAddresses data/0/ips --testCases data/0/testcases-norm-euc --invocationCount 10 --warmUpIterations 1000 --out data/0/out --seed 1283798324
     #command: --data data/0/descriptors-1-million-reduced-128-normalized.data --dataeuc data/0/descriptors-1-million-reduced-128-normalized.data --size 1008263 --setup single --dimensions 128 --dataType numeric --nodesAddresses data/0/ips --testCases data/0/testcases-norm-euc-single --invocationCount 10 --warmUpIterations 1000 --out data/0/out --seed 1283798324
-    #command: --data data/0/descriptors-1-million-reduced-128.data --dataeuc data/0/descriptors-1-million-reduced-128.data --size 1008263 --setup distributed--dimensions 128 --dataType numeric --nodesAddresses data/0/ips --testCases data/0/testcases-euc --invocationCount 10 --warmUpIterations 10 --out data/0/out --seed 1283798324
+    command: --data data/profiset-128-float-tiny.data --dataeuc data/profiset-128-float-tiny.data --size 500000 --setup distributed --dimensions 128 --dataType numeric --nodesAddresses data/ips --testCases data/testcases-euc --invocationCount 10 --warmUpIterations 10 --out data/out --seed 1283798324
     volumes:
      - /home/remeeh/IdeaProjects/Distributed-LSH/data/:/opt/docker/data
     links:

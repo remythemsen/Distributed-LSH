@@ -57,6 +57,7 @@ object Tools {
   def knn(cands:CandSet, eucDataSet:Array[Array[Float]], lookUpMap:Array[Int], pq:mutable.PriorityQueue[Int], qp:Array[Float], k:Int) : Unit = {
     // Assuming that cands has size >= k
 
+    PQOrd.dists = null
     PQOrd.dists = cands.dists
 
     var l = 0

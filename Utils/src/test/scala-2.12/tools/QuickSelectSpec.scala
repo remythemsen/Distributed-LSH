@@ -30,10 +30,10 @@ class QuickSelectSpec extends FlatSpec with Matchers {
     v.+=(3,3.1)
     v.+=(2,4.2)
     v.+=(1,0.001)
-    assert(QuickSelect.selectKthDist(v, 0, v.size-1) == 0.001)
-    assert(QuickSelect.selectKthDist(v, 1, v.size-1) == 3.0)
-    assert(QuickSelect.selectKthDist(v, 2, v.size-1) == 3.1)
-    assert(QuickSelect.selectKthDist(v, 3, v.size-1) == 4.2)
+    assert(new QuickSelect().selectKthDist(v, 0, v.size-1) == 0.001)
+    assert(new QuickSelect().selectKthDist(v, 1, v.size-1) == 3.0)
+    assert(new QuickSelect().selectKthDist(v, 2, v.size-1) == 3.1)
+    assert(new QuickSelect().selectKthDist(v, 3, v.size-1) == 4.2)
   }
 
   "quick select" should "never on random inputs crash" in {
@@ -44,7 +44,7 @@ class QuickSelectSpec extends FlatSpec with Matchers {
       for(j <- 0 until 250) {
         cands+=(rnd.nextInt(),rnd.nextDouble())
       }
-      QuickSelect.selectKthDist(cands, rnd.nextInt(250), 249)
+      new QuickSelect().selectKthDist(cands, rnd.nextInt(250), 249)
       assert(1 == 1)
     }
   }
@@ -58,9 +58,9 @@ class QuickSelectSpec extends FlatSpec with Matchers {
       cands.+=(rnd.nextInt(), j.toDouble)
     }
 
-    val r = QuickSelect.selectKthDist(cands, 123, cands.size-1)
+    val r = new QuickSelect().selectKthDist(cands, 123, cands.size-1)
     assert(r == 123.0)
-    val z = QuickSelect.selectKthDist(cands, 0, cands.size-1)
+    val z = new QuickSelect().selectKthDist(cands, 0, cands.size-1)
     assert(z == 0.0)
   }
 

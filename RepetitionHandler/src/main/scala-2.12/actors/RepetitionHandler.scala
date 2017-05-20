@@ -27,6 +27,7 @@ class RepetitionHandler[A] extends Actor {
   private var repetitions:Array[Table[A]] = _
   private var simMeasure:Distance[A] = _
   private var hfFac:HashFunctionFactory[A] = _
+  private var qs:QuickSelect = _
 
   // Internal lookup map for vectors in datastructure
   private var dataSet:Array[A] = _
@@ -59,7 +60,8 @@ class RepetitionHandler[A] extends Actor {
       this.dsf = null
       this.cands = null
       this.resultSet = null
-
+      this.qs = null
+      this.qs = new QuickSelect()
       this.resultSet = (new Array(50), new Array(50))
       this.simMeasure = distance.asInstanceOf[Distance[A]]
       this.hfFac = hashFunctionFac.asInstanceOf[HashFunctionFactory[A]]
@@ -124,7 +126,9 @@ class RepetitionHandler[A] extends Actor {
 
 
     case Query(qp, k) => // Returns CandSet of indexes and dists' from q
-      if(this.resultSet._1.length != k) this.resultSet = Tuple2(new Array(k), new Array(k))
+      if(this.resultSet._1.length != k) {
+        this.resultSet = Tuple2(new Array(k), new Array(k))
+      }
       this.cands.reset
       // Generate probes
       this.probeGenerator.generate(qp.asInstanceOf[A])
@@ -152,7 +156,7 @@ class RepetitionHandler[A] extends Actor {
 
       sender ! {
         if(cands.size > k) {
-          cands<=QuickSelect.selectKthDist(cands, k-1, cands.size-1)
+          cands<=this.qs.selectKthDist(cands, k-1, cands.size-1)
           cands.ids.getElements(0, resultSet._1, 0, k)
           cands.dists.getElements(0, resultSet._2, 0, k)
           this.resultSet
@@ -172,6 +176,7 @@ class RepetitionHandler[A] extends Actor {
       println("System terminated")
   }
 
+  var c = 0
 
   def buildRepetition(mapRef:Int, dataSize:Int):Boolean = {
     var j = 0

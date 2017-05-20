@@ -20,6 +20,7 @@ import datastructures.Table
 import hashfunctions.HashFunction
 import io.Parser.DisaParserNumeric
 import multiprobing.{PQ, PQ2, ProbeScheme, TwoStep}
+import tools.Tools.PQOrd
 import tools.{CandSet, QuickSelect, Tools}
 
 import scala.io.Source
@@ -31,6 +32,7 @@ trait LSHStructure[Descriptor, Query, FileSet] {
   def query(qp:Query, k:Int) : CandSet
   var cands:CandSet = _
   var idLookupMap:Array[Int] = _
+  var qs:QuickSelect = _
 }
 
 trait Binary {
@@ -71,6 +73,8 @@ trait LSHStructureSingle[Descriptor, Query, FileSet] extends LSHStructure[Descri
   var distance:Distance[Descriptor] = _
 
   def clear():Unit = {
+    PQOrd.dists = null
+    this.qs = null
     if(this.repetitions != null) {
       for(i <- this.repetitions.indices) {
         this.repetitions(i).clear
@@ -220,6 +224,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     var nextBucket: (Int, Long) = null
     this.cands.reset
 
+
     // Contains pointers to the dataset
 
     var j, c = 0
@@ -242,7 +247,7 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     }
 
     if(cands.size > k) {
-      cands<=QuickSelect.selectKthDist(this.cands, k-1, cands.size-1)
+      cands<=this.qs.selectKthDist(this.cands, k-1, cands.size-1)
       cands.take(k)
       cands
     } else {
@@ -262,7 +267,9 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
     this.futures = new Array(internalReps)
     this.maxCands = maxCands
     this.distance = simMeasure
+    this.cands = null
     this.cands = new CandSet(maxCands)
+    this.qs = new QuickSelect()
 
     this.buildDataSet(fileSet, n, dimensions, parserFac, DataSetFacNumeric)
 
@@ -284,9 +291,12 @@ class LSHNumericSingle extends LSHStructureSingle[Array[Float], Array[Float], St
 class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDistributed[Array[Float], Array[Float], String] {
   this.nodes = repetitions
   override def build(fileSet: String, n: Int, parserFac: DisaParserFac[Array[Float]], internalReps: Int, hfFac: HashFunctionFactory[Array[Float]], pGenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[Array[Float]], seed: Long): Unit = {
-
+    PQOrd.dists = null
+    this.qs = null
+    this.cands = null
     this.cands = new CandSet(maxCands)
     this.futureResults = new Array(nodes.length)
+    this.qs = new QuickSelect()
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(nodes.length)
     var i = 0
     while(i < nodes.length) {
@@ -306,7 +316,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     getCands(qp, k)
 
     if(this.cands.size > k) {
-      cands<=QuickSelect.selectKthDist(cands, k-1, cands.size)
+      cands<=this.qs.selectKthDist(cands, k-1, cands.size)
       var i = 0
       while(i < cands.size) {
         // Adding the correct ids
@@ -328,11 +338,17 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
 class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[util.BitSet, (util.BitSet, Array[Float], Int),  (String, String)] {
 
   this.nodes = repetitions
-  this.pq = new mutable.PriorityQueue[Int]
 
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[util.BitSet], internalReps: Int, hfFac: HashFunctionFactory[util.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[util.BitSet], seed: Long): Unit = {
+    this.qs = null
+    this.cands = null
+    this.pq = null
+    PQOrd.dists = null
+    this.futureResults = null
+    this.qs = new QuickSelect()
     this.futureResults = new Array(nodes.length)
     this.cands = new CandSet(maxCands)
+    this.pq = new mutable.PriorityQueue[Int]()(PQOrd)
 
     val statuses:ArrayBuffer[Future[Any]] = new ArrayBuffer(nodes.length)
     var i = 0
@@ -369,8 +385,11 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
   override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[util.BitSet], internalReps: Int, hfFac: HashFunctionFactory[util.BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[util.BitSet], seed: Long): Unit = {
     this.clear()
     this.pq = null
+    this.cands = null
+    PQOrd.dists = null
+    this.qs = new QuickSelect()
     this.rnd = new Random(seed)
-    this.pq = new mutable.PriorityQueue[Int]
+    this.pq = new mutable.PriorityQueue[Int]()(PQOrd)
     this.cands = new CandSet(maxCands)
 
     this.hashFunctions = new Array(internalReps)
@@ -422,7 +441,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
 
     // Search euclidean space (with knn size set)
     if(cands.size > qp._3) {
-      cands<=QuickSelect.selectKthDist(cands, qp._3-1, cands.size-1)
+      cands<=this.qs.selectKthDist(cands, qp._3-1, cands.size-1)
       Tools.knn(cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, k)
       this.cands
     } else {

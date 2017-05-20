@@ -5,7 +5,7 @@ package tools
   * http://blog.teamleadnet.com/2012/07/quick-select-algorithm-find-kth-element.html
   *
   */
-object QuickSelect {
+class QuickSelect {
   def selectKthDist(data:CandSet, k:Int, until:Int):Double = {
 
     var from = 0
