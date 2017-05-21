@@ -39,8 +39,8 @@ trait Tester[Descriptor, Query, FileSet] {
   def runQueries(invocationCount:Int):((Double,Double,Double),(Double,Double,Double), Double, Double) = {
     println("Running queries...")
     // Test result containers
-    val queryTimes:ArrayBuffer[Double] = ArrayBuffer()
-    val queryRecalls:(ArrayBuffer[Double], ArrayBuffer[Double], ArrayBuffer[Double]) = (new ArrayBuffer, new ArrayBuffer, new ArrayBuffer)
+    val queryTimes:ArrayBuffer[Double] = new ArrayBuffer()
+    val queryRecalls = Tuple3(new ArrayBuffer[Double](), new ArrayBuffer[Double](), new ArrayBuffer[Double]())
 
     // Run queries
     var j = 0
@@ -56,7 +56,6 @@ trait Tester[Descriptor, Query, FileSet] {
       // Time Test, every query is made 5 times
       var invocationTimes:Array[Double] = new Array(invocationCount)
       var l = 0
-
 
       while(l < invocationCount) {
         invocationTimes(l) = timer {
@@ -115,13 +114,13 @@ trait Tester[Descriptor, Query, FileSet] {
   def average(sum:Double, length:Int) : Double = {
     sum / length
   }
-  def average(seq:Seq[Double]) : Double = {
-    seq.sum / seq.length
+  def average(seq:ArrayBuffer[Double]) : Double = {
+    seq.sum / seq.size
   }
-  def stdDeviation(seq:Seq[Double]) : Double = {
+  def stdDeviation(seq:ArrayBuffer[Double]) : Double = {
     Math.sqrt(variance(seq))
   }
-  def variance(seq: Seq[Double]) : Double = {
+  def variance(seq: ArrayBuffer[Double]) : Double = {
     val avg = average(seq)
     seq.map(x => math.pow(x - avg, 2)).sum / seq.length
   }
@@ -147,6 +146,7 @@ trait Tester[Descriptor, Query, FileSet] {
       })
       map.put(key.toInt, nearestNeighbors)
     }
+
     map
   }
 }
@@ -259,6 +259,7 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
   this.lsh = new LSHBinaryDistributed(this.getNodes(nodes))
   var lastQueriesDir = " "
   var lastKnnDir = " "
+  var lastKnnMax = -1
 
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
@@ -269,8 +270,8 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
     }
 
     // Get queries, keep last set if fileDir is the same
-    if(!testCase.queriesDir.equals(lastQueriesDir)) {
-      println("queries has not been loaded. Loading queries...")
+    if(!testCase.queriesDir.equals(lastQueriesDir) || !testCase.knnMax.equals(lastKnnMax)) {
+      println("Loading queries...")
       val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray
       val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), dimensions).toArray
       this.queries = new Array(binQueries.length)
@@ -281,6 +282,7 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
       }
 
       this.lastQueriesDir = testCase.queriesDir
+      this.lastKnnMax = testCase.knnMax
     }
 
 
@@ -315,6 +317,7 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
   this.lsh = new LSHBinarySingle
   var lastQueriesDir = " "
   var lastKnnDir = " "
+  var lastKnnMax:Int = -1
 
   override def run(testCase: TestCase, warmUpIterations: Int, invocationCount: Int): Result = {
     this.testCase = testCase
@@ -324,10 +327,10 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
     }
 
     // Get queries, keep last set if fileDir is the same
-    if(!testCase.queriesDir.equals(lastQueriesDir)) {
-      println("queries has not been loaded. Loading queries...")
-      val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray
-      val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), dimensions).toArray
+    if(!testCase.queriesDir.equals(lastQueriesDir) || !testCase.knnMax.equals(lastKnnMax)) {
+      println("Loading queries...")
+      val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), 0).toArray // dimensions are not needed in disaparser bin and num
+      val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), 0).toArray
       this.queries = new Array(binQueries.length)
       var i = 0
       while(i < binQueries.length) {
@@ -336,6 +339,7 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
       }
 
       this.lastQueriesDir = testCase.queriesDir
+      this.lastKnnMax = testCase.knnMax
     }
 
     // Call lsh build

@@ -89,14 +89,11 @@ object Tools {
       tmpDists(v) = cands.dists.getDouble(candsIndex)
       v+=1
     }
-    // Using system optimized array copy
-    cands.ids.addElements(0, tmpIds, 0, tmpIds.length)
-    cands.dists.addElements(0, tmpDists, 0, tmpDists.length)
-    cands.pointer = k+1
-    /*while(w < k) {
-      cands.nonDistinctAdd(tmpIds(w),tmpDists(w))
-      w+=1
-    }*/
+    var m = 0
+    while(m < tmpIds.length) {
+      cands+=(tmpIds(m), tmpDists(m))
+      m+=1
+    }
   }
 
 }

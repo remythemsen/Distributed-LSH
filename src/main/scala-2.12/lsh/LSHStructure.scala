@@ -316,7 +316,7 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     getCands(qp, k)
 
     if(this.cands.size > k) {
-      cands<=this.qs.selectKthDist(cands, k-1, cands.size)
+      cands<=this.qs.selectKthDist(cands, k-1, cands.size-1)
       var i = 0
       while(i < cands.size) {
         // Adding the correct ids
@@ -441,16 +441,17 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[util.BitSet, (util.
 
     // Search euclidean space (with knn size set)
     if(cands.size > qp._3) {
-      cands<=this.qs.selectKthDist(cands, qp._3-1, cands.size-1)
-      Tools.knn(cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, k)
-      this.cands
-    } else {
-      Tools.knn(cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, {
-        if(cands.size < k) cands.size
-        else k
-      })
-      this.cands
+      // size was bigger than the knnMax specified, we need to prune down
+      cands <= this.qs.selectKthDist(cands, qp._3 - 1, cands.size - 1)
     }
+
+    // start knn linear search
+    Tools.knn(cands, this.eucDataSet, this.idLookupMap, this.pq, qp._2, {
+      if(cands.size < k) cands.size
+      else k
+    })
+
+    this.cands
   }
 }
 

@@ -6,10 +6,10 @@ package tools
   *
   */
 class QuickSelect {
-  def selectKthDist(data:CandSet, k:Int, until:Int):Double = {
+  def selectKthDist(data:CandSet, k:Int, untilIncluding:Int):Double = {
 
     var from = 0
-    var to = until
+    var to = untilIncluding
 
     // if from and to is equal, it's the kth element
     while (from < to) {

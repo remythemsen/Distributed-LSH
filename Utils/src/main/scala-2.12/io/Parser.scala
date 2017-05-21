@@ -88,7 +88,7 @@ object Parser {
         i+=1
       }
 
-      (line.head.toInt, bitSet) // convert bitstring to bitset
+      (line.head.toInt, bitSet)
     }
   }
 }

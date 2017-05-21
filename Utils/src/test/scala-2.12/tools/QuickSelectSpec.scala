@@ -4,7 +4,6 @@ import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.Random
-import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by remeeh on 30-04-2017.
@@ -62,6 +61,20 @@ class QuickSelectSpec extends FlatSpec with Matchers {
     assert(r == 123.0)
     val z = new QuickSelect().selectKthDist(cands, 0, cands.size-1)
     assert(z == 0.0)
+  }
+
+  "quick select" should "never go swap outside of until" in {
+    val rnd = new Random
+    val qs = new QuickSelect()
+    val cs = new CandSet(20)
+    for(i <- 1 until 21) {
+      cs+=(20-i, 20-i.toDouble)
+    }
+    cs+=(122, -0.001)
+    cs+=(121, -0.0091)
+    cs.take(16)
+    val r = qs.selectKthDist(cs, 16-1, cs.size-1)
+    assert(1 == 1)
   }
 
 }

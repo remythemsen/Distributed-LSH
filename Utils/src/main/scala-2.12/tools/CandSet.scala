@@ -24,6 +24,9 @@ class CandSet(maxCands:Int) {
   }
 
   def <=(dist:Double):Unit = {
+    //Note that in the case of hamming distance, the chance
+    //that points close to qp will have identical distances.
+    //are much higher than euclidean measure.
     var i = 0
     var tmpPointer = this.pointer - 1
     this.softReset
