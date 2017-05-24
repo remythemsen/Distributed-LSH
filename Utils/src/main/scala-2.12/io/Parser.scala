@@ -2,6 +2,8 @@ package io
 
 import java.util
 
+import org.apache.lucene.util.OpenBitSet
+
 import scala.collection.mutable
 
 object Parser {
@@ -69,16 +71,16 @@ object Parser {
       (id, resultArray)
     }*/
   }
-  case class DisaParserBinary(iterator: Iterator[String], dimensions:Int) extends DisaParser[util.BitSet](iterator, dimensions) {
+  case class DisaParserBinary(iterator: Iterator[String], dimensions:Int) extends DisaParser[OpenBitSet](iterator, dimensions) {
     /*
     * Expected format for file is:
     * id  binaryString
     * 1234 1010100010010100101
     */
-    override def next: (Int, util.BitSet) = {
+    override def next: (Int, OpenBitSet) = {
 
       val line:Array[String] = iterator.next.split(" ")
-      val bitSet:util.BitSet = new util.BitSet()
+      val bitSet:OpenBitSet = new OpenBitSet()
       val l = line(1).split("")
       var i = 0
       while(i < l.length) {

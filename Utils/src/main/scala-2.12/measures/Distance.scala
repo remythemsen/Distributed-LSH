@@ -1,7 +1,7 @@
 package measures
 
+import org.apache.lucene.util.OpenBitSet
 import tools.Tools._
-import java.util.BitSet
 
 import scala.collection.mutable
 
@@ -45,10 +45,10 @@ object CosineUnit extends Distance[Array[Float]] {
     (1.0-dotProduct(x, y)) / 2.0 //normalizing the result to [0,1]
   }
 }
-object Hamming extends Distance[BitSet] {
+object Hamming extends Distance[OpenBitSet] {
 
-  override def measure(x: BitSet, y: BitSet):Double = {
-    val xb:BitSet = x.clone().asInstanceOf[BitSet]
+  override def measure(x: OpenBitSet, y: OpenBitSet):Double = {
+    val xb:OpenBitSet = x.clone().asInstanceOf[OpenBitSet]
     xb.xor(y)
     xb.cardinality()
   }

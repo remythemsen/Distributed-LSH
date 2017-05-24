@@ -1,9 +1,12 @@
 package hashfunctions
 
 import org.scalatest.{FlatSpec, Matchers}
+
 import scala.collection.mutable
 import scala.util.Random
 import java.util
+
+import org.apache.lucene.util.OpenBitSet
 
 class BitHashSpec extends FlatSpec with Matchers {
   def fixture = {
@@ -13,7 +16,7 @@ class BitHashSpec extends FlatSpec with Matchers {
 
       def getRndVec(dimensions:Int, seed:Long) = {
         val rnd = new Random(seed)
-        val vec = new util.BitSet()
+        val vec = new OpenBitSet()
         for(i <- 0 until dimensions) {
           if(rnd.nextBoolean()) {
             vec.set(i)

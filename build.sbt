@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.0" % "test",
   "com.typesafe.akka" %% "akka-actor" % "2.5.1",
   "com.typesafe.akka" %% "akka-remote" % "2.5.1",
-  "it.unimi.dsi" % "fastutil" % "7.2.0"
+  "it.unimi.dsi" % "fastutil" % "7.2.0",
+  "org.apache.lucene" % "lucene-core" % "4.10.3"
 )
 
 lazy val DistributedLSH = project in file(".") dependsOn RepetitionHandler

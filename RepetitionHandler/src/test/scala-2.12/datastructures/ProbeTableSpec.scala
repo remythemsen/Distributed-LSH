@@ -2,17 +2,37 @@ package datastructures
 
 import hashfunctions.{BitHash, Hyperplane}
 import org.scalatest.{FlatSpec, Matchers}
+
 import scala.collection.mutable
 import scala.util.Random
 import java.util
+import java.util.concurrent.Executors
+
+import scala.concurrent._
+import scala.concurrent.duration._
+import it.unimi.dsi.fastutil.ints.IntArrayList
+import org.apache.lucene.util.OpenBitSet
+
+import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.{Await, Future}
 
 class ProbeTableSpec extends FlatSpec with Matchers {
-
+  implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(8))
   val data:Array[Array[Float]] = Array.fill[Array[Float]](1)(new Array[Float](128))
   // TODO Fix this test
-  val bitData:Array[util.BitSet] = Array.fill[util.BitSet](1)(new util.BitSet)
+  val bitData:Array[OpenBitSet] = Array.fill[OpenBitSet](1)(new OpenBitSet)
   val arr = new Array[Float](128)
   val rnd = new Random(System.currentTimeMillis())
+
+  "Memory Test" should "Consume some amount of mem :) " in {
+    val l =  new IntArrayList(10)
+    for(i <- 0 until 10) {
+      l.add(i)
+    }
+    val r = new Array[Int](11)
+    l.getElements(0, r, 0, 10)
+    r
+  }
 
   "Query " should "return results given a valid query" in {
     val k = 6

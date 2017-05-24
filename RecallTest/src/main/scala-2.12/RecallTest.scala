@@ -69,6 +69,8 @@ object RecallTest extends App {
         sb.append("± ")
         sb.append("0.01 ")
         sb.append("± ")
+        sb.append("0.05 ")
+        sb.append("± ")
         sb.append("time ")
         sb.append("± ")
         sb.toString
@@ -108,6 +110,7 @@ object RecallTest extends App {
           sb.append(df.format(res._1._1)+" "+df.format(res._2._1)+" ")
           sb.append(df.format(res._1._2)+" "+df.format(res._2._2)+" ")
           sb.append(df.format(res._1._3)+" "+df.format(res._2._3)+" ")
+          sb.append(df.format(res._1._4)+" "+df.format(res._2._4)+" ")
           sb.append(df.format(res._3 / 1E6)+"ms ") // Avg Time
           sb.append(df.format(res._4 / 1E6)+"ms") // Std dev Time
           sb.toString

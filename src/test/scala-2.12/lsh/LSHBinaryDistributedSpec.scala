@@ -9,7 +9,9 @@ import akka.util.Timeout
 import hashfunctions.{BitHash, Hyperplane}
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import measures.{EuclideanFast, Hamming}
+import org.apache.lucene.util.OpenBitSet
 import org.scalatest.{FlatSpec, Matchers}
+import tools.{CandSet, Tools}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -29,20 +31,28 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
 
       // Preparing tests
 
-      val rnd = new Random(System.currentTimeMillis())
+      val rnd = new Random(54321)
       val k = 12
       val dim = 256
-      val hashFunctions = Array(BitHash(k, rnd.nextLong, dim), BitHash(k, rnd.nextLong, dim))
-      val bitDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-hamming-256bit.data"
-      val eucDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/0/descriptors-1-million-reduced-128-normalized.data"
-      val dataSet = DisaParserNumeric(Source.fromFile(new File(eucDataDir)).getLines(), 128).take(50).toArray
-      val dataSetBit = DisaParserBinary(Source.fromFile(new File(bitDataDir)).getLines(), 256).take(50).toArray
+      //val hashFunctions = Array(BitHash(k, rnd.nextLong, dim), BitHash(k, rnd.nextLong, dim))
+      val hashFunctions = Array(BitHash(k, rnd.nextLong, dim))
+      val bitDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/ps-256-tiny.data"
+      val eucDataDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/profiset-128-float-tiny.data"
+      val bitQDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/ps-256-tiny.query"
+      val eucQDir = "/home/remeeh/IdeaProjects/Distributed-LSH/data/profiset-128-float.query"
+      val eucQueries = DisaParserNumeric(Source.fromFile(new File(eucQDir)).getLines(), 128).toArray
+      val bitQueries = DisaParserBinary(Source.fromFile(new File(bitQDir)).getLines(), 256).toArray
 
       val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[RepetitionHandler[util.BitSet]])
+      val a1 = system.actorOf(Props[RepetitionHandler[OpenBitSet]])
+      val a2 = system.actorOf(Props[RepetitionHandler[OpenBitSet]])
+      val a3 = system.actorOf(Props[RepetitionHandler[OpenBitSet]])
+      val a4 = system.actorOf(Props[RepetitionHandler[OpenBitSet]])
+      val a5 = system.actorOf(Props[RepetitionHandler[OpenBitSet]])
+      //val lsh = new LSHBinaryDistributed(Array(a1,a2,a3,a4,a5))
       val lsh = new LSHBinaryDistributed(Array(a1))
 
-      lsh.build((bitDataDir, eucDataDir), 1008263, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 5000, k, dim, Hamming, rnd.nextLong())
+      lsh.build((bitDataDir, eucDataDir), 500000, DisaParserFacBitSet, hashFunctions.length, BitHashFactory, "twostep", 40000, k, dim, Hamming, rnd.nextLong())
 
     }
   }
@@ -91,15 +101,23 @@ class LSHBinaryDistributedSpec extends FlatSpec with Matchers {
     val results:Array[Boolean] = new Array(50)
 
     for(i <- 0 until 50) {
-      val index = f.rnd.nextInt(f.dataSetBit.length)
-      val qp = f.dataSetBit(index)
-      val qpe = f.dataSet(index)
-      val qpa = (qp._2, qpe._2, 2000)
-      val res = f.lsh.query(qpa, 30)
+      val index = f.rnd.nextInt(f.bitQueries.length)
+      val qp = f.bitQueries(index)
+      val qpe = f.eucQueries(index)
+      val qpa = (qp._2, qpe._2, 5000) // 5000 will be searched by knn
+      val res:CandSet = f.lsh.query(qpa, 50) // 50 will come out
       if(res.size != res.distinct.size) {
         println(res.size - res.distinct.size)
       }
-      results(i) = res.size == res.distinct.size
+      val i1 = new ArrayBuffer[Int]
+      val i2 = new ArrayBuffer[Double]
+      for(j <- 0 until res.size) {
+        i1+=res.ids.getInt(j)
+        i2 += math.sqrt(res.dists.getDouble(j))
+      }
+      println("avg query dists " + i2.sum / i2.size)
+
+      results(i) = i1.size == i1.distinct.size
     }
 
     // Cleaning up

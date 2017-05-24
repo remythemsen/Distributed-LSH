@@ -1,6 +1,9 @@
 package multiprobing
 
+import java.util
+
 import hashfunctions.HashFunction
+import org.apache.lucene.util.OpenBitSet
 
 /**
   * Created by remeeh on 07-04-2017.
@@ -16,7 +19,6 @@ class TwoStep[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
   // We are using three counters to achieve inserting in probes array with this ordering
   // Note: All 1step of hf(1) will preceed all 1step of hf(2) TODO: Make different index system that addresses this
   override def generate(qp:A): Unit = {
-
     var keysC = 0
     var oneStepC = hfs.length
     var twoStepC = oneStepC+(k*hfs.length)

@@ -8,9 +8,11 @@ import akka.util.Timeout
 import datastructures.Table
 import hashfunctions.{BitHash, HashFunction, Hyperplane}
 import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import measures.Distance
 import messages._
 import multiprobing.{PQ, PQ2, ProbeScheme, TwoStep}
+import org.apache.lucene.util.OpenBitSet
 import tools.{CandSet, QuickSelect}
 
 import scala.collection.mutable
@@ -44,6 +46,7 @@ class RepetitionHandler[A] extends Actor {
   // Reusable array for hashed keys (query)
   private var keys:Array[(Int,Long)] = _
 
+
   override def receive: Receive = {
     // Setting or resetting a repetition
     case InitRepetition(buildFromFile, n, parserFac, dataSetFac, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
@@ -73,6 +76,7 @@ class RepetitionHandler[A] extends Actor {
       this.parser = parserFact(buildFromFile,dimensions)
       this.dsf = dataSetFac.asInstanceOf[DataSetFac[A]]
       this.cands = new CandSet(qMaxCands)
+
 
       if(buildFromFile != this.lastDataSet) {
         this.dataSet = dsf(n)
@@ -108,6 +112,7 @@ class RepetitionHandler[A] extends Actor {
       }
 
 
+
       // Initializing the pgenerator
       this.probeGenerator = probeScheme.toLowerCase match {
         case "pq" => new PQ(functions, this.hashFunctions)
@@ -120,15 +125,18 @@ class RepetitionHandler[A] extends Actor {
 
       implicit val timeout = Timeout(20.hours)
       Await.result(Future.sequence(futures.toIndexedSeq), timeout.duration)
+
       System.gc
 
       sender ! true
 
 
-    case Query(qp, k) => // Returns CandSet of indexes and dists' from q
+    case Query(qp:A, k:Int) => // Returns CandSet of indexes and dists' from q
+
       if(this.resultSet._1.length != k) {
         this.resultSet = Tuple2(new Array(k), new Array(k))
       }
+
       this.cands.reset
       // Generate probes
       this.probeGenerator.generate(qp.asInstanceOf[A])
@@ -148,23 +156,28 @@ class RepetitionHandler[A] extends Actor {
             if (!this.cands.distinct.contains(bucket.getInt(j))) {
               this.cands.distinct.add(bucket.getInt(j))
               this.cands += (bucket.getInt(j), this.simMeasure.measure(this.dataSet(bucket.getInt(j)), qp.asInstanceOf[A]))
+              c+=1 // We do not count duplicates
             }
             j += 1
           }
         }
       }
 
+      if(this.cands.size > k) {
+        this.cands <= this.qs.selectKthDist(this.cands, k - 1, this.cands.size - 1)
+        this.cands.ids.getElements(0, resultSet._1, 0, k)
+        this.cands.dists.getElements(0, resultSet._2, 0, k)
+      } else if(cands.size < k) {
+        this.resultSet = (new Array[Int](this.cands.size), new Array[Double](this.cands.size))
+        this.cands.ids.getElements(0, resultSet._1, 0, this.cands.size)
+        this.cands.dists.getElements(0, resultSet._2, 0, this.cands.size)
+      } else {
+        this.cands.ids.getElements(0, resultSet._1, 0, k)
+        this.cands.dists.getElements(0, resultSet._2, 0, k)
+      }
+
       sender ! {
-        if(cands.size > k) {
-          cands<=this.qs.selectKthDist(cands, k-1, cands.size-1)
-          cands.ids.getElements(0, resultSet._1, 0, k)
-          cands.dists.getElements(0, resultSet._2, 0, k)
-          this.resultSet
-        } else {
-          cands.ids.getElements(0, resultSet._1, 0, k)
-          cands.dists.getElements(0, resultSet._2, 0, k)
-          this.resultSet
-        }
+        this.resultSet
       }
 
 
@@ -175,8 +188,6 @@ class RepetitionHandler[A] extends Actor {
       context.system.terminate()
       println("System terminated")
   }
-
-  var c = 0
 
   def buildRepetition(mapRef:Int, dataSize:Int):Boolean = {
     var j = 0
@@ -199,7 +210,7 @@ case object DisaParserFacNumeric extends DisaParserFac[Array[Float]] {
     DisaParserNumeric(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
 }
-case object DisaParserFacBitSet extends DisaParserFac[util.BitSet] {
+case object DisaParserFacBitSet extends DisaParserFac[OpenBitSet] {
   def apply(pathToFile:String, numOfDim:Int) : DisaParserBinary = {
     DisaParserBinary(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
@@ -210,8 +221,8 @@ abstract class DataSetFac[A] {
 object DataSetFacNumeric extends DataSetFac[Array[Float]] {
   override def apply(size: Int): Array[Array[Float]] = new Array(size)
 }
-object DataSetBitSet extends DataSetFac[util.BitSet] {
-  override def apply(size: Int): Array[util.BitSet] = new Array(size)
+object DataSetBitSet extends DataSetFac[OpenBitSet] {
+  override def apply(size: Int): Array[OpenBitSet] = new Array(size)
 }
 abstract class HashFunctionFactory[A] {
   def apply(k:Int, seed:Long, numOfDim:Int):HashFunction[A]
@@ -222,8 +233,8 @@ case object HyperplaneFactory extends HashFunctionFactory[Array[Float]] {
     Hyperplane(k, seed, numOfDim)
   }
 }
-case object BitHashFactory extends HashFunctionFactory[util.BitSet] {
-  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[util.BitSet] = {
+case object BitHashFactory extends HashFunctionFactory[OpenBitSet] {
+  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[OpenBitSet] = {
     BitHash(k, seed, numOfDim)
   }
 }

@@ -3,6 +3,7 @@ package benchmark
 import java.util
 
 import measures._
+import org.apache.lucene.util.OpenBitSet
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 
@@ -16,7 +17,7 @@ class Distance {
 
   def getRndVec(dimensions:Int, seed:Long) = {
     val rnd = new Random(seed)
-    val vec = new util.BitSet()
+    val vec = new OpenBitSet()
     for (i <- 0 until dimensions) {
       if (rnd.nextBoolean()) {
         vec.set(i)
@@ -31,9 +32,9 @@ class Distance {
   var rnd:Random = new Random(System.currentTimeMillis())
   var vector:Array[Float] = Array()
   var vector2:Array[Float] = Array()
-  var bitVector:util.BitSet = _
-  var bitVector2:util.BitSet = _
-  var hamming:measures.Distance[util.BitSet] = _
+  var bitVector:OpenBitSet = _
+  var bitVector2:OpenBitSet = _
+  var hamming:measures.Distance[OpenBitSet] = _
   var euclidean:measures.Distance[Array[Float]] = _
   var euclideanFast:measures.Distance[Array[Float]] = _
 

@@ -1,9 +1,7 @@
 package measures
 
-import java.util
+import org.apache.lucene.util.OpenBitSet
 import org.scalatest.{FlatSpec, Matchers}
-
-import scala.collection.mutable
 import scala.util.Random
 
 /**
@@ -19,10 +17,10 @@ class HammingSpec extends FlatSpec with Matchers {
     }
   }
 
-  def randomBitSet(dim:Int, seed:Long):util.BitSet = {
+  def randomBitSet(dim:Int, seed:Long):OpenBitSet = {
     val rnd = new Random(seed)
     var i = 0
-    var res = new util.BitSet
+    var res = new OpenBitSet
     while(i < dim) {
       if(rnd.nextBoolean()) {
         res.set(i)
@@ -40,21 +38,21 @@ class HammingSpec extends FlatSpec with Matchers {
 
   "hamming measure " should " return correct precalculated results " in {
     val f = fixture
-    val v1 = new util.BitSet()
+    val v1 = new OpenBitSet()
     v1.set(1)
     v1.set(4)
     v1.set(6)
     v1.set(8)
-    val v2 = new util.BitSet()
+    val v2 = new OpenBitSet()
     v2.set(1)
     v2.set(4)
     v2.set(6)
     v2.set(8)
-    val v3 = new util.BitSet()
+    val v3 = new OpenBitSet()
     v3.set(1)
     v3.set(6)
     v3.set(8)
-    val v4 = new util.BitSet()
+    val v4 = new OpenBitSet()
     v4.set(1)
     v4.set(3)
     v4.set(6)

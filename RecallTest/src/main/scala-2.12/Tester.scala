@@ -14,8 +14,10 @@ import scala.io.Source
 import scala.util.Random
 import java.util
 
+import org.apache.lucene.util.OpenBitSet
+
 trait Tester[Descriptor, Query, FileSet] {
-  type Result = ((Double, Double, Double), (Double,Double,Double), Double, Double)
+  type Result = ((Double, Double, Double, Double), (Double,Double,Double, Double), Double, Double)
   var lsh:LSHStructure[Descriptor, Query, FileSet] = _
   var queries:Array[(Int, Query)] = _
   var knnStructure:mutable.HashMap[Int, Array[(Int, Double)]] = _
@@ -36,18 +38,20 @@ trait Tester[Descriptor, Query, FileSet] {
     }
   }
 
-  def runQueries(invocationCount:Int):((Double,Double,Double),(Double,Double,Double), Double, Double) = {
+  def runQueries(invocationCount:Int):((Double,Double,Double,Double),(Double,Double,Double,Double), Double, Double) = {
     println("Running queries...")
     // Test result containers
     val queryTimes:ArrayBuffer[Double] = new ArrayBuffer()
-    val queryRecalls = Tuple3(new ArrayBuffer[Double](), new ArrayBuffer[Double](), new ArrayBuffer[Double]())
+    val queryRecalls = Tuple4(new ArrayBuffer[Double](), new ArrayBuffer[Double](), new ArrayBuffer[Double](), new ArrayBuffer[Double]())
 
     // Run queries
     var j = 0
     while(j < this.queries.length) {
 
       val index = rnd.nextInt(this.queries.length)
+
       val qp:(Int, Query) = this.queries(index)
+      //println("Query id: " + qp._1 + "Query vc: " + qp._2)
 
 
       // Recall Test
@@ -74,6 +78,7 @@ trait Tester[Descriptor, Query, FileSet] {
           this.annSet.dists.set(j, Math.sqrt(annSet.dists.getDouble(j)))
           j+=1
         }
+
       }
 
       // Adding the current q's recall to the set of recalls
@@ -81,13 +86,14 @@ trait Tester[Descriptor, Query, FileSet] {
       queryRecalls._1 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.0)
       queryRecalls._2 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.001)
       queryRecalls._3 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.01)
+      queryRecalls._4 += recallFarthestPointApprox(optSet, annSet, this.testCase.knn, 0.05)
 
       j += 1
     }
 
     // Accumulate
-    ((average(queryRecalls._1), average(queryRecalls._2), average(queryRecalls._3)),
-     (stdDeviation(queryRecalls._1),stdDeviation(queryRecalls._2),stdDeviation(queryRecalls._3)),
+    ((average(queryRecalls._1), average(queryRecalls._2), average(queryRecalls._3), average(queryRecalls._4)),
+     (stdDeviation(queryRecalls._1),stdDeviation(queryRecalls._2),stdDeviation(queryRecalls._3), stdDeviation(queryRecalls._4)),
       average(queryTimes), stdDeviation(queryTimes))
   }
 
@@ -104,6 +110,8 @@ trait Tester[Descriptor, Query, FileSet] {
 
 
     while(c < annSet.size) {
+      //println(" ids " + annSet.ids.getInt(c))
+      //println("chck: " + annSet.dists.getDouble(c) + " vs: " + kthFarthestDistOpt)
       if(annSet.dists.getDouble(c) <= (1 + eps) * kthFarthestDistOpt ) r+=1
       c+=1
     }
@@ -114,15 +122,33 @@ trait Tester[Descriptor, Query, FileSet] {
   def average(sum:Double, length:Int) : Double = {
     sum / length
   }
-  def average(seq:ArrayBuffer[Double]) : Double = {
-    seq.sum / seq.size
+
+  def average(seq:Seq[Double]) : Double = {
+    var i = 0
+    var res:Double = 0.0
+    while(i < seq.size) {
+      res+=seq(i)
+      i+=1
+    }
+    res / seq.size
   }
+
   def stdDeviation(seq:ArrayBuffer[Double]) : Double = {
     Math.sqrt(variance(seq))
   }
+
   def variance(seq: ArrayBuffer[Double]) : Double = {
+    var tmpArray:Array[Double] = new Array(seq.size)
+    require(seq.size == queries.size)
     val avg = average(seq)
-    seq.map(x => math.pow(x - avg, 2)).sum / seq.length
+    var i = 0
+    var vari = 0.0
+    while(i < seq.size) {
+      vari = seq(i) - avg
+      tmpArray(i) = vari * vari
+      i+=1
+    }
+    average(tmpArray)
   }
 
   def timer[R](r: => R): Double = {
@@ -252,8 +278,9 @@ class NumericSingle(data:String, dataSize:Int, dimensions:Int, seed:Long) extend
   }
 }
 
-class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long, nodes:File) extends DistributedTester[util.BitSet, (util.BitSet, Array[Float], Int), (String,String)] {
-  type Descriptor = util.BitSet
+class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long, nodes:File) extends DistributedTester[OpenBitSet, (OpenBitSet, Array[Float], Int), (String,String)] {
+
+  type Descriptor = OpenBitSet
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinaryDistributed(this.getNodes(nodes))
@@ -273,14 +300,13 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
     if(!testCase.queriesDir.equals(lastQueriesDir) || !testCase.knnMax.equals(lastKnnMax)) {
       println("Loading queries...")
       val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray
-      val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), dimensions).toArray
+      val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), 128).toArray // TODO dont hardcode 128
       this.queries = new Array(binQueries.length)
       var i = 0
       while(i < binQueries.length) {
         this.queries(i) = (binQueries(i)._1, (binQueries(i)._2, eucQueries(i)._2, testCase.knnMax))
         i+=1
       }
-
       this.lastQueriesDir = testCase.queriesDir
       this.lastKnnMax = testCase.knnMax
     }
@@ -289,14 +315,14 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
     // Call lsh build
     val distance = testCase.measure.toLowerCase match {
       case "hamming" => Hamming
-      case _ => throw new Exception("Unkown Distance measure specified...")
+      case _ => throw new Exception("Unknown Distance measure specified...")
     }
 
     val ps = testCase.probeScheme.toLowerCase match {
       case "pq" => throw new Exception("PQ cannot be used with bitsets")
       case "pq2" => throw new Exception("PQ2 cannot be used with bitsets")
       case "twostep" => "twostep"
-      case _ => throw new Exception("Unkown probescheme!")
+      case _ => throw new Exception("Unknown probescheme!")
     }
 
     // Initializing LSH Structure
@@ -310,8 +336,8 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
   }
 }
 
-class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long) extends Tester[util.BitSet, (util.BitSet, Array[Float], Int), (String,String)] {
-  type Descriptor = util.BitSet
+class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long) extends Tester[OpenBitSet, (OpenBitSet, Array[Float], Int), (String,String)] {
+  type Descriptor = OpenBitSet
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinarySingle
@@ -353,7 +379,7 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
       case "pq" => throw new Exception("PQ cannot be used with bitsets")
       case "pq2" => throw new Exception("PQ2 cannot be used with bitsets")
       case "twostep" => "twostep"
-      case _ => throw new Exception("Unkown probescheme!")
+      case _ => throw new Exception("Unknown probescheme!")
     }
 
     // Initializing LSH Structure
