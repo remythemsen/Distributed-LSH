@@ -9,12 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/KNNFileBuilder" />
-            <option value="$PROJECT_DIR$/KNNFileBuilder/project" />
             <option value="$PROJECT_DIR$/MicroBenchmark" />
             <option value="$PROJECT_DIR$/MicroBenchmark/project" />
-            <option value="$PROJECT_DIR$/Preprocess" />
-            <option value="$PROJECT_DIR$/Preprocess/project" />
             <option value="$PROJECT_DIR$/RecallTest" />
             <option value="$PROJECT_DIR$/RecallTest/project" />
             <option value="$PROJECT_DIR$/RepetitionHandler" />
