@@ -6,9 +6,6 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-/**
-  * Created by remeeh on 07-04-2017.
-  */
 class TwoStepSpec extends FlatSpec with Matchers {
   def fixture = {
     new {
@@ -25,8 +22,8 @@ class TwoStepSpec extends FlatSpec with Matchers {
     for(i <- 0 until 500) {
       val v = Array.fill[Float](128)(f.rnd.nextFloat())
       f.gen.generate(v)
-      val one = f.gen.next
-      val two = f.gen.next
+      val one = f.gen.next()
+      val two = f.gen.next()
       assert(f.hf(v) == one._2)
       assert(f.hf2(v) == two._2)
     }
@@ -72,7 +69,7 @@ class TwoStepSpec extends FlatSpec with Matchers {
     val v = Array.fill[Float](128)(f.rnd.nextFloat())
     f.gen.generate(v)
 
-    assert(f.gen.toArray.size == 8)
+    assert(f.gen.toArray.length == 8)
   }
 
   "generate" should "generate the input key itself" in {

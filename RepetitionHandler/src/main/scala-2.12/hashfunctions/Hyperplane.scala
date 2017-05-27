@@ -3,6 +3,7 @@ import tools.Tools._
 import scala.util.Random
 
 case class Hyperplane(k: Int, seed:Long, numOfDim: Int) extends HashFunction[Array[Float]](k, seed, numOfDim) {
+  println("HP Started with seed: " + seed)
   private val rnd:Random = new Random(seed)
   private val numberOfDimensions:Int = numOfDim
   val hyperPlanes:Array[Array[Float]] = generateHyperplanes(numberOfDimensions, k)

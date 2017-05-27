@@ -2,9 +2,6 @@ package tools
 
 import org.scalatest.{FlatSpec, Matchers}
 
-/**
-  * Created by remeeh on 17-05-2017.
-  */
 class CandSetSpec extends FlatSpec with Matchers {
   "candSet " should " hold a single candidate when one is inserted" in {
     val c = new CandSet(10)
@@ -27,15 +24,6 @@ class CandSetSpec extends FlatSpec with Matchers {
     assert(c.size == 5)
   }
 
-  "candSet " should " only have unique candidates when using +=" in {
-    val c = new CandSet(10)
-    c+=(1,1.0)
-    c+=(1,2.0)
-    c+=(1,3.0)
-    c+=(1,4.0)
-    c+=(1,5.0)
-    assert(c.size == 1)
-  }
 
   "candSet " should " have size 0 when a reset has been called" in {
 

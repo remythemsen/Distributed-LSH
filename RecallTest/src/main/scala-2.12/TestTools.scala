@@ -1,6 +1,3 @@
-/**
-  * Created by remeeh on 5/4/17.
-  */
 class TestTools {
   def average(sum:Double, length:Int) : Double = {
     sum / length

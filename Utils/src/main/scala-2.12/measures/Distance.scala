@@ -1,9 +1,11 @@
 package measures
 
-import org.apache.lucene.util.OpenBitSet
-import tools.Tools._
+import java.util
 
-import scala.collection.mutable
+import com.googlecode.javaewah.datastructure.BitSet
+import org.apache.lucene.util.OpenBitSet
+import org.roaringbitmap.RoaringBitmap
+import tools.Tools._
 
 trait Distance[A] {
   def measure(x:A, y:A) : Double
@@ -45,12 +47,29 @@ object CosineUnit extends Distance[Array[Float]] {
     (1.0-dotProduct(x, y)) / 2.0 //normalizing the result to [0,1]
   }
 }
-object Hamming extends Distance[OpenBitSet] {
 
+object Hamming2 extends Distance[OpenBitSet] {
   override def measure(x: OpenBitSet, y: OpenBitSet):Double = {
-    val xb:OpenBitSet = x.clone().asInstanceOf[OpenBitSet]
+    OpenBitSet.xorCount(x, y)
+  }
+}
+
+object Hamming extends Distance[BitSet] {
+  override def measure(x: BitSet, y: BitSet):Double = {
+    x.xorcardinality(y)
+  }
+}
+
+object Hamming3 extends Distance[util.BitSet] {
+  override def measure(x: util.BitSet, y: util.BitSet):Double = {
+    val xb:util.BitSet = x.clone().asInstanceOf[util.BitSet]
     xb.xor(y)
     xb.cardinality()
   }
 }
 
+object Hamming4 extends Distance[RoaringBitmap] {
+  override def measure(x: RoaringBitmap, y: RoaringBitmap):Double = {
+    RoaringBitmap.xorCardinality(x,y)//.xor(x, y).getLongCardinality
+  }
+}

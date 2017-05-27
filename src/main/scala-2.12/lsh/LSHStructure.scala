@@ -16,6 +16,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
+import com.googlecode.javaewah.datastructure.BitSet
 import datastructures.Table
 import hashfunctions.HashFunction
 import io.Parser.DisaParserNumeric
@@ -174,15 +175,16 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
       var bucket = Await.result(futureResults(j), timeout.duration).asInstanceOf[(Array[Int], Array[Double])]
 
       if(bucket!=null) {
-        j = 0
-        while (j < bucket._1.length) {
-          if(!this.cands.distinct.contains(bucket._1(j))) {
-            this.cands.distinct.add(bucket._1(j))
-            this.cands+=(bucket._1(j), bucket._2(j))
+        var m = 0
+        while (m < bucket._1.length) {
+          if(!this.cands.distinct.contains(bucket._1(m))) {
+            this.cands.distinct.add(bucket._1(m))
+            this.cands+=(bucket._1(m), bucket._2(m))
           }
-          j += 1
+          m += 1
         }
       }
+      j+=1
     }
   }
 
@@ -204,7 +206,7 @@ trait LSHStructureDistributed[Descriptor, Query, FileSet] extends LSHStructure[D
     }
   }
 
-  def destroy : Unit = {
+  def destroy() : Unit = {
     println("initiated shut down sequence..")
     var i = 0
     while(i < nodes.length) {
@@ -338,9 +340,9 @@ class LSHNumericDistributed(repetitions:Array[ActorRef]) extends LSHStructureDis
     this.cands
   }
 }
-class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[OpenBitSet, (OpenBitSet, Array[Float], Int),  (String, String)] {
+class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHStructureDistributed[BitSet, (BitSet, Array[Float], Int),  (String, String)] {
   this.nodes = repetitions
-  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[OpenBitSet], internalReps: Int, hfFac: HashFunctionFactory[OpenBitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[OpenBitSet], seed: Long): Unit = {
+  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[BitSet], internalReps: Int, hfFac: HashFunctionFactory[BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[BitSet], seed: Long): Unit = {
     val rnd = new Random(seed)
     PQOrd.dists = null
     this.qs = null
@@ -367,7 +369,7 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
     System.gc()
   }
 
-  override def query(qp: (OpenBitSet, Array[Float], Int), k: Int): CandSet = {
+  override def query(qp: (BitSet, Array[Float], Int), k: Int): CandSet = {
     this.cands.reset
     getCands(qp._1, qp._3/this.repetitions.length)
     // Search euclidean space (this will return k results)
@@ -383,8 +385,8 @@ class LSHBinaryDistributed(repetitions:Array[ActorRef]) extends Binary with LSHS
   }
 }
 
-class LSHBinarySingle extends Binary with LSHStructureSingle[OpenBitSet, (OpenBitSet, Array[Float], Int), (String, String)] {
-  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[OpenBitSet], internalReps: Int, hfFac: HashFunctionFactory[OpenBitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[OpenBitSet], seed: Long): Unit = {
+class LSHBinarySingle extends Binary with LSHStructureSingle[BitSet, (BitSet, Array[Float], Int), (String, String)] {
+  override def build(fileSet: (String, String), n: Int, parserFac: DisaParserFac[BitSet], internalReps: Int, hfFac: HashFunctionFactory[BitSet], pgenerator: String, maxCands: Int, functions: Int, dimensions: Int, simMeasure: Distance[BitSet], seed: Long): Unit = {
     this.clear()
     this.pq = null
     this.cands = null
@@ -413,7 +415,7 @@ class LSHBinarySingle extends Binary with LSHStructureSingle[OpenBitSet, (OpenBi
     System.gc()
   }
 
-  override def query(qp: (OpenBitSet, Array[Float], Int), k: Int): CandSet = {
+  override def query(qp: (BitSet, Array[Float], Int), k: Int): CandSet = {
 
     this.cands.reset
     // Generate probes

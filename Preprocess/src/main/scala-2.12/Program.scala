@@ -6,9 +6,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 import scala.util.Random
 
-/**
-  * Created by remeeh on 2/21/17.
-  */
 
 // Args config
 case class Config(
@@ -67,7 +64,7 @@ object Program extends App {
       val preProcessedTuples = new ArrayBlockingQueue[(Int, Array[Float])](20)
 
       println("Loading files...")
-      val input = new DisaParserRaw(Source.fromFile(config.data).getLines, config.dataDim)
+      val input = DisaParserRaw(Source.fromFile(config.data).getLines, config.dataDim)
       val originalDimensions = config.dataDim
       val n = config.n
 
@@ -85,8 +82,6 @@ object Program extends App {
           loadedTuples.put(input.next)
 
         }
-      }.onFailure {
-        case t => println("An error has occured in the input parser: " + t.getMessage)
       }
 
       for (i <- 0 until p) {
@@ -99,8 +94,6 @@ object Program extends App {
             val reducedTuple = (tuple._1, aux)
             preProcessedTuples.put(reducedTuple)
           }
-        }.onFailure {
-          case t => println("An error has occured: " + t.getMessage)
         }
       }
 
@@ -137,7 +130,7 @@ object Program extends App {
         sb.append("\n")
 
         // Write resulting set
-        output.write(sb.toString())
+        output.write(sb.toString)
 
 
         j += 1.0

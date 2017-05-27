@@ -2,9 +2,6 @@ import tools.Tools
 
 import scala.util.Random
 
-/**
-  * Created by remeeh on 01-03-2017.
-  */
 object DimensionalityReducer{
 
   def getNewVector(x:Array[Float], matrix:Array[Array[Float]], a: => Array[Float], binary:Boolean, seed:Long, sqrtTargetDim:Double) = {

@@ -3,11 +3,7 @@ package multiprobing
 import java.util
 
 import hashfunctions.HashFunction
-import org.apache.lucene.util.OpenBitSet
 
-/**
-  * Created by remeeh on 07-04-2017.
-  */
 class TwoStep[A](k:Int, hfs:Array[HashFunction[A]]) extends ProbeScheme[A] {
   // Set of resulting probes for all keys
   var probes:Array[(Int, Long)] = new Array(hfs.length*(1+(k*(k+1)/2)))

@@ -4,14 +4,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.longs.{Long2IntOpenHashMap, Long2ObjectOpenHashMap}
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-/**
-  * Created by remeeh on 16-05-2017.
-  */
 @State(Scope.Benchmark)
 class HashMap {
   var rnd:Random = _
@@ -49,7 +45,7 @@ class HashMap {
     }
   }
 
-  @Setup(Level.Invocation)
+  @Setup(Level.Iteration)
   def getRandomVec(): Unit = {
     if (rnd.nextGaussian() < 0) {
       this.longMapKey = this.longMapKeys(this.rnd.nextInt(this.longMapKeys.length))

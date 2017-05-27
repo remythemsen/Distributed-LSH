@@ -6,9 +6,6 @@ import tools.Tools.PQOrd
 import scala.collection.mutable
 import scala.util.Random
 
-/**
-  * Created by remeeh on 5/21/17.
-  */
 class ToolsSpec extends FlatSpec with Matchers {
   "knn " should "produce correct result!" in {
     val rnd = new Random

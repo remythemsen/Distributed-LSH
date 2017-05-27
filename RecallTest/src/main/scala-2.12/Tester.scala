@@ -14,6 +14,7 @@ import scala.io.Source
 import scala.util.Random
 import java.util
 
+import com.googlecode.javaewah.datastructure.BitSet
 import org.apache.lucene.util.OpenBitSet
 
 trait Tester[Descriptor, Query, FileSet] {
@@ -100,7 +101,7 @@ trait Tester[Descriptor, Query, FileSet] {
   def recallFarthestPointApprox(optSet:Array[(Int, Double)], annSet:CandSet, k:Int, eps:Double) : Double = {
     // We assume here that the optSet is sorted, and have equalto or more points than specified k
     // We also assume that annSet.size <= k
-    require(optSet.size >= k)
+    require(optSet.length >= k)
     require(annSet.size <= k)
 
     val kthFarthestDistOpt = optSet(k-1)._2
@@ -139,7 +140,7 @@ trait Tester[Descriptor, Query, FileSet] {
 
   def variance(seq: ArrayBuffer[Double]) : Double = {
     var tmpArray:Array[Double] = new Array(seq.size)
-    require(seq.size == queries.size)
+    require(seq.size == queries.length)
     val avg = average(seq)
     var i = 0
     var vari = 0.0
@@ -278,9 +279,9 @@ class NumericSingle(data:String, dataSize:Int, dimensions:Int, seed:Long) extend
   }
 }
 
-class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long, nodes:File) extends DistributedTester[OpenBitSet, (OpenBitSet, Array[Float], Int), (String,String)] {
+class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long, nodes:File) extends DistributedTester[BitSet, (BitSet, Array[Float], Int), (String,String)] {
 
-  type Descriptor = OpenBitSet
+  type Descriptor = BitSet
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinaryDistributed(this.getNodes(nodes))
@@ -336,8 +337,8 @@ class BinaryDistributed(data:String, dataeuc:String, dataSize:Int, dimensions:In
   }
 }
 
-class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long) extends Tester[OpenBitSet, (OpenBitSet, Array[Float], Int), (String,String)] {
-  type Descriptor = OpenBitSet
+class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, seed:Long) extends Tester[BitSet, (BitSet, Array[Float], Int), (String,String)] {
+  type Descriptor = BitSet
 
   this.rnd = new Random(seed)
   this.lsh = new LSHBinarySingle
@@ -355,7 +356,7 @@ class BinarySingle(data:String, dataeuc:String, dataSize:Int, dimensions:Int, se
     // Get queries, keep last set if fileDir is the same
     if(!testCase.queriesDir.equals(lastQueriesDir) || !testCase.knnMax.equals(lastKnnMax)) {
       println("Loading queries...")
-      val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), 0).toArray // dimensions are not needed in disaparser bin and num
+      val binQueries = DisaParserBinary(Source.fromFile(new File(testCase.queriesDir)).getLines(), dimensions).toArray // dimensions are not needed in disaparser bin and num
       val eucQueries = DisaParserNumeric(Source.fromFile(new File(testCase.eucQueriesDir)).getLines(), 0).toArray
       this.queries = new Array(binQueries.length)
       var i = 0

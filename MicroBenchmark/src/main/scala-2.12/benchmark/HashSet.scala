@@ -7,9 +7,6 @@ import org.openjdk.jmh.infra.Blackhole
 import scala.collection.mutable
 import scala.util.Random
 
-/**
-  * Created by remeeh on 16-05-2017.
-  */
 @State(Scope.Benchmark)
 class HashSet {
   var rnd:Random = _
@@ -33,7 +30,7 @@ class HashSet {
     }
   }
 
-  @Setup(Level.Invocation)
+  @Setup(Level.Iteration)
   def getRandom(): Unit = {
     if (rnd.nextGaussian() < 0) {
       this.key = this.keys(this.rnd.nextInt(this.keys.length))

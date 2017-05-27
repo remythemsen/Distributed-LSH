@@ -6,11 +6,11 @@ import java.util
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import com.googlecode.javaewah.datastructure.BitSet
 import hashfunctions.{BitHash, Hyperplane}
 import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import measures.{EuclideanFast, Hamming}
 import messages.{InitRepetition, Query}
-import org.apache.lucene.util.OpenBitSet
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.mutable
@@ -24,10 +24,10 @@ class RepetitionHandlerBitSpec extends FlatSpec with Matchers {
 
   implicit val timeout = Timeout(10.hours)
 
-  def randomBitSet(dim:Int, seed:Long):OpenBitSet = {
+  def randomBitSet(dim:Int, seed:Long):BitSet = {
     val rnd = new Random(seed)
     var i = 0
-    var res = new OpenBitSet
+    var res = new BitSet
     while(i < dim) {
       if(rnd.nextBoolean()) {
         res.set(i)
@@ -48,7 +48,7 @@ class RepetitionHandlerBitSpec extends FlatSpec with Matchers {
       val dimensions = 256
       val hashFunctions = Array(BitHash(k, rnd.nextLong, dimensions), BitHash(k, rnd.nextLong(), dimensions))
       val system = ActorSystem("UnitTestSystem")
-      val a1 = system.actorOf(Props[actors.RepetitionHandler[OpenBitSet]], name = "rep1")
+      val a1 = system.actorOf(Props[actors.RepetitionHandler[BitSet]], name = "rep1")
       println("making dataset")
       //val dataSet = DisaParserBinary(Source.fromFile(new File(data)).getLines(), dimensions)
 

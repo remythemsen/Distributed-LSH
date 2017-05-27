@@ -16,7 +16,7 @@ class DotProduct {
   var vector:Array[Float] = Array()
   var vector2:Array[Float] = Array()
 
-  @Setup(Level.Invocation)
+  @Setup(Level.Iteration)
   def genRandomVec(): Unit = {
     vector = Array.fill[Float](dimensions)(rnd.nextFloat)
     vector2 = Array.fill[Float](dimensions)(rnd.nextFloat)

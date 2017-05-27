@@ -5,9 +5,6 @@ import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.Random
 
-/**
-  * Created by remeeh on 30-04-2017.
-  */
 class QuickSelectSpec extends FlatSpec with Matchers {
   val fixure = {
     new {

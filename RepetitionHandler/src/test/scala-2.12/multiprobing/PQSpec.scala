@@ -74,7 +74,6 @@ class PQSpec extends FlatSpec with Matchers {
     assert(firstPrio._2.equals(key))
     assert(secondPrio._2.equals(key2))
     assert(hasOneBitDifferent(key, thirdPrio._2) || hasOneBitDifferent(key2, thirdPrio._2))
-    // TODO We do not always have that 1step has higher priority than twostep :S
 
   }
 
@@ -83,7 +82,7 @@ class PQSpec extends FlatSpec with Matchers {
     val v = Array.fill[Float](128)(f.rnd.nextFloat())
     f.gen.generate(v)
 
-    assert(f.gen.toArray.size == 8)
+    assert(f.gen.toArray.length == 8)
   }
 
 }

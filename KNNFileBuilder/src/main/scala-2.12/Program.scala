@@ -7,9 +7,6 @@ import scopt.OptionParser
 import scala.collection.mutable
 import scala.io.Source
 
-/**
-  * Created by remeeh on 14-03-2017.
-  */
 object Program extends App {
 
   getArgsParser.parse(args, Config()) match {
@@ -49,7 +46,7 @@ object Program extends App {
 
   def write(file:File, map:mutable.HashMap[Int, Array[(Int, Double)]]): Unit = {
     val arr:Array[(Int, Array[(Int, Double)])] = map.toArray
-    for(i <- 0 until arr.length) {
+    for(i <- arr.indices) {
       val res:String = {
         arr(i)._1.toString + {
           val sb = new StringBuilder

@@ -26,6 +26,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Utils" exported="" />
+    <orderEntry type="library" name="SBT: com.googlecode.javaewah:JavaEWAH:1.1.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.apache.lucene:lucene-core:4.10.3:jar" level="project" />
     <orderEntry type="library" name="SBT: com.github.scopt:scopt_2.12:3.5.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.12.1:jar" level="project" />
@@ -35,5 +36,6 @@
     <orderEntry type="library" name="SBT: org.scalactic:scalactic_2.12:3.0.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.12:3.0.0:jar" level="project" />
     <orderEntry type="library" name="SBT: it.unimi.dsi:fastutil:7.2.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.roaringbitmap:RoaringBitmap:0.6.44:jar" level="project" />
   </component>
 </module>

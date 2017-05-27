@@ -23,10 +23,6 @@ class GenerateProbes {
   def setup(): Unit = {
     hp = Hyperplane(k, rnd.nextLong(), 128)
     mp = new PQ(k, Array(hp))
-  }
-
-  @Setup(Level.Invocation)
-  def genKey(): Unit = {
     key = Array.fill(128)(rnd.nextFloat)
   }
 

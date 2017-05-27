@@ -5,6 +5,7 @@ import java.util
 
 import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
 import akka.util.Timeout
+import com.googlecode.javaewah.datastructure.BitSet
 import datastructures.Table
 import hashfunctions.{BitHash, HashFunction, Hyperplane}
 import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
@@ -50,7 +51,7 @@ class RepetitionHandler[A] extends Actor {
   override def receive: Receive = {
     // Setting or resetting a repetition
     case InitRepetition(buildFromFile, n, parserFac, dataSetFac, internalReps, hashFunctionFac, probeScheme, qMaxCands, functions, dimensions, distance, seed) =>
-      println("recieved an init message")
+      println("recieved an init message with seed: " + seed)
 
       this.repetitions = null
       this.simMeasure = null
@@ -99,7 +100,6 @@ class RepetitionHandler[A] extends Actor {
       this.repetitions = new Array(internalReps)
       val futures: Array[Future[Any]] = new Array(internalReps)
 
-      //var i = 0
       for (i <- 0 until internalReps) {
         this.repetitions(i) = new Table({
               this.hashFunctions(i) = this.hfFac(functions, rnd.nextLong(), dimensions)
@@ -126,7 +126,7 @@ class RepetitionHandler[A] extends Actor {
       implicit val timeout = Timeout(20.hours)
       Await.result(Future.sequence(futures.toIndexedSeq), timeout.duration)
 
-      System.gc
+      System.gc()
 
       sender ! true
 
@@ -210,7 +210,7 @@ case object DisaParserFacNumeric extends DisaParserFac[Array[Float]] {
     DisaParserNumeric(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
 }
-case object DisaParserFacBitSet extends DisaParserFac[OpenBitSet] {
+case object DisaParserFacBitSet extends DisaParserFac[BitSet] {
   def apply(pathToFile:String, numOfDim:Int) : DisaParserBinary = {
     DisaParserBinary(Source.fromFile(new File(pathToFile)).getLines(), numOfDim)
   }
@@ -221,8 +221,8 @@ abstract class DataSetFac[A] {
 object DataSetFacNumeric extends DataSetFac[Array[Float]] {
   override def apply(size: Int): Array[Array[Float]] = new Array(size)
 }
-object DataSetBitSet extends DataSetFac[OpenBitSet] {
-  override def apply(size: Int): Array[OpenBitSet] = new Array(size)
+object DataSetBitSet extends DataSetFac[BitSet] {
+  override def apply(size: Int): Array[BitSet] = new Array(size)
 }
 abstract class HashFunctionFactory[A] {
   def apply(k:Int, seed:Long, numOfDim:Int):HashFunction[A]
@@ -233,8 +233,8 @@ case object HyperplaneFactory extends HashFunctionFactory[Array[Float]] {
     Hyperplane(k, seed, numOfDim)
   }
 }
-case object BitHashFactory extends HashFunctionFactory[OpenBitSet] {
-  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[OpenBitSet] = {
+case object BitHashFactory extends HashFunctionFactory[BitSet] {
+  override def apply(k:Int, seed:Long, numOfDim:Int): HashFunction[BitSet] = {
     BitHash(k, seed, numOfDim)
   }
 }

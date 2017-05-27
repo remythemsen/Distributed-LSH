@@ -7,9 +7,6 @@ import org.openjdk.jmh.infra.Blackhole
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-/**
-  * Created by remeeh on 16-05-2017.
-  */
 
 @State(Scope.Benchmark)
 class ArrayList {
@@ -44,7 +41,7 @@ class ArrayList {
     }
   }
 
-  @Setup(Level.Invocation)
+  @Setup(Level.Iteration)
   def invocate():Unit = {
     this.nxtIndex = this.rnd.nextInt(INITIAL_SIZE)
     this.nxtInt = this.rnd.nextInt(INITIAL_SIZE)
