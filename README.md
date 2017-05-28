@@ -10,7 +10,7 @@ sbt "project RecallTest" "run --data sample_files/128-float.txt --dataeuc sample
 
 To run the recalltest with BitHash in single machine mode issue the following command:
 
-sbt "project RecallTest" "run --data sample_files/128-float.txt --dataeuc sample_files/128-float.txt --size 100 --setup single --dimensions 128 --dataType numeric --nodesAddresses sample_files/nodesaddresses.txt --testCases sample_files/testcases-euc-nondistributed.txt --invocationCount 10 --warmUpIterations 2000 --out . --seed 95731014"
+sbt "project RecallTest" "run --data sample_files/256-binary.txt --dataeuc sample_files/256-binary.txt --size 100 --setup single --dimensions 256 --dataType binary --nodesAddresses sample_files/nodesaddresses.txt --testCases sample_files/testcases-bin-nondistributed.txt --invocationCount 10 --warmUpIterations 2000 --out . --seed 59731014"
 
 
 ## NOTE:
