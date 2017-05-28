@@ -17,6 +17,20 @@ sbt "project RecallTest" "run --data sample_files/256-binary.txt --dataeuc sampl
 The datasets provides in sample_files folder are very small and will not yield good results with the settings described above.
 They are merely included to show the format the parser will accept. The settings in the sample_files testcases fits a dataset of size: ~500.000
 
+The data file format is:
+id component(0) component(0+1) ... component(dim)
+
+e.g. 
+
+123 0.135 0.5139 -0.124
+
+for numeric type
+
+and 
+
+123 010100010
+
+for binary type
 
 
 run the following command for the description of the flags:
