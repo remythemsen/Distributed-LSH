@@ -1,6 +1,6 @@
-sample_files/256-bin.queries sample_files/128-float.queries 4 12 twostep 20000 10 euclidean 50 sample_files/128-float-euclidean-knnset.txt
-sample_files/256-bin.queries sample_files/128-float.queries 4 12 twostep 20000 50 euclidean 50 sample_files/128-float-euclidean-knnset.txt
-sample_files/256-bin.queries sample_files/128-float.queries 4 12 twostep 20000 500 euclidean 50 sample_files/128-float-euclidean-knnset.txt
-sample_files/256-bin.queries sample_files/128-float.queries 4 12 twostep 40000 10 euclidean 50 sample_files/128-float-euclidean-knnset.txt
-sample_files/256-bin.queries sample_files/128-float.queries 4 12 twostep 40000 50 euclidean 50 sample_files/128-float-euclidean-knnset.txt
-sample_files/256-bin.queries sample_files/128-float.queries 4 12 twostep 40000 500 euclidean 50 sample_files/128-float-euclidean-knnset.txt
+sample_files/256-bin-queries.txt sample_files/128-float-queries.txt 4 12 twostep 20000 10 euclidean 50 sample_files/128-float-euclidean-knnset.txt
+sample_files/256-bin-queries.txt sample_files/128-float-queries.txt 4 12 twostep 20000 50 euclidean 50 sample_files/128-float-euclidean-knnset.txt
+sample_files/256-bin-queries.txt sample_files/128-float-queries.txt 4 12 twostep 20000 500 euclidean 50 sample_files/128-float-euclidean-knnset.txt
+sample_files/256-bin-queries.txt sample_files/128-float-queries.txt 4 12 twostep 40000 10 euclidean 50 sample_files/128-float-euclidean-knnset.txt
+sample_files/256-bin-queries.txt sample_files/128-float-queries.txt 4 12 twostep 40000 50 euclidean 50 sample_files/128-float-euclidean-knnset.txt
+sample_files/256-bin-queries.txt sample_files/128-float-queries.txt 4 12 twostep 40000 500 euclidean 50 sample_files/128-float-euclidean-knnset.txt
