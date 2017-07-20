@@ -15,7 +15,10 @@ libraryDependencies ++= Seq(
   "org.apache.lucene" % "lucene-core" % "4.10.3",
   "com.googlecode.javaewah" % "JavaEWAH" % "1.1.6",
   "org.roaringbitmap" % "RoaringBitmap" % "0.6.44"
+
 )
+
+libraryDependencies += "commons-io" % "commons-io" % "2.5"
 
 lazy val DistributedLSH = project in file(".") dependsOn RepetitionHandler
 

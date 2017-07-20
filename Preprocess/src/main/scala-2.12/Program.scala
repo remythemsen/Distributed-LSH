@@ -1,7 +1,11 @@
 import java.io.{BufferedWriter, File, FileOutputStream, OutputStreamWriter}
 import java.util.concurrent.{ArrayBlockingQueue, Executors}
+import javax.swing.filechooser.FileNameExtensionFilter
+
 import io.Parser.DisaParserRaw
+import org.apache.commons.io.FilenameUtils
 import scopt.OptionParser
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 import scala.util.Random
@@ -102,10 +106,11 @@ object Program extends App {
           "-" + config.binary
         else ""
       }
+      var oldExt = FilenameUtils.getExtension(config.data.getAbsolutePath)
       val dir: String = config.outDir.concat("/")
         // constructing filename
-        .concat(config.data.getName.substring(0, config.data.getName.length - 5))
-        .concat("-reduced-" + dimensions + isBinary + ".data")
+        .concat(config.data.getName.substring(0, config.data.getName.length - oldExt.length-1))
+        .concat("-reduced-" + dimensions + isBinary + "."+oldExt)
 
       val output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dir.toString)))
 
@@ -147,6 +152,7 @@ object Program extends App {
       print("Ok!\n")
 
     }
+    case None => // do nothing
   }
 }
 
