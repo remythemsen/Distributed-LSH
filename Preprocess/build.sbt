@@ -11,6 +11,7 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.0",
   "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
+libraryDependencies += "commons-io" % "commons-io" % "2.5"
 
 homepage := Some(url("https://github.com/remythemsen/Distributed_LSH"))
 
