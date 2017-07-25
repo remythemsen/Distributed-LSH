@@ -7,15 +7,11 @@ import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import lsh._
 import measures._
 import tools.CandSet
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.Random
-import java.util
-
 import com.googlecode.javaewah.datastructure.BitSet
-import org.apache.lucene.util.OpenBitSet
 
 trait Tester[Descriptor, Query, FileSet] {
   type Result = ((Double, Double, Double, Double), (Double,Double,Double, Double), Double, Double)

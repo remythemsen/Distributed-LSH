@@ -1,18 +1,14 @@
 package lsh
 
 import java.io.File
-import java.util
-
 import actors._
 import akka.actor.ActorRef
 import measures.Distance
 import messages.{InitRepetition, Query, Stop}
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future}
 import akka.util.Timeout
-
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.pattern.ask
@@ -21,7 +17,6 @@ import datastructures.Table
 import hashfunctions.HashFunction
 import io.Parser.DisaParserNumeric
 import multiprobing.{PQ, PQ2, ProbeScheme, TwoStep}
-import org.apache.lucene.util.OpenBitSet
 import tools.Tools.PQOrd
 import tools.{CandSet, QuickSelect, Tools}
 

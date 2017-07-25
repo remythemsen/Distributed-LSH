@@ -9,6 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Embedding" />
+            <option value="$PROJECT_DIR$/Embedding/project" />
             <option value="$PROJECT_DIR$/KNNFileBuilder" />
             <option value="$PROJECT_DIR$/KNNFileBuilder/project" />
             <option value="$PROJECT_DIR$/MicroBenchmark" />

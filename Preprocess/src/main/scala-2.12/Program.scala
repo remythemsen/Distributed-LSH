@@ -2,7 +2,7 @@ import java.io.{BufferedWriter, File, FileOutputStream, OutputStreamWriter}
 import java.util.concurrent.{ArrayBlockingQueue, Executors}
 import javax.swing.filechooser.FileNameExtensionFilter
 
-import io.Parser.DisaParserRaw
+import io.Parser.{DisaParserNumeric, DisaParserRaw}
 import org.apache.commons.io.FilenameUtils
 import scopt.OptionParser
 
@@ -19,6 +19,7 @@ case class Config(
                    dataDim:Int = 4096,
                    targetDim:Int = 128,
                    binary:Boolean = false,
+                   yfc:Boolean = false,
                    randomSeed:Long = System.currentTimeMillis()
                  )
 
@@ -41,8 +42,11 @@ object Program extends App {
     opt[Int]('t', "targetDimension").valueName("<int>").required().action((x, c) =>
       c.copy(targetDim = x)).text("target vector dimensions, default 256")
 
-    opt[Boolean]('b', "binary").valueName("<false|true>").required().action((x, c) =>
+    opt[Boolean]('b', "binary").valueName("<false|true>").action((x, c) =>
       c.copy(binary = x)).text("should out file contain binary values, default false")
+
+    opt[Boolean]('s', "yfc").valueName("<false|true>").action((x, c) =>
+      c.copy(yfc = x)).text("is file format yfc-enumerated, default false")
 
     opt[Long]('r', "seed").valueName("<long>").action((x, c) =>
       c.copy(randomSeed = x)).text("random seed for matrix generation, default system time")
@@ -62,13 +66,18 @@ object Program extends App {
       val rnd = new Random(config.randomSeed)
 
 
-      val p = 6
+      val p = 4
       // Number of threads // Same time no matter what number from 4-16
-      val loadedTuples = new ArrayBlockingQueue[(Int, Array[Float])](10000)
+      val loadedTuples = new ArrayBlockingQueue[(Int, Array[Float])](10)
       val preProcessedTuples = new ArrayBlockingQueue[(Int, Array[Float])](20)
 
       println("Loading files...")
-      val input = DisaParserRaw(Source.fromFile(config.data).getLines, config.dataDim)
+      val input = if(config.yfc) {
+        DisaParserNumeric(Source.fromFile(config.data).getLines, config.dataDim)
+      } else {
+        DisaParserRaw(Source.fromFile(config.data).getLines, config.dataDim)
+      }
+
       val originalDimensions = config.dataDim
       val n = config.n
 
@@ -84,7 +93,6 @@ object Program extends App {
       Future {
         while (input.hasNext) {
           loadedTuples.put(input.next)
-
         }
       }
 
