@@ -12,7 +12,6 @@
       <module fileurl="file://$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecallInner.iml" filepath="$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecallInner.iml" />
       <module fileurl="file://$PROJECT_DIR$/KNN/KNN.iml" filepath="$PROJECT_DIR$/KNN/KNN.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/KNN-build.iml" filepath="$PROJECT_DIR$/.idea/modules/KNN-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/KNNFileBuilder.iml" filepath="$PROJECT_DIR$/.idea/modules/KNNFileBuilder.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/KNNFileBuilder-build.iml" filepath="$PROJECT_DIR$/.idea/modules/KNNFileBuilder-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" />
