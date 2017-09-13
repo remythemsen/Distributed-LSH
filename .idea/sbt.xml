@@ -13,6 +13,8 @@
             <option value="$PROJECT_DIR$/Embedding/project" />
             <option value="$PROJECT_DIR$/EmbeddingRecall" />
             <option value="$PROJECT_DIR$/EmbeddingRecall/project" />
+            <option value="$PROJECT_DIR$/KNN" />
+            <option value="$PROJECT_DIR$/KNN/project" />
             <option value="$PROJECT_DIR$/KNNFileBuilder" />
             <option value="$PROJECT_DIR$/KNNFileBuilder/project" />
             <option value="$PROJECT_DIR$/MicroBenchmark" />

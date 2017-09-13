@@ -1,4 +1,4 @@
-import IO.{DataParser, KNNFileParser, TestPrinter}
+import IO.{DataParser, KNNFileParser, TestFormatter}
 import concrete.{RecallTester, TestCaseManager}
 
 import scala.io.Source
@@ -19,7 +19,7 @@ object Program extends App {
         slack
       )
 
-      println(TestPrinter.outPut(results, conf.dataSize, conf.querySize, conf.dimensions, slack))
+      println(TestFormatter.outPut(results, conf.dataSize, conf.querySize, conf.dimensions, slack))
     }
     case None => {
       // do nothing

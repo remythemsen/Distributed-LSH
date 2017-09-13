@@ -4,7 +4,7 @@ import concrete.TestResult
 
 import scala.util.{Failure, Success, Try}
 
-object TestPrinter {
+object TestFormatter {
   def outPut(results:Iterator[Try[TestResult]], dataSize:Int, querySize:Int, dimensions:Int, slack:Vector[Double]) : String = {
     "Recall Tests for\n\n" +
       "Dataset of size: " + dataSize.toString + "\n" +

@@ -1,9 +1,7 @@
 package concrete
 
+import KNN.KNNStructure
 import measures.EuclideanDouble
-import tools.KNN
-import tools.KNN.KNNStructure
-
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}
 
