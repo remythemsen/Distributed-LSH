@@ -11,6 +11,19 @@ trait Distance[A] {
   def measure(x:A, y:A) : Double
 }
 
+object EuclideanFastDouble extends Distance[Array[Double]] {
+  // Note this is without sqrt!
+  override def measure(x: Array[Double], y: Array[Double]): Double = {
+    var res = 0.0
+    var i = 0
+    while(i < x.length) {
+      res += Math.pow(y(i) - x(i), 2)
+      i += 1
+    }
+    res
+  }
+}
+
 object EuclideanFast extends Distance[Array[Float]] {
   // Note this is without sqrt!
   override def measure(x: Array[Float], y: Array[Float]): Double = {
@@ -24,6 +37,17 @@ object EuclideanFast extends Distance[Array[Float]] {
   }
 }
 
+object EuclideanDouble extends Distance[Array[Double]] {
+  override def measure(x: Array[Double], y: Array[Double]): Double = {
+    var res = 0.0
+    var i = 0
+    while(i < x.length) {
+      res += Math.pow(y(i) - x(i), 2)
+      i += 1
+    }
+    Math.sqrt(res)
+  }
+}
 object Euclidean extends Distance[Array[Float]] {
   override def measure(x: Array[Float], y: Array[Float]): Double = {
     var res = 0.0

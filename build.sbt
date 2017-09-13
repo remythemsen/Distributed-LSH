@@ -34,4 +34,7 @@ lazy val KNNFileBuilder = project in file("KNNFileBuilder") dependsOn Utils
 
 lazy val RepetitionHandler = project in file("RepetitionHandler") dependsOn Utils
 
+lazy val EmbeddingRecall = project in file("EmbeddingRecall") dependsOn Utils
+
 lazy val Embedding = project in file("Embedding") dependsOn Utils
+
