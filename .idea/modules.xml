@@ -2,23 +2,17 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Distributed-LSH.iml" filepath="$PROJECT_DIR$/Distributed-LSH.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/DistributedLSH.iml" filepath="$PROJECT_DIR$/.idea/modules/DistributedLSH.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/DistributedLSH-build.iml" filepath="$PROJECT_DIR$/.idea/modules/DistributedLSH-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/Embedding/Embedding.iml" filepath="$PROJECT_DIR$/Embedding/Embedding.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Embedding-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Embedding-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecall.iml" filepath="$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecall.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/EmbeddingRecall-build.iml" filepath="$PROJECT_DIR$/.idea/modules/EmbeddingRecall-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecallInner.iml" filepath="$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecallInner.iml" />
       <module fileurl="file://$PROJECT_DIR$/KNN/KNN.iml" filepath="$PROJECT_DIR$/KNN/KNN.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/KNN-build.iml" filepath="$PROJECT_DIR$/.idea/modules/KNN-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSH.iml" filepath="$PROJECT_DIR$/.idea/modules/LSH.iml" />
-      <module fileurl="file://$PROJECT_DIR$/LSH/LSH.iml" filepath="$PROJECT_DIR$/LSH/LSH.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSH-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSH-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSH-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSH-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHBundle.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHBundle.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHBundle-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHBundle-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHRecall.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHRecall.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" />
