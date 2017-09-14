@@ -1,7 +1,5 @@
 package IO
 
-import concrete.KNN.{KNearestNeighbors, QueryPointId}
-
 import scala.collection.immutable.HashMap
 
 object KNNFileFormatter {
@@ -12,7 +10,7 @@ object KNNFileFormatter {
    * 123,1 1.0,2 2.0,3 3.0
    * 123,1 1.0,2 2.0,3 3.0
    */
-  def outPut(map: HashMap[QueryPointId, KNearestNeighbors]) : String = {
+  def outPut(map: HashMap[Int, Array[(Int, Double)]]) : String = {
     map.foldLeft("") {
       (result, entry) =>
         result + entry._1 + {

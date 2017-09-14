@@ -1,33 +1,43 @@
 import java.io._
 
+import IO.Parser.DisaParserBinary
 import IO.{DataParser, KNNFileFormatter}
 import concrete.KNN
-import measures.{Cosine, CosineUnit, Distance, Euclidean}
+import measures._
 import scopt.OptionParser
-
-import scala.collection.mutable
 import scala.io.Source
 
 object Program extends App {
 
   getArgsParser.parse(args, Config()) match {
     case Some(config) => {
-      val measure = config.measure.toLowerCase match {
-        case "euclidean" => Euclidean
-      }
 
       val qpfile = config.queryPoints
+      val dataIterator = Source.fromFile(config.data).getLines()
+      val queryIterator = Source.fromFile(config.queryPoints).getLines()
 
-      println(
-        KNNFileFormatter.outPut(
-          KNN.generate(
-            k = config.k,
-            dps = DataParser(Source.fromFile(config.data).getLines),
-            qps = DataParser(Source.fromFile(config.queryPoints).getLines)
+      println(config.measure.toLowerCase match {
+        case "euclidean" => {
+          KNNFileFormatter.outPut(
+            KNN.generate(
+              k = config.k,
+              dataPoints = DataParser(dataIterator),
+              queryPoints = DataParser(queryIterator),
+              measure = EuclideanDouble
+            )
           )
-        )
-      )
-
+        }
+        case "hamming" => {
+          KNNFileFormatter.outPut(
+            KNN.generate(
+              k = config.k,
+              dataPoints = DisaParserBinary(dataIterator, config.dimensions),
+              queryPoints = DisaParserBinary(queryIterator, config.dimensions),
+              measure = Hamming
+            )
+          )
+        }
+      })
     }
     case None => println("Please provide the correct arguments") // Nothing
   }
