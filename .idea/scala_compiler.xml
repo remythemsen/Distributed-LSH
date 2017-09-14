@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="SBT 1" modules="distributed-lsh,Repetition,KNNFileBuilder,DistributedLSH,Preprocess,Recall,RecallTest,DistributedLSH,LSHBundle,Embedding,EmbeddingRecall,KNN,LSH,LSHRecall,MicroBenchmark,RepetitionHandler,Utils" />
+    <profile name="SBT 1" modules="distributed-lsh,Repetition,KNNFileBuilder,Preprocess,Recall,RecallTest,DistributedLSH,DistributedLSH,LSHBundle,Embedding,EmbeddingRecall,KNN,LSH,LSHRecall,MicroBenchmark,RepetitionHandler,Utils" />
   </component>
 </project>

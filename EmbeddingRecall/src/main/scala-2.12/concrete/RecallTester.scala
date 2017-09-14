@@ -11,8 +11,8 @@ object RecallTester {
   // The count of points found by KNN in the reduced dataset which has distance to the corresponding query point
   // less than or equal to the k'th farthest point from q in the KNN set done in original space.
 
-  def calcRecall(foundNeighbors:KNNStructure,
-                 optimalNeighbors:KNNStructure,
+  def calcRecall(foundNeighbors:HashMap[Int, Array[(Int, Double)]],
+                 optimalNeighbors:HashMap[Int, Array[(Int, Double)]],
                  orgSpaceSet:HashMap[Int, Array[Double]],
                  k:Int,
                  slack:Vector[Double]
@@ -45,7 +45,7 @@ object RecallTester {
   // be compared in. optimalResults knnstructure is passed in, in order to
   // just load the needed vector into memory from the dataset, the needed
   // vectors are just those appearing in the optimal result sets
-  def buildVectorMap(orgData: Iterator[(Int, Array[Double])], orgQueries: Iterator[(Int, Array[Double])], optimalResults:KNNStructure) : HashMap[Int, Array[Double]] = {
+  def buildVectorMap(orgData: Iterator[(Int, Array[Double])], orgQueries: Iterator[(Int, Array[Double])], optimalResults:HashMap[Int, Array[(Int, Double)]]) : HashMap[Int, Array[Double]] = {
     val requiredVectors = optimalResults.foldLeft(Set[Int]()) {
       (set, item) => {
         set + item._1 ++ item._2.map(x => x._1)
@@ -64,7 +64,7 @@ object RecallTester {
   def run(cases:Iterator[Try[TestCase]], optimalSetParser:Iterator[(Int, Array[(Int, Double)])], orgSpaceDataParser:Iterator[(Int, Array[Double])], orgSpaceQueryParser:Iterator[(Int, Array[Double])], slack:Vector[Double]) : Iterator[Try[TestResult]] = {
     cases.map({
       case Success(testCase) => {
-        val results = KNN.generate(testCase.knn, testCase.reducedDataParser, testCase.reducedQueryParser)
+        val results = KNN.generate[Array[Double]](testCase.knn, testCase.reducedDataParser, testCase.reducedQueryParser, EuclideanDouble)
         val optimalResults = KNN.populate(optimalSetParser)
         val originalSpaceSet = buildVectorMap(orgSpaceDataParser, orgSpaceQueryParser, optimalResults)
 

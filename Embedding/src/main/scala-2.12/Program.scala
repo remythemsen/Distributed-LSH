@@ -2,6 +2,7 @@ import java.io.{BufferedWriter, File, FileOutputStream, OutputStreamWriter}
 import java.util.concurrent.{ArrayBlockingQueue, Executors}
 
 import IO.Parser.{DisaParserNumeric, DisaParserRaw}
+import org.apache.commons.io.FilenameUtils
 import scopt.OptionParser
 
 import scala.concurrent.{ExecutionContext, Future}
