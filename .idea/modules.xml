@@ -12,9 +12,13 @@
       <module fileurl="file://$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecallInner.iml" filepath="$PROJECT_DIR$/EmbeddingRecall/EmbeddingRecallInner.iml" />
       <module fileurl="file://$PROJECT_DIR$/KNN/KNN.iml" filepath="$PROJECT_DIR$/KNN/KNN.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/KNN-build.iml" filepath="$PROJECT_DIR$/.idea/modules/KNN-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSH.iml" filepath="$PROJECT_DIR$/.idea/modules/LSH.iml" />
       <module fileurl="file://$PROJECT_DIR$/LSH/LSH.iml" filepath="$PROJECT_DIR$/LSH/LSH.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSH-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSH-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSH-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSH-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHBundle.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHBundle.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHRecall.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHRecall.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" filepath="$PROJECT_DIR$/.idea/modules/LSHRecall-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" filepath="$PROJECT_DIR$/.idea/modules/MicroBenchmark-build.iml" />
