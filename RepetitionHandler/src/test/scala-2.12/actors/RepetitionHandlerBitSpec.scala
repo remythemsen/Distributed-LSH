@@ -8,7 +8,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.googlecode.javaewah.datastructure.BitSet
 import hashfunctions.{BitHash, Hyperplane}
-import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import measures.{EuclideanFast, Hamming}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}

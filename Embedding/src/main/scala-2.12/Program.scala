@@ -1,9 +1,7 @@
 import java.io.{BufferedWriter, File, FileOutputStream, OutputStreamWriter}
 import java.util.concurrent.{ArrayBlockingQueue, Executors}
-import javax.swing.filechooser.FileNameExtensionFilter
 
-import io.Parser.{DisaParserNumeric, DisaParserRaw}
-import org.apache.commons.io.FilenameUtils
+import IO.Parser.{DisaParserNumeric, DisaParserRaw}
 import scopt.OptionParser
 
 import scala.concurrent.{ExecutionContext, Future}

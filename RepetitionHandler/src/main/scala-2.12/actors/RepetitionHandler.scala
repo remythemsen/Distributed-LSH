@@ -3,12 +3,12 @@ package actors
 import java.io.File
 import java.util
 
+import IO.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
 import akka.util.Timeout
 import com.googlecode.javaewah.datastructure.BitSet
 import datastructures.Table
 import hashfunctions.{BitHash, HashFunction, Hyperplane}
-import io.Parser.{DisaParser, DisaParserBinary, DisaParserNumeric}
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import measures.Distance
 import messages._

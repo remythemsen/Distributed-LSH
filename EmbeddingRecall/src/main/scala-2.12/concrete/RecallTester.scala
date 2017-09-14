@@ -1,7 +1,7 @@
 package concrete
 
-import KNN.KNNStructure
 import measures.EuclideanDouble
+
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}
 
@@ -32,6 +32,7 @@ object RecallTester {
   }
 
   def countValid(queryPoint: Array[Double], candSet:Array[Array[Double]], kthDist:Double, slack:Double) : Double = {
+
     candSet.foldLeft(0.0) {
       (result, candidate) =>
         if(EuclideanDouble.measure(queryPoint, candidate) <= kthDist * (1.0 + slack)) result + 1.0

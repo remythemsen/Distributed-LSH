@@ -6,8 +6,7 @@ case class Config(
                    dimensions:Int = 0,
                    k:Int = 50,
                    queryPoints:File = new File("."),
-                   measure:String = ".",
-                   outDir:String = "."
+                   measure:String = "."
                  )
 
 

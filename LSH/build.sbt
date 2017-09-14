@@ -1,4 +1,4 @@
-name := "RecallTest"
+name := "LSH"
 
 organization := "dk.distributed_lsh"
 

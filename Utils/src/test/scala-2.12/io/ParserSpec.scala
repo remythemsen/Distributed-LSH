@@ -1,6 +1,6 @@
 package io
 
-import io.Parser.DisaParserNumeric
+import IO.Parser.DisaParserNumeric
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.io.Source

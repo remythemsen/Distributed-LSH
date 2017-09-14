@@ -2,14 +2,15 @@ package actors
 
 import java.io.File
 
+import IO.Parser.DisaParserNumeric
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import hashfunctions.Hyperplane
-import io.Parser.{DisaParser, DisaParserNumeric}
 import measures.{Cosine, CosineUnit, EuclideanFast}
 import messages.{InitRepetition, Query}
 import org.scalatest.{FlatSpec, Matchers}
+
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

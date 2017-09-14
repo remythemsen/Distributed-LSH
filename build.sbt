@@ -22,19 +22,19 @@ libraryDependencies += "commons-io" % "commons-io" % "2.5"
 
 lazy val DistributedLSH = project in file(".") dependsOn RepetitionHandler
 
-lazy val Utils = project in file("Utils")
+lazy val LSH = project in file("LSH") dependsOn Utils
 
-lazy val RecallTest = project in file("RecallTest") dependsOn(DistributedLSH, RepetitionHandler, Utils)
-
-lazy val MicroBenchmark = project in file("MicroBenchmark") dependsOn(DistributedLSH, RepetitionHandler, Utils) enablePlugins JmhPlugin
-
-lazy val Preprocess = project in file("Preprocess") dependsOn Utils
-
-lazy val RepetitionHandler = project in file("RepetitionHandler") dependsOn Utils
+lazy val LSHRecall = project in file("LSHRecall") dependsOn(DistributedLSH, RepetitionHandler, Utils)
 
 lazy val EmbeddingRecall = project in file("EmbeddingRecall") dependsOn(Utils, KNN)
 
 lazy val Embedding = project in file("Embedding") dependsOn Utils
+
+lazy val MicroBenchmark = project in file("MicroBenchmark") dependsOn(DistributedLSH, RepetitionHandler, Utils) enablePlugins JmhPlugin
+
+lazy val RepetitionHandler = project in file("RepetitionHandler") dependsOn Utils
+
+lazy val Utils = project in file("Utils")
 
 lazy val KNN = project in file("KNN") dependsOn Utils
 

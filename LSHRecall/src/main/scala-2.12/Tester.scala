@@ -1,12 +1,13 @@
 import java.io.File
 
+import IO.Parser.{DisaParserBinary, DisaParserNumeric}
 import actors._
 import akka.actor.{ActorRef, ActorSystem, AddressFromURIString, Deploy, Props}
 import akka.remote.RemoteScope
-import io.Parser.{DisaParserBinary, DisaParserNumeric}
 import lsh._
 import measures._
 import tools.CandSet
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source

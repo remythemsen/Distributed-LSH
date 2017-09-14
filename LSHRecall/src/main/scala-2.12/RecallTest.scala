@@ -1,7 +1,7 @@
 import java.io.File
 import java.text.DecimalFormat
 
-import io.ResultWriter
+import IO.ResultWriter
 import scopt.OptionParser
 
 import scala.io.Source
